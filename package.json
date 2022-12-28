@@ -1,0 +1,48 @@
+{
+  "name": "NVR",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "serve": "ts-node backend/server/Server.ts",
+    "dev": "webpack --config webpack.dev.ts && npx ts-node backend/server/Server.ts",
+    "prodnobuild": "webpack --config webpack.prod.ts && npx ts-node backend/server/Server.ts",
+    "prod": "webpack --config webpack.prod.ts && tsc serverside && node backend/server/Server.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zaary/NVR.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Zaary/NVR/issues"
+  },
+  "homepage": "https://github.com/Zaary/NVR#readme",
+  "dependencies": {
+    "@babel/core": "^7.18.0",
+    "@babel/preset-env": "^7.18.0",
+    "@babel/preset-typescript": "^7.17.12",
+    "@types/cors": "^2.8.13",
+    "@types/express": "^4.17.13",
+    "@types/msgpack-lite": "^0.1.8",
+    "babel-loader": "^8.2.5",
+    "cors": "^2.8.5",
+    "css-loader": "^6.7.3",
+    "error-stack-parser": "^2.1.4",
+    "express": "^4.18.1",
+    "html-webpack-plugin": "^5.5.0",
+    "msgpack-lite": "^0.1.26",
+    "sass": "^1.57.1",
+    "sass-loader": "^13.2.0",
+    "style-loader": "^3.3.1",
+    "terser-webpack-plugin": "^5.3.1",
+    "ts-node": "^10.7.0",
+    "tsee": "^1.3.2",
+    "typescript": "^4.6.4",
+    "webpack": "^5.72.1",
+    "webpack-cli": "^4.9.2"
+  }
+}
