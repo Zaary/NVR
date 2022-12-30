@@ -50,6 +50,8 @@ export default class HoverInfoModule extends Renderer {
                 data[i + 2] = Math.max(original[2] * 255 - factor, 0);
             }
 
+            context.putImageData(imageData, 0, 0);
+
             return canvas;
         }
 
