@@ -1,3 +1,4 @@
+import { util } from "../data/type/MoomooUtil";
 import Vector from "./type/Vector";
 
 function randInt(min: number, max: number) {
@@ -24,9 +25,9 @@ function getDistance(pos1: Vector, pos2: Vector): number {
 }
 
 function getDirection(from: Vector, to: Vector): number {
-	return Math.atan2(to.y - from.y, to.x - from.y);
+	return Math.atan2(to.y - from.y, to.x - from.x);
 }
-	
+
 function getAngleDist(a: number, b: number) {
 	var p = Math.abs(b - a) % (Math.PI * 2);
 	return (p > Math.PI ? (Math.PI * 2) - p : p);

@@ -13,6 +13,7 @@ class TickEngine extends EventEmitter {
     public ping: number;
     private lastTick: number;
     private nextTick: number;
+    private lastEmittedUnsafe: number;
 
     constructor(core: Core) {
         super();
@@ -21,9 +22,10 @@ class TickEngine extends EventEmitter {
         this.ping = 0;
         this.lastTick = 0;
         this.nextTick = 0;
+        this.lastEmittedUnsafe = -1;
 
-        connection.on("packetsend", (packet: Packet) => {
-            if (packet.type == PacketType.PING) {
+        connection.on("packetsend", (event: EventPacket) => {
+            if (event.getPacket().type == PacketType.PING) {
                 this.pingQueue.push(Date.now());
             }
         });
@@ -32,7 +34,8 @@ class TickEngine extends EventEmitter {
             const packet = event.getPacket();
             
             if (packet.type == PacketType.PING) {
-                this.ping = (Date.now() - this.pingQueue.shift()!) / 2;
+                const shift = this.pingQueue.shift()!;
+                this.ping = (Date.now() - shift) / 2;
                 this.emit("ping", this.ping);
             } else if (packet.type == PacketType.PLAYER_UPDATE) {
                 this.lastTick = Date.now() - this.ping;
@@ -44,8 +47,10 @@ class TickEngine extends EventEmitter {
         });
 
         core.on("update", (delta: number) => {
-            if (Date.now() + this.ping + this.serverLag + delta * 1.15 >= this.nextTick) {
+            if (this.lastEmittedUnsafe === this.tickIndex) return;
+            if (Date.now() + this.ping * 1.5 + this.serverLag + delta * 1.3 >= this.nextTick) {
                 this.emit("unsafetick", this.tickIndex + 1);
+                this.lastEmittedUnsafe = this.tickIndex;
             }
         });
     }

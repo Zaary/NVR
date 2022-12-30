@@ -1,4 +1,20 @@
-const accessories = [{
+interface Accessory {
+	id: number;
+	name: string;
+	price: number;
+	scale: number;
+	xOff?: number;
+	yOff?: number;
+	desc: string;
+	spdMult?: number;
+	dmgMultO?: number;
+	healthRegen?: number;
+	spin?: boolean;
+	dmg?: number;
+	healD?: number;
+}
+
+const accessories: Accessory[] = [{
 	id: 12,
 	name: "Snowball",
 	price: 1000,
@@ -147,3 +163,4 @@ const accessories = [{
 }];
 
 export default accessories;
+export { Accessory }

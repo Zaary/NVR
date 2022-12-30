@@ -1,8 +1,12 @@
 import { EventEmitter } from "tsee";
+import { currentPlayer, players } from "../core/Core";
+import config from "../data/moomoo/config";
+import { util } from "../data/type/MoomooUtil";
+import Player from "../data/type/Player";
 import MathUtil from "../util/MathUtil";
 import { Class } from "../util/type/Definitions";
 import Vector from "../util/type/Vector";
-import BackgroundRenderer from "./background/BackgroundRenderer";
+import InterfaceModule from "./InterfaceModule";
 
 type Dimensions = {
     width: number;
@@ -10,6 +14,7 @@ type Dimensions = {
 }
 
 type RendererID = "background";
+type InterfaceRendererID = "packetCount";
 
 export abstract class Renderer {
     protected renderManager: RenderManager;
@@ -33,8 +38,10 @@ export default class RenderManager extends EventEmitter<{
     public viewport: Dimensions;
     private canvasVertices = [new Vector, new Vector];
     public cameraPosition: Vector;
+    public staticCamera: Vector;
 
     private renderers: Map<RendererID, Renderer>;
+    private interfaceRenderers: Map<InterfaceRendererID, InterfaceModule>;
     private lastRender: number;
 
     constructor(canvas: HTMLCanvasElement, width: number, height: number) {
@@ -44,21 +51,24 @@ export default class RenderManager extends EventEmitter<{
         this.transformMatrix = new DOMMatrix([1, 0, 0, 1, 0, 0]);
         this.defaultMatrix = new DOMMatrixReadOnly([1, 0, 0, 1, 0, 0]);
         this.viewport = { width, height };
-        this.cameraPosition = new Vector(0, 0);
+        this.cameraPosition = new Vector(14400 / 2, 14400 / 2);
+        this.staticCamera = new Vector(14400 / 2, 14400 / 2);
 
         this.renderers = new Map();
+        this.interfaceRenderers = new Map();
         this.lastRender = 0;
 
         const resizeListener = (() => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            //canvas.width = window.innerWidth;
+            //canvas.height = window.innerHeight;
             this.updateTransformMatrix();
-            this.context.setTransform(this.transformMatrix);
+            //this.context.setTransform(this.transformMatrix);
             this.canvasVertices = [
-                this.canvasToContext(0, 0),
-                this.canvasToContext(window.innerWidth, window.innerHeight)
+                this.canvasToContext(this.cameraPosition, 0, 0),
+                this.canvasToContext(this.cameraPosition, window.innerWidth, window.innerHeight)
             ];
         });
+
         resizeListener();
 
         window.addEventListener("resize", resizeListener);
@@ -68,15 +78,41 @@ export default class RenderManager extends EventEmitter<{
     }
 
     updateCamera(delta: number, targetPosition: Vector) {
+
         const distance = MathUtil.getDistance(this.cameraPosition, targetPosition);
         const direction = MathUtil.getDirection(this.cameraPosition, targetPosition);
-        const speed = Math.min(distance * 0.01 * delta, distance);
+        const speed = distance * 0.01 * delta;
         
         if (distance > 0.05) {
             this.cameraPosition.directionMove(direction, speed);
         } else {
             this.cameraPosition.set(targetPosition);
         }
+
+        this.staticCamera.set(targetPosition);
+
+        players.forEach((player: Player) => {
+            if (player.visible) {
+                if (player.forcePos) {
+                    player.x = player.serverPosX;
+                    player.y = player.serverPosY;
+                } else {
+                    // lerp position
+                    const rate = 170;
+                    player.dt += delta;
+
+                    const overTick = Math.min(1.7, player.dt / rate);
+                    player.x = util.lerp(player.clientPosX, player.serverPosX, overTick);
+                    player.y = util.lerp(player.clientPosY, player.serverPosY, overTick);
+
+                    // lerp direction
+                    /*const positionDelta = player.positionTimestamp - player.lastPositionTimestamp;
+                    const tickDelta = lastTime - player.lastPositionTimestamp;
+                    const ratio = tickDelta / positionDelta;
+                    player.dir = MathHelper.lerpAngle(player.serverDir, player.lastDir, Math.min(1.2, ratio));*/
+                }
+            }
+        })
     }
 
     updateTransformMatrix() {
@@ -100,10 +136,17 @@ export default class RenderManager extends EventEmitter<{
     private render() {
         const currentMs = Date.now();
         const delta = currentMs - this.lastRender;
+        //if (delta < 500) { window.requestAnimationFrame(() => this.render()); return };
         this.lastRender = currentMs;
+
+        if (currentPlayer && currentPlayer.visible) {
+            this.updateCamera(delta, new Vector(Math.round(currentPlayer.x), Math.round(currentPlayer.y)));
+            //console.log(this.cameraPosition.toString(true));
+        }
 
         //this.clear();
         this.renderers.forEach(renderer => { renderer.render(delta) });
+        this.interfaceRenderers.forEach(renderer => { renderer.render(delta) });
 
         window.requestAnimationFrame(() => this.render());
     }
@@ -112,23 +155,27 @@ export default class RenderManager extends EventEmitter<{
         this.renderers.set(id, new rendererClass(this));
     }
 
+    createInterfaceRenderer(id: InterfaceRendererID, rendererClass: Class<InterfaceModule>) {
+        this.interfaceRenderers.set(id, new rendererClass(this));
+    }
+
     startRender() {
         this.lastRender = Date.now();
         window.requestAnimationFrame(() => this.render());
     }
 
-    private getCameraOffset() {
-        return new Vector(this.cameraPosition.x - (this.viewport.width / 2), this.cameraPosition.y - (this.viewport.height / 2));
+    private getCameraOffset(camera: Vector) {
+        return camera.clone().subtract(this.viewport.width / 2, this.viewport.height / 2);
     }
 
-    mapToContext(vector: Vector): Vector;
-    mapToContext(x: number, y: number): Vector;
+    mapToContext(camera: Vector, vector: Vector): Vector;
+    mapToContext(camera: Vector, x: number, y: number): Vector;
 
     /**
      * Projects given position from the map onto the canvas
      */
-     mapToContext(param1: Vector | number, param2?: number): Vector {
-        const offset = this.getCameraOffset();
+     mapToContext(camera: Vector, param1: Vector | number, param2?: number): Vector {
+        const offset = this.getCameraOffset(camera);
         if (typeof param1 === "object") {
             return param1.clone().subtract(offset);
         } else {
@@ -136,20 +183,20 @@ export default class RenderManager extends EventEmitter<{
         }
     }
 
-    canvasToMap(vector: Vector): Vector;
-    canvasToMap(x: number, y: number): Vector;
+    canvasToMap(camera: Vector, vector: Vector): Vector;
+    canvasToMap(camera: Vector, x: number, y: number): Vector;
 
     /**
      * Gives mouse map position from the mouse position on canvas
      */
-    canvasToMap(param1: Vector | number, param2?: number): Vector {
-        const offset = this.getCameraOffset();
+    canvasToMap(camera: Vector, param1: Vector | number, param2?: number): Vector {
+        const offset = this.getCameraOffset(camera);
         if (typeof param1 === "object") {
             return param1
                 .clone()
                 .subtract(this.transformMatrix.e, this.transformMatrix.f)
                 .divide(this.transformMatrix.a, this.transformMatrix.d)
-                .add(offset);
+                .add(offset)
         } else {
             return new Vector(
                 (param1 - this.transformMatrix.e) / this.transformMatrix.a + offset.x,
@@ -158,15 +205,14 @@ export default class RenderManager extends EventEmitter<{
         }
     }
 
-    canvasToContext(vector: Vector): Vector;
-    canvasToContext(x: number, y: number): Vector;
+    canvasToContext(camera: Vector, vector: Vector): Vector;
+    canvasToContext(camera: Vector, x: number, y: number): Vector;
 
-    canvasToContext(param1: Vector | number, param2?: number) {
+    canvasToContext(camera: Vector, param1: Vector | number, param2?: number) {
         if (typeof param1 === "object") {
-            return this.mapToContext(this.canvasToMap(param1));
+            return this.mapToContext(camera, this.canvasToMap(camera, param1));
         } else {
-            return this.mapToContext(this.canvasToMap(param1, param2!));
+            return this.mapToContext(camera, this.canvasToMap(camera, param1, param2!));
         }
-        
     }
 }

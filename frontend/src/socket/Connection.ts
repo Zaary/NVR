@@ -4,12 +4,13 @@ import EventPacket from "../event/EventPacket";
 import Logger from "../util/Logger";
 import { Packet, Side } from "./packets/Packet";
 import { PacketFactory } from "./packets/PacketFactory";
+import { PacketType } from "./packets/PacketType";
 
 const logger = new Logger("connection");
 
 let connection: Connection;
 const packetFactory = PacketFactory.getInstance();
-
+let was = false;
 class Connection extends EventEmitter {
 
     public socket: Injection | null;
@@ -21,13 +22,13 @@ class Connection extends EventEmitter {
         this.defaultReceiver = null;
     }
 
-    injectSocket(socket: WebSocket) {
+    injectSocket(socket: Injection) {
         this.socket = socket;
     }
 
-    send(packet: Packet) {
+    send(packet: Packet, allow?: boolean) {
         if (this.socket && this.socket.readyState == 1) {
-            this.socket.send(packetFactory.serializePacket(packet), true);
+            this.socket[allow ? "ss" : "send"](packetFactory.serializePacket(packet), true);
         }
     }
 };
@@ -96,11 +97,18 @@ class Injection extends WebSocket {
         
         super.send(packetFactory.serializePacket(event.getPacket()));
     }
+
+    ss(data: string | ArrayBufferLike | Blob | ArrayBufferView): void {
+        super.send(data);
+    }
 }
 
 Object.defineProperty(window, "WebSocket", {
     get() {
-        console.log(ErrorStackParser.parse(new Error()));
+        const caller = ErrorStackParser.parse(new Error())[1];
+        if (!caller.fileName || !(/(:?http|https):\/\/(?:sandbox.|dev.)?moomoo.io\/bundle.js/g.test(caller.fileName)) || caller.functionName != "Object.connect") {
+            alert("alert! your mom is fat! why are you not accessing WebSocket from bundle fucker");
+        }
         return Injection;
     },
     set(a) {

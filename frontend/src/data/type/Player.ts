@@ -5,6 +5,10 @@ import hats from "../moomoo/hats";
 import { items } from "../moomoo/items";
 
 class Player {
+    serverPosX: number;
+    serverPosY: number;
+    clientPosX: number;
+    clientPosY: number;
 
     public id: string;
     public sid: number;
@@ -40,6 +44,7 @@ class Player {
 	public alive: boolean = false;
 	public lockMove: boolean = false;
 	public lockDir: boolean = false;
+	public isLeader: boolean = false;
 	public minimapCounter: number = 0;
 	public chatCountdown: number = 0;
 	public shameCount: number = 0;
@@ -52,6 +57,7 @@ class Player {
 	public mouseState: number = 0;
 	public buildIndex: number = -1;
 	public weaponIndex: number = 0;
+	public weaponVariant: number = 0;
 	public dmgOverTime: {
         dmg?: number,
         doer?: Player,
@@ -85,6 +91,17 @@ class Player {
 	public reloads: { [key: number]: number } = {};
     public resources: { [key: string]: number } = {};
 	public visible: boolean = false;
+    forcePos: any;
+    x2: number | undefined;
+    y2: number | undefined;
+    d2: number | undefined;
+    t2: any;
+    t1: any;
+    x1: any;
+    y1: any;
+    lastTickPosX: number;
+    lastTickPosY: number;
+    serverDir: any;
     
     constructor(id: string, sid: number) {
         this.id = id;
@@ -116,6 +133,13 @@ class Player {
         this.lastPing = 0;
         this.iconIndex = 0;
         this.skinColor = 0;
+
+		this.serverPosX = 0;
+		this.serverPosY = 0;
+		this.clientPosX = 0;
+		this.clientPosY = 0;
+		this.lastTickPosX = 0;
+		this.lastTickPosY = 0;
     }
 
 	// SPAWN:
@@ -136,6 +160,7 @@ class Player {
 		this.mouseState = 0;
 		this.buildIndex = -1;
 		this.weaponIndex = 0;
+		this.weaponVariant = 0;
 		this.dmgOverTime = {};
 		this.noMovTimer = 0;
 		this.maxXP = 300;

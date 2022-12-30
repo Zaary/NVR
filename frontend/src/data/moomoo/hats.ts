@@ -1,4 +1,45 @@
-const hats = [{
+interface Hat {
+	id: number;
+	name: string;
+	dontSell?: boolean;
+	price: number;
+	scale: number;
+	xOff?: number;
+	yOff?: number;
+	desc: string;
+	spdMult?: number;
+	dmgMultO?: number;
+	healthRegen?: number;
+	spin?: boolean;
+	dmg?: number;
+	healD?: number;
+	coldM?: number;
+	watrImm?: boolean;
+	aMlt?: number;
+	dmgMult?: number;
+	poisonRes?: number;
+	extraGold?: number;
+	projCost?: number;
+	antiTurret?: number;
+	dmgK?: number;
+	poisonDmg?: number;
+	bullRepel?: number;
+	poisonTime?: number;
+	topSprite?: boolean;
+	pps?: number;
+	turret?: {
+		proj: number,
+		range: number,
+		rate: number
+	}
+	atkSpd?: number;
+	kScrM?: number;
+	bDmg?: number;
+	goldSteal?: number;
+	noEat?: boolean;
+	invisTimer?: number;
+}
+const hats: Hat[] = [{
 	id: 45,
 	name: "Shame!",
 	dontSell: true,
@@ -319,3 +360,4 @@ const hats = [{
 }];
 
 export default hats;
+export { Hat }

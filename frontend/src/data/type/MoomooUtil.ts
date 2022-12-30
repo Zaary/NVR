@@ -18,12 +18,12 @@ const decel = function (val: number, cel: number) {
 	return val;
 }
 
-const getDistance = function (x1: number, y1: number, x2: number, y2: number) {
-	return Math.hypot(x1 - x2, y1 - y2);
+const getDistance = function (x1, y1, x2, y2) {
+	return Math.sqrt((x2 -= x1) * x2 + (y2 -= y1) * y2);
 }
 
-const getDirection = function (from_x: number, from_y: number, to_x: number, to_y: number) {
-	return Math.atan2(to_y - from_y, from_y - to_y);
+const getDirection = function (x1, y1, x2, y2) {
+	return Math.atan2(y1 - y2, x1 - x2);
 }
 
 const getAngleDist = function (a: number, b: number) {

@@ -1,5 +1,7 @@
 import Player from "../type/Player";
 
+
+
 const groups = [{
 	id: 0,
 	name: "food",
@@ -403,7 +405,45 @@ const weapons = [{
 	speed: 1500
 }];
 
-const list = [{
+interface Item {
+	id: number;
+	age?: number;
+	group: any,
+	name: string;
+	desc: string;
+	req: (string | number)[];
+	consume?: (doer: any) => any;
+	scale: number;
+	holdOffset: number;
+	projDmg?: boolean;
+	health?: number;
+	placeOffset?: number;
+	pre?: number;
+	dmg?: number;
+	spritePadding?: number;
+	pDmg?: number;
+	turnSpeed?: number;
+	pps?: number;
+	iconLineMult?: number;
+	type?: number;
+	colDiv?: number;
+	trap?: boolean;
+	ignoreCollision?: boolean;
+	hideFromEnemy?: boolean;
+	boostSpeed?: number;
+	doUpdate?: boolean;
+	projectile?: number;
+	shootIndex?: number;
+	zIndex?: number;
+	shootRange?: number;
+	shootRate?: number;
+	healCol?: number;
+	spawnPoint?: boolean;
+	blocker?: number;
+	teleport?: boolean;
+}
+
+const list: Item[] = [{
 	id: -1,
 	group: groups[0],
 	name: "apple",
@@ -725,4 +765,4 @@ for (var i = 0; i < list.length; ++i) {
 }
 
 const items = { groups, projectiles, weapons, list };
-export { items };
+export { items, Item };
