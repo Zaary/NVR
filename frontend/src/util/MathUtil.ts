@@ -48,6 +48,17 @@ function lerpAngle(value1: number, value2: number, amount: number) {
 	return (value % Math.PI * 2);
 }
 
+type Color = [number, number, number, number];
+
+function combineColors(base: Color, added: Color): Color {
+	let mix = [];
+	mix[3] = 1 - (1 - added[3]) * (1 - base[3]); // alpha
+	mix[0] = Math.round((added[0] * added[3] / mix[3]) + (base[0] * base[3] * (1 - added[3]) / mix[3])); // red
+	mix[1] = Math.round((added[1] * added[3] / mix[3]) + (base[1] * base[3] * (1 - added[3]) / mix[3])); // green
+	mix[2] = Math.round((added[2] * added[3] / mix[3]) + (base[2] * base[3] * (1 - added[3]) / mix[3])); // blue
+	return <Color> mix;
+}
+
 export default {
     randInt,
     randFloat,
@@ -56,5 +67,6 @@ export default {
     getDistance,
     getDirection,
     getAngleDist,
-    lerpAngle
+    lerpAngle,
+	combineColors
 }

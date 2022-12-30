@@ -95,7 +95,7 @@ function process(packet: Packet) {
                 // type (data[5]) is null for player buildings but set for natural objects
                 // id (data[6]) is null for natural objects but is set for player buildings
                 // owner sid (data[7]) is -1 for natural objects otherwise is set.
-                core.objectManager.add(data[0], data[1], data[2], data[3], data[4], data[5], items.list[data[6]], (data[7] >= 0 ? { sid: data[7] } : null));
+                core.objectManager.add(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
             }
             break;
         case PacketType.REMOVE_GAME_OBJ:

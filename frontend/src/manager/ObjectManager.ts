@@ -1,7 +1,7 @@
 import { players } from "../core/Core";
 import config from "../data/moomoo/config";
 import { items } from "../data/moomoo/items";
-import { GameObject, PlayerBuilding } from "../data/type/GameObject";
+import { GameObject, NaturalObject, PlayerBuilding } from "../data/type/GameObject";
 import { util } from "../data/type/MoomooUtil";
 import Player from "../data/type/Player";
 import { SidArray } from "../util/type/SidArray";
@@ -148,7 +148,12 @@ export default class ObjectManager {
         
         // otherwise create a new object and push it into objects
         if (!tmpObj) {
-            tmpObj = new GameObject(sid, new Vector(x, y), dir, s);
+            if (owner === -1) {
+                tmpObj = new NaturalObject(sid, new Vector(x, y), dir, s, type);
+            } else {
+                tmpObj = new PlayerBuilding(sid, new Vector(x, y), dir, s, data, owner);
+            }
+
             this.gameObjects.push(tmpObj);
         }
 

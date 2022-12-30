@@ -19,6 +19,16 @@ class GameObject {
     }
 }
 
+class NaturalObject extends GameObject {
+
+    public type: number;
+
+    constructor(sid: number, position: Vector, dir: number, scale: number, type: number) {
+        super(sid, position, dir, scale);
+        this.type = type;
+    }
+}
+
 class PlayerBuilding extends GameObject {
     public stats: Item;
     public owner: { sid: number };
@@ -34,4 +44,4 @@ class PlayerBuilding extends GameObject {
     }
 }
 
-export { GameObject, PlayerBuilding }
+export { GameObject, NaturalObject, PlayerBuilding }

@@ -1,5 +1,5 @@
 import { EventEmitter } from "tsee";
-import { currentPlayer, players } from "../core/Core";
+import { Core, currentPlayer, players } from "../core/Core";
 import config from "../data/moomoo/config";
 import { util } from "../data/type/MoomooUtil";
 import Player from "../data/type/Player";
@@ -18,9 +18,11 @@ type InterfaceRendererID = "packetCount";
 
 export abstract class Renderer {
     protected renderManager: RenderManager;
+    protected core: Core;
 
-    constructor(renderManager: RenderManager) {
+    constructor(renderManager: RenderManager, core: Core) {
         this.renderManager = renderManager;
+        this.core = core;
     }
 
     abstract render(delta: number): void;
@@ -136,7 +138,6 @@ export default class RenderManager extends EventEmitter<{
     private render() {
         const currentMs = Date.now();
         const delta = currentMs - this.lastRender;
-        //if (delta < 500) { window.requestAnimationFrame(() => this.render()); return };
         this.lastRender = currentMs;
 
         if (currentPlayer && currentPlayer.visible) {
@@ -147,20 +148,29 @@ export default class RenderManager extends EventEmitter<{
         //this.clear();
         this.renderers.forEach(renderer => { renderer.render(delta) });
         this.interfaceRenderers.forEach(renderer => { renderer.render(delta) });
-
-        window.requestAnimationFrame(() => this.render());
     }
 
-    createRenderer(id: RendererID, rendererClass: Class<Renderer>) {
-        this.renderers.set(id, new rendererClass(this));
+    createRenderer(id: RendererID, rendererClass: Class<Renderer>, core: Core) {
+        this.renderers.set(id, new rendererClass(this, core));
     }
 
-    createInterfaceRenderer(id: InterfaceRendererID, rendererClass: Class<InterfaceModule>) {
-        this.interfaceRenderers.set(id, new rendererClass(this));
+    createInterfaceRenderer(id: InterfaceRendererID, rendererClass: Class<InterfaceModule>, core: Core) {
+        this.interfaceRenderers.set(id, new rendererClass(core, this));
     }
 
-    startRender() {
+    createRenderHook() {
         this.lastRender = Date.now();
+        const _ = this;
+
+        const originalAnimFrame = window.requestAnimationFrame;
+        window.requestAnimationFrame = function(callback: FrameRequestCallback): number {
+            // call moomoo's renderer
+            const result = originalAnimFrame.call(this, callback);
+            // then call our renderer
+            _.render();
+            // and finally return result from moomoo's renderer
+            return result;
+        }
         window.requestAnimationFrame(() => this.render());
     }
 

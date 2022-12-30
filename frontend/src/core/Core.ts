@@ -21,6 +21,8 @@ import PacketCountModule from "../render/interface/PacketCountModule";
 import ModuleManager from "../features/ModuleManager";
 import InteractionEngine from "../util/engine/InteractionEngine";
 import { core } from "../main";
+import BundleProxy from "../injector/BundleProxy";
+import API from "../injector/api/API";
 
 const logger = new Logger("core");
 
@@ -30,18 +32,6 @@ let target: Player | null = null;
 const players = new SidArray<Player>();
 const animals = new SidArray<any>();
 const buildings = new SidArray<GameObject>();
-
-connection.once("ready", function() {
-    /*pathfinder.on("path", function(path) {
-        pathfind(path);
-    });*/
-
-    connection.on("packetreceive", function(event: EventPacket) {
-        PacketHandler.process(event.getPacket());
-
-        core.moduleManager.onPacketReceive(event);
-    });
-});
 
 /*
 const pathfinder = new Pathfinder();
@@ -68,6 +58,8 @@ class Core extends EventEmitter {
     private lastUpdate: number;
     private scheduledActions: Action[];
 
+    public bundleAPI: API;
+
     public objectManager: ObjectManager;
     public renderManager: RenderManager | null;
     public moduleManager: ModuleManager;
@@ -80,6 +72,8 @@ class Core extends EventEmitter {
         super();
 
         logger.info(`launched StarLit core version ${Core.VER} by ${Core.AUTHORS.join(", ")}`);
+
+        this.bundleAPI = new API();
 
         this.lastUpdate = Date.now();
         this.scheduledActions = [];
@@ -121,16 +115,27 @@ class Core extends EventEmitter {
 
         DocumentUtil.waitForElement("#gameCanvas", (element: Element) => {
             this.renderManager = new RenderManager(<HTMLCanvasElement> element, 1920, 1080);
-        
-            this.renderManager.createRenderer("background", HoverInfoModule);
 
-            this.renderManager.createInterfaceRenderer("packetCount", PacketCountModule);
+            this.renderManager.createRenderer("background", HoverInfoModule, this);
 
-            this.renderManager.startRender();
+            this.renderManager.createInterfaceRenderer("packetCount", PacketCountModule, this);
+
+            this.renderManager.createRenderHook();
+        });
+
+        // listen for received packets (always process the packet before passing it to modules)
+        connection.on("packetreceive", (event: EventPacket) => {
+            PacketHandler.process(event.getPacket());
+            this.moduleManager.onPacketReceive(event);
+        });
+
+        DocumentUtil.deleteOnCreation(element => {
+            return (element instanceof HTMLScriptElement && /moomoo\.io\/bundle\.js$/g.test(element.src));
+        }, (script) => {
+            BundleProxy.loadBundle((<HTMLScriptElement> script).src, this.bundleAPI);
         });
         
-        this.update = this.update.bind(this);
-        requestAnimationFrame(this.update);
+        setInterval(this.update.bind(this), 1);
     }
 
     update() {
@@ -142,8 +147,6 @@ class Core extends EventEmitter {
         this.emit("update", delta);
         
         this.moduleManager.onUpdate(delta);
-
-        requestAnimationFrame(this.update);
     }
 
     runUppermostAction(action: ActionType, tick: number) {

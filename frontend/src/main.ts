@@ -7,9 +7,18 @@ import Logger from "./util/Logger";
 
 const logger = new Logger("main");
 
-DocumentUtil.init(document);
+if (document && document instanceof Node) {
+    DocumentUtil.init(document);
+} else {
+    window.addEventListener("load", () => DocumentUtil.init(document));
+}
 
 logger.info("initializing core");
 const core = new Core();
+
+if (!core) {
+    logger.error("critical: core failed to load!");
+    alert("critical: core failed to load! please report this to developers!");
+}
 
 export { core };

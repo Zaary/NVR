@@ -103,11 +103,14 @@ class Injection extends WebSocket {
     }
 }
 
+const originalWebSocket = WebSocket;
+
 Object.defineProperty(window, "WebSocket", {
     get() {
         const caller = ErrorStackParser.parse(new Error())[1];
-        if (!caller.fileName || !(/(:?http|https):\/\/(?:sandbox.|dev.)?moomoo.io\/bundle.js/g.test(caller.fileName)) || caller.functionName != "Object.connect") {
-            alert("alert! your mom is fat! why are you not accessing WebSocket from bundle fucker");
+        if (!caller.fileName || !(/(?:(?:http|https):\/\/(?:sandbox\.|dev\.)?moomoo\.io\/bundle\.js|\(unknown source\)\))/g.test(caller.fileName)) || caller.functionName != "Object.connect") {
+            logger.warn("accessing WebSocket from unkown source:", caller);
+            return originalWebSocket;
         }
         return Injection;
     },
