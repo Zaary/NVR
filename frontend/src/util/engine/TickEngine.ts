@@ -1,32 +1,51 @@
-import EventEmitter from "events";
+import { EventEmitter } from "tsee";
 import { Core } from "../../core/Core";
 import config from "../../data/moomoo/config";
 import EventPacket from "../../event/EventPacket";
 import { connection } from "../../socket/Connection";
 import { Packet } from "../../socket/packets/Packet";
 import { PacketType } from "../../socket/packets/PacketType";
+import MathUtil from "../MathUtil";
 
-class TickEngine extends EventEmitter {
+class TickEngine extends EventEmitter<{
+    ping: (ping: number) => void;
+    serverlag: (lag: number) => void;
+    tick: (tickIndex: number) => void;
+    pretick: (futureTickIndex: number) => void;
+}> {
 
     public tickIndex: number;
+
     private pingQueue: number[];
+    private lastPing: number;
     public ping: number;
     private lastTick: number;
-    private nextTick: number;
-    private lastEmittedUnsafe: number;
+
+    private predictionTick: number;
+    private emittedPredictionTick: number;
+
+    private pings: number[];
+    private deltas: number[];
 
     constructor(core: Core) {
         super();
-        this.tickIndex = 0;
+        this.tickIndex = -1;
+
         this.pingQueue = [];
+        this.lastPing = 0;
         this.ping = 0;
         this.lastTick = 0;
-        this.nextTick = 0;
-        this.lastEmittedUnsafe = -1;
+
+        this.predictionTick = -1;
+        this.emittedPredictionTick = -1;
+
+        this.pings = [];
+        this.deltas = [];
 
         connection.on("packetsend", (event: EventPacket) => {
             if (event.getPacket().type == PacketType.PING) {
                 this.pingQueue.push(Date.now());
+                this.lastPing = Date.now();
             }
         });
 
@@ -36,21 +55,47 @@ class TickEngine extends EventEmitter {
             if (packet.type == PacketType.PING) {
                 const shift = this.pingQueue.shift()!;
                 this.ping = (Date.now() - shift) / 2;
+
+                if (this.pings.length > 5) {
+                    this.pings.pop();
+                    this.pings.push(this.ping);
+                    this.pings.shift();
+                } else {
+                    this.pings.push(this.ping);
+                }
+
                 this.emit("ping", this.ping);
             } else if (packet.type == PacketType.PLAYER_UPDATE) {
+                this.tickIndex++;
+
                 this.lastTick = Date.now() - this.ping;
                 if (this.serverLag > 0) this.emit("serverlag", this.serverLag);
 
-                this.nextTick = this.lastTick + (1000 / config.serverUpdateRate);
-                this.emit("tick", ++this.tickIndex);
+                this.emit("tick", this.tickIndex);
             }
         });
 
         core.on("update", (delta: number) => {
-            if (this.lastEmittedUnsafe === this.tickIndex) return;
-            if (Date.now() + this.ping * 1.5 + this.serverLag + delta * 1.3 >= this.nextTick) {
-                this.emit("unsafetick", this.tickIndex + 1);
-                this.lastEmittedUnsafe = this.tickIndex;
+            if (this.pings.length >= 5 && this.pingQueue.length > 0) this.pings[5] = (Date.now() - this.lastPing) / 2;
+
+            this.deltas.push(delta);
+            if (this.deltas.length >= 8) this.deltas.shift();
+
+            const maxDelta = Math.max(...this.deltas);
+            const avgDelta = MathUtil.averageOfArray(this.deltas);
+            const maxPing = Math.max(...this.pings);
+            const avgPing = MathUtil.averageOfArray(this.pings);
+
+            const safeDelta = maxDelta > avgDelta * 1.3 ? avgDelta : maxDelta;
+            const safePing = maxPing > avgPing * 1.8 ? avgPing : maxPing;
+
+            const safe = safePing * 1.35 + safeDelta * 1.2;
+
+            this.predictionTick = this.tickIndex + Math.ceil(safe / (1000 / config.serverUpdateRate));
+
+            if (this.predictionTick > this.emittedPredictionTick) {
+                this.emit("pretick", this.predictionTick);
+                this.emittedPredictionTick = this.predictionTick;
             }
         });
     }
@@ -60,7 +105,7 @@ class TickEngine extends EventEmitter {
     }
 
     get serverLag(): number {
-        return Math.max(Date.now() - this.nextTick, 0);
+        return Math.max(Date.now() - this.lastTick + (1000 / config.serverUpdateRate), 0);
     }
 }
 

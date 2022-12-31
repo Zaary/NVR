@@ -1,10 +1,18 @@
 import Player from "../type/Player";
 
+interface Group {
+	id: number;
+	name: string;
+	layer: number;
+	place: boolean;
+	limit: number;
+}
 
-
-const groups = [{
+const groups: Group[] = [{
 	id: 0,
 	name: "food",
+	place: false,
+	limit: -1,
 	layer: 0
 }, {
 	id: 1,
@@ -408,7 +416,7 @@ const weapons = [{
 interface Item {
 	id: number;
 	age?: number;
-	group: any,
+	group: Group,
 	name: string;
 	desc: string;
 	req: (string | number)[];

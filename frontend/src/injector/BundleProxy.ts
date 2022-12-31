@@ -36,6 +36,8 @@ function evalBundle(code: string, injectedApi: any) {
     const logger = new Logger(window.console, "bundle-vm-" + hash);
 
     vm.call(/*window*/vm, injectedApi, logger);
+    setTimeout(() => (window.onload && window.onload(new Event("load")), window.captchaCallback!()), 1);
+    
 }
 
 export default { loadBundle };

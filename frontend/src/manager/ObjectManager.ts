@@ -11,12 +11,12 @@ export default class ObjectManager {
 
     private gameObjects: SidArray<GameObject>;
     private grids: Record<string, any>;
-    //private updateObjects: any[];
+    private updateObjects: GameObject[];
 
     constructor() {
         this.gameObjects = new SidArray<GameObject>();
         this.grids = {};
-        //this.updateObjects = [];
+        this.updateObjects = [];
 
         Object.defineProperty(window, "objectManager", {
             value: this
@@ -27,8 +27,6 @@ export default class ObjectManager {
     setObjectGrids(obj: GameObject) {
         let tmpX, tmpY;
         let tmpS = config.mapScale / config.colGrid;
-
-        console.log("setting object grid");
 
         var objX = Math.min(config.mapScale, Math.max(0, obj.position.x));
         var objY = Math.min(config.mapScale, Math.max(0, obj.position.y));
@@ -63,13 +61,16 @@ export default class ObjectManager {
         this.gameObjects.remove(obj);
         this.removeObjGrid(obj);
         /*if (server) {
-            if (obj.owner && obj.pps) obj.owner.pps -= obj.pps;
+            if (obj.owner && obj.pps) obj.owner.pps -= obj.pps;*/
             this.removeObjGrid(obj);
-            var tmpIndx = this.updateObjects.indexOf(obj);
-            if (tmpIndx >= 0) {
-                this.updateObjects.splice(tmpIndx, 1);
+
+            if (obj instanceof PlayerBuilding) {
+                var tmpIndx = this.updateObjects.indexOf(obj);
+                if (tmpIndx >= 0) {
+                    this.updateObjects.splice(tmpIndx, 1);
+                }
             }
-        }*/
+        /*}*/
     };
 
     // HIT OBJECT:
@@ -162,8 +163,8 @@ export default class ObjectManager {
         
         // server function
         this.setObjectGrids(tmpObj);
-            /*if (tmpObj.doUpdate)
-                this.updateObjects.push(tmpObj);*/
+        
+        this.updateObjects.push(tmpObj);
     };
 
     // DISABLE BY SID:
@@ -309,5 +310,19 @@ export default class ObjectManager {
             }
         }
         return false;
+    }
+
+    wiggleObject(sid: number, dir: number) {
+        const object = this.gameObjects.findBySid(sid);
+        if (object) object.wiggle.add(new Vector(
+            config.gatherWiggle * Math.cos(dir),
+            config.gatherWiggle * Math.sin(dir)
+        ));
+    }
+
+    update(delta: number) {
+        for (let i = 0; i < this.updateObjects.length; i++) {
+            this.updateObjects[i].update(delta);
+        }
     }
 }

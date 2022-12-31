@@ -14,7 +14,6 @@ import { PacketCountEngine } from "../util/engine/PacketCountEngine";
 import EventPacket from "../event/EventPacket";
 import ObjectManager from "../manager/ObjectManager";
 import { GameObject } from "../data/type/GameObject";
-import DocumentUtil from "../util/DocumentUtil";
 import RenderManager from "../render/RenderManager";
 import HoverInfoModule from "../render/HoverInfoModule";
 import PacketCountModule from "../render/interface/PacketCountModule";
@@ -71,9 +70,10 @@ class Core extends EventEmitter {
     constructor() {
         super();
 
+        this.bundleAPI = new API();
+
         logger.info(`launched StarLit core version ${Core.VER} by ${Core.AUTHORS.join(", ")}`);
 
-        this.bundleAPI = new API();
 
         this.lastUpdate = Date.now();
         this.scheduledActions = [];
@@ -88,8 +88,7 @@ class Core extends EventEmitter {
 
         this.tickEngine.once("ping", this.packetEngine.handlePing.bind(this.packetEngine));
 
-        this.tickEngine.on("unsafetick", (tick: number) => {
-
+        this.tickEngine.on("pretick", (tick: number) => {
             this.moduleManager.onUnsafeTick(tick);
 
             // run actions based on priority
@@ -112,30 +111,24 @@ class Core extends EventEmitter {
             this.moduleManager.onKeyup(event.keyCode);
         });
 
-
-        DocumentUtil.waitForElement("#gameCanvas", (element: Element) => {
-            this.renderManager = new RenderManager(<HTMLCanvasElement> element, 1920, 1080);
-
-            this.renderManager.createRenderer("background", HoverInfoModule, this);
-
-            this.renderManager.createInterfaceRenderer("packetCount", PacketCountModule, this);
-
-            this.renderManager.createRenderHook();
-        });
-
         // listen for received packets (always process the packet before passing it to modules)
         connection.on("packetreceive", (event: EventPacket) => {
             PacketHandler.process(event.getPacket());
             this.moduleManager.onPacketReceive(event);
         });
 
-        DocumentUtil.deleteOnCreation(element => {
-            return (element instanceof HTMLScriptElement && /moomoo\.io\/bundle\.js$/g.test(element.src));
-        }, (script) => {
-            BundleProxy.loadBundle((<HTMLScriptElement> script).src, this.bundleAPI);
-        });
-        
         setInterval(this.update.bind(this), 1);
+    }
+
+    patchBundle(src: string) {
+        BundleProxy.loadBundle(src, this.bundleAPI);
+    }
+
+    initializeRenderer(canvas: HTMLCanvasElement) {
+        this.renderManager = new RenderManager(canvas, 1920, 1080);
+        this.renderManager.createRenderer("background", HoverInfoModule, this);
+        this.renderManager.createInterfaceRenderer("packetCount", PacketCountModule, this);
+        this.renderManager!.createRenderHook();
     }
 
     update() {
@@ -146,6 +139,7 @@ class Core extends EventEmitter {
         // emit event to be used in other modules
         this.emit("update", delta);
         
+        this.objectManager.update(delta);
         this.moduleManager.onUpdate(delta);
     }
 

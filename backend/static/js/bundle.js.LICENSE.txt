@@ -2,8 +2,6 @@
 
 /*! !../../node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js */
 
-/*! !../../node_modules/style-loader/dist/runtime/insertBySelector.js */
-
 /*! !../../node_modules/style-loader/dist/runtime/insertStyleElement.js */
 
 /*! !../../node_modules/style-loader/dist/runtime/setAttributesWithoutAttributes.js */
@@ -11,6 +9,18 @@
 /*! !../../node_modules/style-loader/dist/runtime/styleDomAPI.js */
 
 /*! !../../node_modules/style-loader/dist/runtime/styleTagTransform.js */
+
+/*! ../../../core/Core */
+
+/*! ../../../data/moomoo/items */
+
+/*! ../../../main */
+
+/*! ../../../socket/Connection */
+
+/*! ../../../socket/packets/Packet */
+
+/*! ../../../socket/packets/PacketType */
 
 /*! ../../data/moomoo/config */
 
@@ -22,19 +32,45 @@
 
 /*! ../../socket/packets/PacketType */
 
+/*! ../../util/DrawUtil */
+
+/*! ../../util/Logger */
+
+/*! ../../util/engine/PacketCountEngine */
+
 /*! ../../util/type/Vector */
 
-/*! ../RenderManager */
+/*! ../InterfaceModule */
+
+/*! ../Logger */
+
+/*! ../MathUtil */
+
+/*! ../Module */
+
+/*! ../Transformation */
 
 /*! ../core/Core */
 
-/*! ../data/moomoo/items */
+/*! ../data/moomoo/config */
 
 /*! ../data/type/GameObject */
+
+/*! ../data/type/MoomooUtil */
 
 /*! ../data/type/Player */
 
 /*! ../event/EventPacket */
+
+/*! ../features/ModuleManager */
+
+/*! ../injector/BundleProxy */
+
+/*! ../injector/api/API */
+
+/*! ../main */
+
+/*! ../manager/ObjectManager */
 
 /*! ../moomoo/accessories */
 
@@ -43,6 +79,12 @@
 /*! ../moomoo/hats */
 
 /*! ../moomoo/items */
+
+/*! ../render/HoverInfoModule */
+
+/*! ../render/RenderManager */
+
+/*! ../render/interface/PacketCountModule */
 
 /*! ../socket/Connection */
 
@@ -56,9 +98,15 @@
 
 /*! ../type/MoomooUtil */
 
+/*! ../util/DrawUtil */
+
 /*! ../util/Logger */
 
 /*! ../util/MathUtil */
+
+/*! ../util/StringUtil */
+
+/*! ../util/engine/InteractionEngine */
 
 /*! ../util/engine/PacketCountEngine */
 
@@ -77,6 +125,8 @@
 /*! ./Packet */
 
 /*! ./PacketType */
+
+/*! ./RenderManager */
 
 /*! ./buffer-global */
 
@@ -122,6 +172,10 @@
 
 /*! ./flex-buffer */
 
+/*! ./modules/building/ItemPlacer */
+
+/*! ./modules/combat/Autoheal */
+
 /*! ./packets/Packet */
 
 /*! ./packets/PacketFactory */
@@ -134,13 +188,13 @@
 
 /*! ./read-token */
 
-/*! ./render/RenderManager */
+/*! ./socket/Connection */
 
-/*! ./render/background/BackgroundRenderer */
+/*! ./transformations/TObjectSpriteLoader */
+
+/*! ./transformations/TSourceMapping */
 
 /*! ./types */
-
-/*! ./util/DocumentUtil */
 
 /*! ./util/Logger */
 
@@ -201,6 +255,10 @@
   \*************************************/
 
 /*!***************************************!*\
+  !*** ./frontend/src/util/DrawUtil.ts ***!
+  \***************************************/
+
+/*!***************************************!*\
   !*** ./frontend/src/util/MathUtil.ts ***!
   \***************************************/
 
@@ -228,12 +286,20 @@
   !*** ./frontend/src/core/ActionType.ts ***!
   \*****************************************/
 
+/*!*****************************************!*\
+  !*** ./frontend/src/util/StringUtil.ts ***!
+  \*****************************************/
+
 /*!******************************************!*\
   !*** ./frontend/src/data/moomoo/hats.ts ***!
   \******************************************/
 
 /*!******************************************!*\
   !*** ./frontend/src/data/type/Player.ts ***!
+  \******************************************/
+
+/*!******************************************!*\
+  !*** ./frontend/src/injector/api/API.ts ***!
   \******************************************/
 
 /*!******************************************!*\
@@ -250,10 +316,6 @@
 
 /*!*******************************************!*\
   !*** ./frontend/src/socket/Connection.ts ***!
-  \*******************************************/
-
-/*!*******************************************!*\
-  !*** ./frontend/src/util/DocumentUtil.ts ***!
   \*******************************************/
 
 /*!********************************************!*\
@@ -273,6 +335,10 @@
   \**********************************************/
 
 /*!**********************************************!*\
+  !*** ./frontend/src/injector/BundleProxy.ts ***!
+  \**********************************************/
+
+/*!**********************************************!*\
   !*** ./frontend/src/render/RenderManager.ts ***!
   \**********************************************/
 
@@ -283,6 +349,10 @@
 /*!**********************************************!*\
   !*** ./node_modules/msgpack-lite/lib/ext.js ***!
   \**********************************************/
+
+/*!***********************************************!*\
+  !*** ./frontend/src/manager/ObjectManager.ts ***!
+  \***********************************************/
 
 /*!***********************************************!*\
   !*** ./frontend/src/socket/packets/Packet.ts ***!
@@ -297,6 +367,18 @@
   \***********************************************/
 
 /*!************************************************!*\
+  !*** ./frontend/src/features/ModuleManager.ts ***!
+  \************************************************/
+
+/*!************************************************!*\
+  !*** ./frontend/src/render/HoverInfoModule.ts ***!
+  \************************************************/
+
+/*!************************************************!*\
+  !*** ./frontend/src/render/InterfaceModule.ts ***!
+  \************************************************/
+
+/*!************************************************!*\
   !*** ./frontend/src/util/engine/TickEngine.ts ***!
   \************************************************/
 
@@ -306,6 +388,14 @@
 
 /*!*************************************************!*\
   !*** ./frontend/src/data/moomoo/accessories.ts ***!
+  \*************************************************/
+
+/*!*************************************************!*\
+  !*** ./frontend/src/features/modules/Module.ts ***!
+  \*************************************************/
+
+/*!*************************************************!*\
+  !*** ./frontend/src/injector/Transformation.ts ***!
   \*************************************************/
 
 /*!*************************************************!*\
@@ -397,6 +487,10 @@
   \******************************************************/
 
 /*!*******************************************************!*\
+  !*** ./frontend/src/util/engine/InteractionEngine.ts ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
   !*** ./frontend/src/util/engine/PacketCountEngine.ts ***!
   \*******************************************************/
 
@@ -417,6 +511,10 @@
   \********************************************************/
 
 /*!**********************************************************!*\
+  !*** ./frontend/src/features/modules/combat/Autoheal.ts ***!
+  \**********************************************************/
+
+/*!**********************************************************!*\
   !*** ./node_modules/msgpack-lite/lib/bufferish-array.js ***!
   \**********************************************************/
 
@@ -428,8 +526,12 @@
   !*** ./node_modules/msgpack-lite/lib/bufferish-buffer.js ***!
   \***********************************************************/
 
+/*!************************************************************!*\
+  !*** ./frontend/src/render/interface/PacketCountModule.ts ***!
+  \************************************************************/
+
 /*!**************************************************************!*\
-  !*** ./frontend/src/render/background/BackgroundRenderer.ts ***!
+  !*** ./frontend/src/features/modules/building/ItemPlacer.ts ***!
   \**************************************************************/
 
 /*!**************************************************************!*\
@@ -448,13 +550,17 @@
   !*** ./node_modules/style-loader/dist/runtime/styleDomAPI.js ***!
   \***************************************************************/
 
-/*!********************************************************************!*\
-  !*** ./node_modules/style-loader/dist/runtime/insertBySelector.js ***!
-  \********************************************************************/
+/*!*****************************************************************!*\
+  !*** ./frontend/src/injector/transformations/TSourceMapping.ts ***!
+  \*****************************************************************/
 
 /*!*********************************************************************!*\
   !*** ./node_modules/style-loader/dist/runtime/styleTagTransform.js ***!
   \*********************************************************************/
+
+/*!**********************************************************************!*\
+  !*** ./frontend/src/injector/transformations/TObjectSpriteLoader.ts ***!
+  \**********************************************************************/
 
 /*!**********************************************************************!*\
   !*** ./node_modules/style-loader/dist/runtime/insertStyleElement.js ***!

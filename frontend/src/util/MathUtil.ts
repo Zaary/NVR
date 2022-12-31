@@ -59,6 +59,10 @@ function combineColors(base: Color, added: Color): Color {
 	return <Color> mix;
 }
 
+function averageOfArray(array: number[]) {
+	return array.reduce((previous, acumulator) => previous + acumulator, 0) / array.length;
+}
+
 export default {
     randInt,
     randFloat,
@@ -68,5 +72,6 @@ export default {
     getDirection,
     getAngleDist,
     lerpAngle,
-	combineColors
+	combineColors,
+	averageOfArray
 }

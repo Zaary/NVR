@@ -71,7 +71,7 @@
                 setTarget: () => setTarget,
                 target: () => target
             });
-            var events__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./node_modules/events/events.js"), events__WEBPACK_IMPORTED_MODULE_0___default = __webpack_require__.n(events__WEBPACK_IMPORTED_MODULE_0__), _socket_Connection__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./frontend/src/socket/Connection.ts"), _socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("./frontend/src/socket/PacketHandler.ts"), _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__("./frontend/src/socket/packets/Packet.ts"), _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__("./frontend/src/socket/packets/PacketType.ts"), _util_Logger__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__("./frontend/src/util/Logger.ts"), _util_type_SidArray__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__("./frontend/src/util/type/SidArray.ts"), _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__("./frontend/src/util/engine/TickEngine.ts"), _Action__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__("./frontend/src/core/Action.ts"), _ActionType__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__("./frontend/src/core/ActionType.ts"), _util_engine_PacketCountEngine__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__("./frontend/src/util/engine/PacketCountEngine.ts");
+            var events__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./node_modules/events/events.js"), events__WEBPACK_IMPORTED_MODULE_0___default = __webpack_require__.n(events__WEBPACK_IMPORTED_MODULE_0__), _socket_Connection__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./frontend/src/socket/Connection.ts"), _socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("./frontend/src/socket/PacketHandler.ts"), _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__("./frontend/src/socket/packets/Packet.ts"), _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__("./frontend/src/socket/packets/PacketType.ts"), _util_Logger__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__("./frontend/src/util/Logger.ts"), _util_type_SidArray__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__("./frontend/src/util/type/SidArray.ts"), _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__("./frontend/src/util/engine/TickEngine.ts"), _Action__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__("./frontend/src/core/Action.ts"), _ActionType__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__("./frontend/src/core/ActionType.ts"), _util_engine_PacketCountEngine__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__("./frontend/src/util/engine/PacketCountEngine.ts"), _manager_ObjectManager__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__("./frontend/src/manager/ObjectManager.ts"), _render_RenderManager__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__("./frontend/src/render/RenderManager.ts"), _render_HoverInfoModule__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__("./frontend/src/render/HoverInfoModule.ts"), _render_interface_PacketCountModule__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__("./frontend/src/render/interface/PacketCountModule.ts"), _features_ModuleManager__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__("./frontend/src/features/ModuleManager.ts"), _util_engine_InteractionEngine__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__("./frontend/src/util/engine/InteractionEngine.ts"), _injector_BundleProxy__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__("./frontend/src/injector/BundleProxy.ts"), _injector_api_API__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__("./frontend/src/injector/api/API.ts");
             function _typeof(obj) {
                 return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(obj) {
                     return typeof obj;
@@ -154,11 +154,6 @@
             function setTarget(player) {
                 target = player;
             }
-            _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.once("ready", (function() {
-                _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.on("packetreceive", (function(event) {
-                    _socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__.PacketHandler.process(event.getPacket());
-                }));
-            }));
             var Core = function(_EventEmitter) {
                 !function(subClass, superClass) {
                     if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function");
@@ -177,18 +172,45 @@
                     var _this;
                     return function(instance, Constructor) {
                         if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-                    }(this, Core), _this = _super.call(this), logger.info("launched StarLit core version ".concat(Core.VER, " by ").concat(Core.AUTHORS)), 
-                    _this.lastUpdate = Date.now(), _this.scheduledActions = [], _this.tickEngine = new _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_7__.TickEngine(_assertThisInitialized(_this)), 
+                    }(this, Core), (_this = _super.call(this)).bundleAPI = new _injector_api_API__WEBPACK_IMPORTED_MODULE_18__.default, 
+                    logger.info("launched StarLit core version ".concat(Core.VER, " by ").concat(Core.AUTHORS.join(", "))), 
+                    _this.lastUpdate = Date.now(), _this.scheduledActions = [], _this.objectManager = new _manager_ObjectManager__WEBPACK_IMPORTED_MODULE_11__.default, 
+                    _this.renderManager = null, _this.moduleManager = new _features_ModuleManager__WEBPACK_IMPORTED_MODULE_15__.default, 
+                    _this.tickEngine = new _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_7__.TickEngine(_assertThisInitialized(_this)), 
                     _this.packetEngine = new _util_engine_PacketCountEngine__WEBPACK_IMPORTED_MODULE_10__.PacketCountEngine(_assertThisInitialized(_this)), 
-                    _this.tickEngine.once("ping", _this.packetEngine.handleFirstPing.bind(_this.packetEngine)), 
-                    _this.tickEngine.on("unsafetick", (function(tick) {})), _this.update = _this.update.bind(_assertThisInitialized(_this)), 
-                    requestAnimationFrame(_this.update), _this;
+                    _this.interactionEngine = new _util_engine_InteractionEngine__WEBPACK_IMPORTED_MODULE_16__.default(_assertThisInitialized(_this)), 
+                    _this.tickEngine.once("ping", _this.packetEngine.handlePing.bind(_this.packetEngine)), 
+                    _this.tickEngine.on("pretick", (function(tick) {
+                        _this.moduleManager.onUnsafeTick(tick);
+                    })), _this.tickEngine.on("tick", _this.moduleManager.onTick.bind(_this.moduleManager)), 
+                    document.addEventListener("keydown", (function(event) {
+                        _this.emit("keydown", event), _this.moduleManager.onKeydown(event.keyCode);
+                    })), document.addEventListener("keyup", (function(event) {
+                        _this.emit("keyup", event), _this.moduleManager.onKeyup(event.keyCode);
+                    })), _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.on("packetreceive", (function(event) {
+                        _socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__.PacketHandler.process(event.getPacket()), 
+                        _this.moduleManager.onPacketReceive(event);
+                    })), setInterval(_this.update.bind(_assertThisInitialized(_this)), 1), _this;
                 }
                 return Constructor = Core, protoProps = [ {
+                    key: "patchBundle",
+                    value: function(src) {
+                        _injector_BundleProxy__WEBPACK_IMPORTED_MODULE_17__.default.loadBundle(src, this.bundleAPI);
+                    }
+                }, {
+                    key: "initializeRenderer",
+                    value: function(canvas) {
+                        this.renderManager = new _render_RenderManager__WEBPACK_IMPORTED_MODULE_12__.default(canvas, 1920, 1080), 
+                        this.renderManager.createRenderer("background", _render_HoverInfoModule__WEBPACK_IMPORTED_MODULE_13__.default, this), 
+                        this.renderManager.createInterfaceRenderer("packetCount", _render_interface_PacketCountModule__WEBPACK_IMPORTED_MODULE_14__.default, this), 
+                        this.renderManager.createRenderHook();
+                    }
+                }, {
                     key: "update",
                     value: function() {
                         var now = Date.now(), delta = now - this.lastUpdate;
-                        this.lastUpdate = now, this.emit("update", delta), requestAnimationFrame(this.update);
+                        this.lastUpdate = now, this.emit("update", delta), this.objectManager.update(delta), 
+                        this.moduleManager.onUpdate(delta);
                     }
                 }, {
                     key: "runUppermostAction",
@@ -232,7 +254,7 @@
                     writable: !1
                 }), Core;
             }(events__WEBPACK_IMPORTED_MODULE_0___default());
-            _defineProperty(Core, "VER", "1.0"), _defineProperty(Core, "AUTHORS", "Zaary");
+            _defineProperty(Core, "VER", "1.0"), _defineProperty(Core, "AUTHORS", [ "Zaary" ]);
         },
         "./frontend/src/data/moomoo/accessories.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
             "use strict";
@@ -806,6 +828,8 @@
             for (var groups = [ {
                 id: 0,
                 name: "food",
+                place: !1,
+                limit: -1,
                 layer: 0
             }, {
                 id: 1,
@@ -1520,6 +1544,12 @@
         },
         "./frontend/src/data/type/GameObject.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
             "use strict";
+            __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
+                GameObject: () => GameObject,
+                NaturalObject: () => NaturalObject,
+                PlayerBuilding: () => PlayerBuilding
+            });
+            var _util_type_Vector__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./frontend/src/util/type/Vector.ts"), _moomoo_items__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./frontend/src/data/moomoo/items.ts");
             function _typeof(obj) {
                 return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(obj) {
                     return typeof obj;
@@ -1527,12 +1557,85 @@
                     return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
                 }, _typeof(obj);
             }
+            function _get() {
+                return _get = "undefined" != typeof Reflect && Reflect.get ? Reflect.get.bind() : function(target, property, receiver) {
+                    var base = _superPropBase(target, property);
+                    if (base) {
+                        var desc = Object.getOwnPropertyDescriptor(base, property);
+                        return desc.get ? desc.get.call(arguments.length < 3 ? target : receiver) : desc.value;
+                    }
+                }, _get.apply(this, arguments);
+            }
+            function _superPropBase(object, property) {
+                for (;!Object.prototype.hasOwnProperty.call(object, property) && null !== (object = _getPrototypeOf(object)); ) ;
+                return object;
+            }
+            function _inherits(subClass, superClass) {
+                if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function");
+                subClass.prototype = Object.create(superClass && superClass.prototype, {
+                    constructor: {
+                        value: subClass,
+                        writable: !0,
+                        configurable: !0
+                    }
+                }), Object.defineProperty(subClass, "prototype", {
+                    writable: !1
+                }), superClass && _setPrototypeOf(subClass, superClass);
+            }
+            function _setPrototypeOf(o, p) {
+                return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function(o, p) {
+                    return o.__proto__ = p, o;
+                }, _setPrototypeOf(o, p);
+            }
+            function _createSuper(Derived) {
+                var hasNativeReflectConstruct = function() {
+                    if ("undefined" == typeof Reflect || !Reflect.construct) return !1;
+                    if (Reflect.construct.sham) return !1;
+                    if ("function" == typeof Proxy) return !0;
+                    try {
+                        return Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], (function() {}))), 
+                        !0;
+                    } catch (e) {
+                        return !1;
+                    }
+                }();
+                return function() {
+                    var result, Super = _getPrototypeOf(Derived);
+                    if (hasNativeReflectConstruct) {
+                        var NewTarget = _getPrototypeOf(this).constructor;
+                        result = Reflect.construct(Super, arguments, NewTarget);
+                    } else result = Super.apply(this, arguments);
+                    return _possibleConstructorReturn(this, result);
+                };
+            }
+            function _possibleConstructorReturn(self, call) {
+                if (call && ("object" === _typeof(call) || "function" == typeof call)) return call;
+                if (void 0 !== call) throw new TypeError("Derived constructors may only return object or undefined");
+                return function(self) {
+                    if (void 0 === self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+                    return self;
+                }(self);
+            }
+            function _getPrototypeOf(o) {
+                return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function(o) {
+                    return o.__proto__ || Object.getPrototypeOf(o);
+                }, _getPrototypeOf(o);
+            }
+            function _classCallCheck(instance, Constructor) {
+                if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
+            }
             function _defineProperties(target, props) {
                 for (var i = 0; i < props.length; i++) {
                     var descriptor = props[i];
                     descriptor.enumerable = descriptor.enumerable || !1, descriptor.configurable = !0, 
                     "value" in descriptor && (descriptor.writable = !0), Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);
                 }
+            }
+            function _createClass(Constructor, protoProps, staticProps) {
+                return protoProps && _defineProperties(Constructor.prototype, protoProps), staticProps && _defineProperties(Constructor, staticProps), 
+                Object.defineProperty(Constructor, "prototype", {
+                    writable: !1
+                }), Constructor;
             }
             function _defineProperty(obj, key, value) {
                 return (key = _toPropertyKey(key)) in obj ? Object.defineProperty(obj, key, {
@@ -1555,70 +1658,48 @@
                 }(arg, "string");
                 return "symbol" === _typeof(key) ? key : String(key);
             }
-            __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
-                GameObject: () => GameObject
-            });
             var GameObject = function() {
-                function GameObject(sid) {
-                    !function(instance, Constructor) {
-                        if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-                    }(this, GameObject), _defineProperty(this, "sentTo", {}), _defineProperty(this, "gridLocations", []), 
-                    _defineProperty(this, "active", !0), _defineProperty(this, "doUpdate", !1), _defineProperty(this, "x", 0), 
-                    _defineProperty(this, "y", 0), _defineProperty(this, "dir", 0), _defineProperty(this, "xWiggle", 0), 
-                    _defineProperty(this, "yWiggle", 0), _defineProperty(this, "scale", 0), _defineProperty(this, "type", null), 
-                    _defineProperty(this, "id", -1), _defineProperty(this, "owner", null), _defineProperty(this, "name", ""), 
-                    _defineProperty(this, "isItem", !1), _defineProperty(this, "group", {}), _defineProperty(this, "health", 0), 
-                    _defineProperty(this, "layer", 0), _defineProperty(this, "colDiv", 1), _defineProperty(this, "blocker", 0), 
-                    _defineProperty(this, "ignoreCollision", !1), _defineProperty(this, "dontGather", !1), 
-                    _defineProperty(this, "hideFromEnemy", !1), _defineProperty(this, "friction", null), 
-                    _defineProperty(this, "projDmg", 0), _defineProperty(this, "dmg", 0), _defineProperty(this, "pDmg", 0), 
-                    _defineProperty(this, "pps", 0), _defineProperty(this, "zIndex", 0), _defineProperty(this, "turnSpeed", 0), 
-                    _defineProperty(this, "req", []), _defineProperty(this, "trap", !1), _defineProperty(this, "healCol", 0), 
-                    _defineProperty(this, "teleport", !1), _defineProperty(this, "boostSpeed", 0), _defineProperty(this, "projectile", 0), 
-                    _defineProperty(this, "shootRange", 0), _defineProperty(this, "shootRate", 0), _defineProperty(this, "shootCount", 0), 
-                    _defineProperty(this, "spawnPoint", !1), this.sid = sid;
+                function GameObject(sid, position, dir, scale) {
+                    _classCallCheck(this, GameObject), _defineProperty(this, "dir", 0), _defineProperty(this, "scale", 0), 
+                    _defineProperty(this, "gridLocations", []), this.sid = sid, this.position = position, 
+                    this.dir = dir, this.scale = scale, this.wiggle = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_0__.default(0, 0);
                 }
-                var Constructor, protoProps, staticProps;
-                return Constructor = GameObject, protoProps = [ {
-                    key: "init",
-                    value: function(x, y, dir, scale, type, data, owner) {
-                        var _data;
-                        data = null !== (_data = data) && void 0 !== _data ? _data : {}, this.sentTo = {}, 
-                        this.gridLocations = [], this.active = !0, this.doUpdate = data.doUpdate, this.x = x, 
-                        this.y = y, this.dir = dir, this.xWiggle = 0, this.yWiggle = 0, this.scale = scale, 
-                        this.type = type, this.id = data.id, this.owner = owner, this.name = data.name, 
-                        this.isItem = null != this.id, this.group = data.group, this.health = data.health, 
-                        this.layer = 2, null != this.group ? this.layer = this.group.layer : 0 == this.type ? this.layer = 3 : 2 == this.type ? this.layer = 0 : 4 == this.type && (this.layer = -1), 
-                        this.colDiv = data.colDiv || 1, this.blocker = data.blocker, this.ignoreCollision = data.ignoreCollision, 
-                        this.dontGather = data.dontGather, this.hideFromEnemy = data.hideFromEnemy, this.friction = data.friction, 
-                        this.projDmg = data.projDmg, this.dmg = data.dmg, this.pDmg = data.pDmg, this.pps = data.pps, 
-                        this.zIndex = data.zIndex || 0, this.turnSpeed = data.turnSpeed, this.req = data.req, 
-                        this.trap = data.trap, this.healCol = data.healCol, this.teleport = data.teleport, 
-                        this.boostSpeed = data.boostSpeed, this.projectile = data.projectile, this.shootRange = data.shootRange, 
-                        this.shootRate = data.shootRate, this.shootCount = this.shootRate, this.spawnPoint = data.spawnPoint;
-                    }
-                }, {
-                    key: "changeHealth",
-                    value: function(amount, doer) {
-                        return this.health += amount, this.health <= 0;
-                    }
-                }, {
-                    key: "getScale",
-                    value: function() {
-                        var sM = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0, ig = arguments.length > 1 && void 0 !== arguments[1] && arguments[1];
-                        return sM = sM || 1, this.scale * (this.isItem || 2 == this.type || 3 == this.type || 4 == this.type ? 1 : .6 * sM) * (ig ? 1 : this.colDiv);
-                    }
-                }, {
+                return _createClass(GameObject, [ {
                     key: "update",
                     value: function(delta) {
-                        this.active && (this.xWiggle && (this.xWiggle *= Math.pow(.99, delta)), this.yWiggle && (this.yWiggle *= Math.pow(.99, delta)), 
-                        this.turnSpeed && (this.dir += this.turnSpeed * delta));
+                        this.wiggle.isNull() || this.wiggle.multiply(Math.pow(.99, delta));
                     }
-                } ], protoProps && _defineProperties(Constructor.prototype, protoProps), staticProps && _defineProperties(Constructor, staticProps), 
-                Object.defineProperty(Constructor, "prototype", {
-                    writable: !1
-                }), GameObject;
-            }();
+                } ]), GameObject;
+            }(), NaturalObject = function(_GameObject) {
+                _inherits(NaturalObject, _GameObject);
+                var _super = _createSuper(NaturalObject);
+                function NaturalObject(sid, position, dir, scale, type) {
+                    var _this;
+                    return _classCallCheck(this, NaturalObject), (_this = _super.call(this, sid, position, dir, scale)).type = type, 
+                    _this;
+                }
+                return _createClass(NaturalObject);
+            }(GameObject), PlayerBuilding = function(_GameObject2) {
+                _inherits(PlayerBuilding, _GameObject2);
+                var _super2 = _createSuper(PlayerBuilding);
+                function PlayerBuilding(sid, position, dir, scale, type, owner) {
+                    var _this2$stats$health, _this2;
+                    return _classCallCheck(this, PlayerBuilding), (_this2 = _super2.call(this, sid, position, dir, scale)).stats = _moomoo_items__WEBPACK_IMPORTED_MODULE_1__.items.list[type], 
+                    _this2.owner = {
+                        sid: owner
+                    }, _this2.meta = {
+                        shouldUpdate: 3 === _this2.stats.group.id
+                    }, _this2.health = null !== (_this2$stats$health = _this2.stats.health) && void 0 !== _this2$stats$health ? _this2$stats$health : 1, 
+                    _this2;
+                }
+                return _createClass(PlayerBuilding, [ {
+                    key: "update",
+                    value: function(delta) {
+                        _get(_getPrototypeOf(PlayerBuilding.prototype), "update", this).call(this, delta), 
+                        this.stats.turnSpeed && (this.dir += this.stats.turnSpeed * delta);
+                    }
+                } ]), PlayerBuilding;
+            }(GameObject);
         },
         "./frontend/src/data/type/MoomooUtil.ts": (module, __webpack_exports__, __webpack_require__) => {
             "use strict";
@@ -1640,10 +1721,10 @@
                     val;
                 },
                 getDistance: function(x1, y1, x2, y2) {
-                    return Math.hypot(x1 - x2, y1 - y2);
+                    return Math.sqrt((x2 -= x1) * x2 + (y2 -= y1) * y2);
                 },
-                getDirection: function(from_x, from_y, to_x, to_y) {
-                    return Math.atan2(to_y - from_y, from_y - to_y);
+                getDirection: function(x1, y1, x2, y2) {
+                    return Math.atan2(y1 - y2, x1 - x2);
                 },
                 getAngleDist: function(a, b) {
                     var p = Math.abs(b - a) % (2 * Math.PI);
@@ -1787,11 +1868,12 @@
                     }(this, Player), _defineProperty(this, "timerCount", 0), _defineProperty(this, "tmpRatio", 0), 
                     _defineProperty(this, "animIndex", 0), _defineProperty(this, "healCol", 0), _defineProperty(this, "active", !1), 
                     _defineProperty(this, "alive", !1), _defineProperty(this, "lockMove", !1), _defineProperty(this, "lockDir", !1), 
-                    _defineProperty(this, "minimapCounter", 0), _defineProperty(this, "chatCountdown", 0), 
-                    _defineProperty(this, "shameCount", 0), _defineProperty(this, "shameTimer", 0), 
-                    _defineProperty(this, "sentTo", {}), _defineProperty(this, "gathering", 0), _defineProperty(this, "autoGather", 0), 
-                    _defineProperty(this, "animTime", 0), _defineProperty(this, "animSpeed", 0), _defineProperty(this, "mouseState", 0), 
-                    _defineProperty(this, "buildIndex", -1), _defineProperty(this, "weaponIndex", 0), 
+                    _defineProperty(this, "isLeader", !1), _defineProperty(this, "minimapCounter", 0), 
+                    _defineProperty(this, "chatCountdown", 0), _defineProperty(this, "shameCount", 0), 
+                    _defineProperty(this, "shameTimer", 0), _defineProperty(this, "sentTo", {}), _defineProperty(this, "gathering", 0), 
+                    _defineProperty(this, "autoGather", 0), _defineProperty(this, "animTime", 0), _defineProperty(this, "animSpeed", 0), 
+                    _defineProperty(this, "mouseState", 0), _defineProperty(this, "buildIndex", -1), 
+                    _defineProperty(this, "weaponIndex", 0), _defineProperty(this, "weaponVariant", 0), 
                     _defineProperty(this, "dmgOverTime", {}), _defineProperty(this, "noMovTimer", 0), 
                     _defineProperty(this, "maxXP", 300), _defineProperty(this, "XP", 0), _defineProperty(this, "age", 1), 
                     _defineProperty(this, "kills", 0), _defineProperty(this, "upgrAge", 2), _defineProperty(this, "upgradePoints", 0), 
@@ -1811,7 +1893,8 @@
                     for (i = 0; i < _moomoo_hats__WEBPACK_IMPORTED_MODULE_3__.default.length; ++i) _moomoo_hats__WEBPACK_IMPORTED_MODULE_3__.default[i].price <= 0 && (this.skins[_moomoo_hats__WEBPACK_IMPORTED_MODULE_3__.default[i].id] = 1);
                     this.points = 0, this.dt = 0, this.hidden = !1, this.itemCounts = {}, this.isPlayer = !0, 
                     this.pps = 0, this.moveDir = void 0, this.skinRot = 0, this.lastPing = 0, this.iconIndex = 0, 
-                    this.skinColor = 0;
+                    this.skinColor = 0, this.serverPosX = 0, this.serverPosY = 0, this.clientPosX = 0, 
+                    this.clientPosY = 0, this.lastTickPosX = 0, this.lastTickPosY = 0;
                 }
                 var Constructor, protoProps, staticProps;
                 return Constructor = Player, protoProps = [ {
@@ -1820,13 +1903,14 @@
                         this.active = !0, this.alive = !0, this.lockMove = !1, this.lockDir = !1, this.minimapCounter = 0, 
                         this.chatCountdown = 0, this.shameCount = 0, this.shameTimer = 0, this.sentTo = {}, 
                         this.gathering = 0, this.autoGather = 0, this.animTime = 0, this.animSpeed = 0, 
-                        this.mouseState = 0, this.buildIndex = -1, this.weaponIndex = 0, this.dmgOverTime = {}, 
-                        this.noMovTimer = 0, this.maxXP = 300, this.XP = 0, this.age = 1, this.kills = 0, 
-                        this.upgrAge = 2, this.upgradePoints = 0, this.x = 0, this.y = 0, this.zIndex = 0, 
-                        this.xVel = 0, this.yVel = 0, this.slowMult = 1, this.dir = 0, this.dirPlus = 0, 
-                        this.targetDir = 0, this.targetAngle = 0, this.maxHealth = 100, this.health = this.maxHealth, 
-                        this.scale = _moomoo_config__WEBPACK_IMPORTED_MODULE_2__.default.playerScale, this.speed = _moomoo_config__WEBPACK_IMPORTED_MODULE_2__.default.playerSpeed, 
-                        this.resources = {}, this.resetMoveDir(), this.resetResources(moofoll), this.items = [ 0, 3, 6, 10 ], 
+                        this.mouseState = 0, this.buildIndex = -1, this.weaponIndex = 0, this.weaponVariant = 0, 
+                        this.dmgOverTime = {}, this.noMovTimer = 0, this.maxXP = 300, this.XP = 0, this.age = 1, 
+                        this.kills = 0, this.upgrAge = 2, this.upgradePoints = 0, this.x = 0, this.y = 0, 
+                        this.zIndex = 0, this.xVel = 0, this.yVel = 0, this.slowMult = 1, this.dir = 0, 
+                        this.dirPlus = 0, this.targetDir = 0, this.targetAngle = 0, this.maxHealth = 100, 
+                        this.health = this.maxHealth, this.scale = _moomoo_config__WEBPACK_IMPORTED_MODULE_2__.default.playerScale, 
+                        this.speed = _moomoo_config__WEBPACK_IMPORTED_MODULE_2__.default.playerSpeed, this.resources = {}, 
+                        this.resetMoveDir(), this.resetResources(moofoll), this.items = [ 0, 3, 6, 10 ], 
                         this.weapons = [ 0 ], this.shootCount = 0, this.weaponXP = [], this.reloads = {};
                     }
                 }, {
@@ -2189,13 +2273,1588 @@
                 }), EventPacket;
             }(__webpack_require__("./frontend/src/event/Event.ts").default);
         },
+        "./frontend/src/features/ModuleManager.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+            "use strict";
+            __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
+                default: () => ModuleManager
+            });
+            var _util_Logger__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./frontend/src/util/Logger.ts"), _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./frontend/src/features/modules/building/ItemPlacer.ts"), _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("./frontend/src/features/modules/combat/Autoheal.ts");
+            function _typeof(obj) {
+                return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(obj) {
+                    return typeof obj;
+                } : function(obj) {
+                    return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+                }, _typeof(obj);
+            }
+            function _createForOfIteratorHelper(o, allowArrayLike) {
+                var it = "undefined" != typeof Symbol && o[Symbol.iterator] || o["@@iterator"];
+                if (!it) {
+                    if (Array.isArray(o) || (it = function(o, minLen) {
+                        if (!o) return;
+                        if ("string" == typeof o) return _arrayLikeToArray(o, minLen);
+                        var n = Object.prototype.toString.call(o).slice(8, -1);
+                        "Object" === n && o.constructor && (n = o.constructor.name);
+                        if ("Map" === n || "Set" === n) return Array.from(o);
+                        if ("Arguments" === n || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+                    }(o)) || allowArrayLike && o && "number" == typeof o.length) {
+                        it && (o = it);
+                        var i = 0, F = function() {};
+                        return {
+                            s: F,
+                            n: function() {
+                                return i >= o.length ? {
+                                    done: !0
+                                } : {
+                                    done: !1,
+                                    value: o[i++]
+                                };
+                            },
+                            e: function(_e) {
+                                throw _e;
+                            },
+                            f: F
+                        };
+                    }
+                    throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+                }
+                var err, normalCompletion = !0, didErr = !1;
+                return {
+                    s: function() {
+                        it = it.call(o);
+                    },
+                    n: function() {
+                        var step = it.next();
+                        return normalCompletion = step.done, step;
+                    },
+                    e: function(_e2) {
+                        didErr = !0, err = _e2;
+                    },
+                    f: function() {
+                        try {
+                            normalCompletion || null == it.return || it.return();
+                        } finally {
+                            if (didErr) throw err;
+                        }
+                    }
+                };
+            }
+            function _arrayLikeToArray(arr, len) {
+                (null == len || len > arr.length) && (len = arr.length);
+                for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+                return arr2;
+            }
+            function _defineProperties(target, props) {
+                for (var i = 0; i < props.length; i++) {
+                    var descriptor = props[i];
+                    descriptor.enumerable = descriptor.enumerable || !1, descriptor.configurable = !0, 
+                    "value" in descriptor && (descriptor.writable = !0), Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);
+                }
+            }
+            function _defineProperty(obj, key, value) {
+                return (key = _toPropertyKey(key)) in obj ? Object.defineProperty(obj, key, {
+                    value,
+                    enumerable: !0,
+                    configurable: !0,
+                    writable: !0
+                }) : obj[key] = value, obj;
+            }
+            function _toPropertyKey(arg) {
+                var key = function(input, hint) {
+                    if ("object" !== _typeof(input) || null === input) return input;
+                    var prim = input[Symbol.toPrimitive];
+                    if (void 0 !== prim) {
+                        var res = prim.call(input, hint || "default");
+                        if ("object" !== _typeof(res)) return res;
+                        throw new TypeError("@@toPrimitive must return a primitive value.");
+                    }
+                    return ("string" === hint ? String : Number)(input);
+                }(arg, "string");
+                return "symbol" === _typeof(key) ? key : String(key);
+            }
+            var logger = new _util_Logger__WEBPACK_IMPORTED_MODULE_0__.default("module-manager"), ModuleManager = function() {
+                function ModuleManager() {
+                    !function(instance, Constructor) {
+                        if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
+                    }(this, ModuleManager), _defineProperty(this, "modules", []);
+                    var _step, _iterator = _createForOfIteratorHelper(ModuleManager.classes);
+                    try {
+                        for (_iterator.s(); !(_step = _iterator.n()).done; ) {
+                            var clazz = _step.value;
+                            this.modules.push(Reflect.construct(clazz, []));
+                        }
+                    } catch (err) {
+                        _iterator.e(err);
+                    } finally {
+                        _iterator.f();
+                    }
+                    logger.info("loaded ".concat(this.modules.length, " modules"));
+                }
+                var Constructor, protoProps, staticProps;
+                return Constructor = ModuleManager, (protoProps = [ {
+                    key: "onUpdate",
+                    value: function(delta) {
+                        var _step2, _iterator2 = _createForOfIteratorHelper(this.modules);
+                        try {
+                            for (_iterator2.s(); !(_step2 = _iterator2.n()).done; ) _step2.value.onUpdate(delta);
+                        } catch (err) {
+                            _iterator2.e(err);
+                        } finally {
+                            _iterator2.f();
+                        }
+                    }
+                }, {
+                    key: "onUnsafeTick",
+                    value: function(tickIndex) {
+                        var _step3, _iterator3 = _createForOfIteratorHelper(this.modules);
+                        try {
+                            for (_iterator3.s(); !(_step3 = _iterator3.n()).done; ) _step3.value.onUnsafeTick(tickIndex);
+                        } catch (err) {
+                            _iterator3.e(err);
+                        } finally {
+                            _iterator3.f();
+                        }
+                    }
+                }, {
+                    key: "onTick",
+                    value: function(tickIndex) {
+                        var _step4, _iterator4 = _createForOfIteratorHelper(this.modules);
+                        try {
+                            for (_iterator4.s(); !(_step4 = _iterator4.n()).done; ) _step4.value.onTick(tickIndex);
+                        } catch (err) {
+                            _iterator4.e(err);
+                        } finally {
+                            _iterator4.f();
+                        }
+                    }
+                }, {
+                    key: "onKeydown",
+                    value: function(keyCode) {
+                        var _step5, _iterator5 = _createForOfIteratorHelper(this.modules);
+                        try {
+                            for (_iterator5.s(); !(_step5 = _iterator5.n()).done; ) _step5.value.onKeydown(keyCode);
+                        } catch (err) {
+                            _iterator5.e(err);
+                        } finally {
+                            _iterator5.f();
+                        }
+                    }
+                }, {
+                    key: "onKeyup",
+                    value: function(keyCode) {
+                        var _step6, _iterator6 = _createForOfIteratorHelper(this.modules);
+                        try {
+                            for (_iterator6.s(); !(_step6 = _iterator6.n()).done; ) _step6.value.onKeyup(keyCode);
+                        } catch (err) {
+                            _iterator6.e(err);
+                        } finally {
+                            _iterator6.f();
+                        }
+                    }
+                }, {
+                    key: "onPacketReceive",
+                    value: function(event) {
+                        var _step7, _iterator7 = _createForOfIteratorHelper(this.modules);
+                        try {
+                            for (_iterator7.s(); !(_step7 = _iterator7.n()).done; ) _step7.value.onPacketReceive(event);
+                        } catch (err) {
+                            _iterator7.e(err);
+                        } finally {
+                            _iterator7.f();
+                        }
+                    }
+                }, {
+                    key: "getModule",
+                    value: function(clazz) {
+                        var _step8, _iterator8 = _createForOfIteratorHelper(this.modules);
+                        try {
+                            for (_iterator8.s(); !(_step8 = _iterator8.n()).done; ) {
+                                var module = _step8.value;
+                                if (module instanceof clazz) return module;
+                            }
+                        } catch (err) {
+                            _iterator8.e(err);
+                        } finally {
+                            _iterator8.f();
+                        }
+                    }
+                } ]) && _defineProperties(Constructor.prototype, protoProps), staticProps && _defineProperties(Constructor, staticProps), 
+                Object.defineProperty(Constructor, "prototype", {
+                    writable: !1
+                }), ModuleManager;
+            }();
+            _defineProperty(ModuleManager, "classes", [ _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_1__.default, _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_2__.default ]);
+        },
+        "./frontend/src/features/modules/Module.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+            "use strict";
+            function _typeof(obj) {
+                return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(obj) {
+                    return typeof obj;
+                } : function(obj) {
+                    return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+                }, _typeof(obj);
+            }
+            function _defineProperties(target, props) {
+                for (var i = 0; i < props.length; i++) {
+                    var descriptor = props[i];
+                    descriptor.enumerable = descriptor.enumerable || !1, descriptor.configurable = !0, 
+                    "value" in descriptor && (descriptor.writable = !0), Object.defineProperty(target, (arg = descriptor.key, 
+                    key = void 0, key = function(input, hint) {
+                        if ("object" !== _typeof(input) || null === input) return input;
+                        var prim = input[Symbol.toPrimitive];
+                        if (void 0 !== prim) {
+                            var res = prim.call(input, hint || "default");
+                            if ("object" !== _typeof(res)) return res;
+                            throw new TypeError("@@toPrimitive must return a primitive value.");
+                        }
+                        return ("string" === hint ? String : Number)(input);
+                    }(arg, "string"), "symbol" === _typeof(key) ? key : String(key)), descriptor);
+                }
+                var arg, key;
+            }
+            __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
+                default: () => Module
+            });
+            var Module = function() {
+                function Module() {
+                    !function(instance, Constructor) {
+                        if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
+                    }(this, Module);
+                }
+                var Constructor, protoProps, staticProps;
+                return Constructor = Module, (protoProps = [ {
+                    key: "onUpdate",
+                    value: function(delta) {}
+                }, {
+                    key: "onUnsafeTick",
+                    value: function(tickIndex) {}
+                }, {
+                    key: "onTick",
+                    value: function(tickIndex) {}
+                }, {
+                    key: "onKeydown",
+                    value: function(keyCode) {}
+                }, {
+                    key: "onKeyup",
+                    value: function(keyCode) {}
+                }, {
+                    key: "onPacketReceive",
+                    value: function(event) {}
+                } ]) && _defineProperties(Constructor.prototype, protoProps), staticProps && _defineProperties(Constructor, staticProps), 
+                Object.defineProperty(Constructor, "prototype", {
+                    writable: !1
+                }), Module;
+            }();
+        },
+        "./frontend/src/features/modules/building/ItemPlacer.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+            "use strict";
+            __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
+                default: () => ItemPlacer
+            });
+            var PlacerType, _core_Core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./frontend/src/core/Core.ts"), _data_moomoo_items__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./frontend/src/data/moomoo/items.ts"), _main__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("./frontend/src/main.ts"), _socket_Connection__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__("./frontend/src/socket/Connection.ts"), _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__("./frontend/src/socket/packets/Packet.ts"), _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__("./frontend/src/socket/packets/PacketType.ts"), _Module__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__("./frontend/src/features/modules/Module.ts");
+            function _createForOfIteratorHelper(o, allowArrayLike) {
+                var it = "undefined" != typeof Symbol && o[Symbol.iterator] || o["@@iterator"];
+                if (!it) {
+                    if (Array.isArray(o) || (it = function(o, minLen) {
+                        if (!o) return;
+                        if ("string" == typeof o) return _arrayLikeToArray(o, minLen);
+                        var n = Object.prototype.toString.call(o).slice(8, -1);
+                        "Object" === n && o.constructor && (n = o.constructor.name);
+                        if ("Map" === n || "Set" === n) return Array.from(o);
+                        if ("Arguments" === n || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+                    }(o)) || allowArrayLike && o && "number" == typeof o.length) {
+                        it && (o = it);
+                        var i = 0, F = function() {};
+                        return {
+                            s: F,
+                            n: function() {
+                                return i >= o.length ? {
+                                    done: !0
+                                } : {
+                                    done: !1,
+                                    value: o[i++]
+                                };
+                            },
+                            e: function(_e) {
+                                throw _e;
+                            },
+                            f: F
+                        };
+                    }
+                    throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+                }
+                var err, normalCompletion = !0, didErr = !1;
+                return {
+                    s: function() {
+                        it = it.call(o);
+                    },
+                    n: function() {
+                        var step = it.next();
+                        return normalCompletion = step.done, step;
+                    },
+                    e: function(_e2) {
+                        didErr = !0, err = _e2;
+                    },
+                    f: function() {
+                        try {
+                            normalCompletion || null == it.return || it.return();
+                        } finally {
+                            if (didErr) throw err;
+                        }
+                    }
+                };
+            }
+            function _arrayLikeToArray(arr, len) {
+                (null == len || len > arr.length) && (len = arr.length);
+                for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+                return arr2;
+            }
+            function _setPrototypeOf(o, p) {
+                return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function(o, p) {
+                    return o.__proto__ = p, o;
+                }, _setPrototypeOf(o, p);
+            }
+            function _createSuper(Derived) {
+                var hasNativeReflectConstruct = function() {
+                    if ("undefined" == typeof Reflect || !Reflect.construct) return !1;
+                    if (Reflect.construct.sham) return !1;
+                    if ("function" == typeof Proxy) return !0;
+                    try {
+                        return Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], (function() {}))), 
+                        !0;
+                    } catch (e) {
+                        return !1;
+                    }
+                }();
+                return function() {
+                    var result, Super = _getPrototypeOf(Derived);
+                    if (hasNativeReflectConstruct) {
+                        var NewTarget = _getPrototypeOf(this).constructor;
+                        result = Reflect.construct(Super, arguments, NewTarget);
+                    } else result = Super.apply(this, arguments);
+                    return _possibleConstructorReturn(this, result);
+                };
+            }
+            function _possibleConstructorReturn(self, call) {
+                if (call && ("object" === _typeof(call) || "function" == typeof call)) return call;
+                if (void 0 !== call) throw new TypeError("Derived constructors may only return object or undefined");
+                return function(self) {
+                    if (void 0 === self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+                    return self;
+                }(self);
+            }
+            function _getPrototypeOf(o) {
+                return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function(o) {
+                    return o.__proto__ || Object.getPrototypeOf(o);
+                }, _getPrototypeOf(o);
+            }
+            function _typeof(obj) {
+                return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(obj) {
+                    return typeof obj;
+                } : function(obj) {
+                    return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+                }, _typeof(obj);
+            }
+            function _classCallCheck(instance, Constructor) {
+                if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
+            }
+            function _defineProperties(target, props) {
+                for (var i = 0; i < props.length; i++) {
+                    var descriptor = props[i];
+                    descriptor.enumerable = descriptor.enumerable || !1, descriptor.configurable = !0, 
+                    "value" in descriptor && (descriptor.writable = !0), Object.defineProperty(target, (arg = descriptor.key, 
+                    key = void 0, key = function(input, hint) {
+                        if ("object" !== _typeof(input) || null === input) return input;
+                        var prim = input[Symbol.toPrimitive];
+                        if (void 0 !== prim) {
+                            var res = prim.call(input, hint || "default");
+                            if ("object" !== _typeof(res)) return res;
+                            throw new TypeError("@@toPrimitive must return a primitive value.");
+                        }
+                        return ("string" === hint ? String : Number)(input);
+                    }(arg, "string"), "symbol" === _typeof(key) ? key : String(key)), descriptor);
+                }
+                var arg, key;
+            }
+            function _createClass(Constructor, protoProps, staticProps) {
+                return protoProps && _defineProperties(Constructor.prototype, protoProps), staticProps && _defineProperties(Constructor, staticProps), 
+                Object.defineProperty(Constructor, "prototype", {
+                    writable: !1
+                }), Constructor;
+            }
+            !function(PlacerType) {
+                PlacerType[PlacerType.SPIKE = 0] = "SPIKE", PlacerType[PlacerType.TRAP = 1] = "TRAP", 
+                PlacerType[PlacerType.WINDMILL = 2] = "WINDMILL";
+            }(PlacerType || (PlacerType = {}));
+            var Placer = function() {
+                function Placer(type) {
+                    switch (_classCallCheck(this, Placer), this.active = !1, this.type = type, type) {
+                      case PlacerType.SPIKE:
+                        this.placingObject = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_1__.items.groups[2];
+                        break;
+
+                      case PlacerType.TRAP:
+                        this.placingObject = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_1__.items.groups[5];
+                        break;
+
+                      case PlacerType.WINDMILL:
+                        this.placingObject = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_1__.items.groups[3];
+                    }
+                }
+                return _createClass(Placer, [ {
+                    key: "setStatus",
+                    value: function(active) {
+                        this.active = active;
+                    }
+                }, {
+                    key: "isActive",
+                    value: function() {
+                        return this.active;
+                    }
+                }, {
+                    key: "run",
+                    value: function(tickIndex) {
+                        _main__WEBPACK_IMPORTED_MODULE_2__.core.interactionEngine.checkPlacementSpace(_core_Core__WEBPACK_IMPORTED_MODULE_0__.currentPlayer, _data_moomoo_items__WEBPACK_IMPORTED_MODULE_1__.items.list[1], 0) && (_socket_Connection__WEBPACK_IMPORTED_MODULE_3__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_4__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_5__.PacketType.SELECT_ITEM, [ 3, !1 ])), 
+                        _socket_Connection__WEBPACK_IMPORTED_MODULE_3__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_4__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_5__.PacketType.ATTACK, [ 1, 0 ])), 
+                        _socket_Connection__WEBPACK_IMPORTED_MODULE_3__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_4__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_5__.PacketType.ATTACK, [ 0, 0 ])), 
+                        _socket_Connection__WEBPACK_IMPORTED_MODULE_3__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_4__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_5__.PacketType.SELECT_ITEM, [ 0, !0 ])));
+                    }
+                } ]), Placer;
+            }(), ItemPlacer = function(_Module) {
+                !function(subClass, superClass) {
+                    if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function");
+                    subClass.prototype = Object.create(superClass && superClass.prototype, {
+                        constructor: {
+                            value: subClass,
+                            writable: !0,
+                            configurable: !0
+                        }
+                    }), Object.defineProperty(subClass, "prototype", {
+                        writable: !1
+                    }), superClass && _setPrototypeOf(subClass, superClass);
+                }(ItemPlacer, _Module);
+                var _super = _createSuper(ItemPlacer);
+                function ItemPlacer() {
+                    var _this;
+                    return _classCallCheck(this, ItemPlacer), (_this = _super.call(this)).placers = new Map, 
+                    _this.activePlacer = null, _this.placers.set(86, new Placer(PlacerType.SPIKE)), 
+                    _this.placers.set(70, new Placer(PlacerType.TRAP)), _this.placers.set(78, new Placer(PlacerType.WINDMILL)), 
+                    _this;
+                }
+                return _createClass(ItemPlacer, [ {
+                    key: "onUnsafeTick",
+                    value: function(tickIndex) {}
+                }, {
+                    key: "onUpdate",
+                    value: function(delta) {
+                        this.activePlacer && _core_Core__WEBPACK_IMPORTED_MODULE_0__.currentPlayer && this.activePlacer.run(0);
+                    }
+                }, {
+                    key: "onKeydown",
+                    value: function(keyCode) {
+                        var placer = this.placers.get(keyCode);
+                        null == placer || placer.setStatus(!0), !this.activePlacer && placer && (this.activePlacer = placer);
+                    }
+                }, {
+                    key: "onKeyup",
+                    value: function(keyCode) {
+                        var _this$placers$get;
+                        null === (_this$placers$get = this.placers.get(keyCode)) || void 0 === _this$placers$get || _this$placers$get.setStatus(!1), 
+                        this.activePlacer = null;
+                        var _step, _iterator = _createForOfIteratorHelper(this.placers.values());
+                        try {
+                            for (_iterator.s(); !(_step = _iterator.n()).done; ) {
+                                var placer = _step.value;
+                                if (placer.isActive()) {
+                                    this.activePlacer = placer;
+                                    break;
+                                }
+                            }
+                        } catch (err) {
+                            _iterator.e(err);
+                        } finally {
+                            _iterator.f();
+                        }
+                    }
+                } ]), ItemPlacer;
+            }(_Module__WEBPACK_IMPORTED_MODULE_6__.default);
+        },
+        "./frontend/src/features/modules/combat/Autoheal.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+            "use strict";
+            __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
+                default: () => Autoheal
+            });
+            var _core_Core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./frontend/src/core/Core.ts"), _main__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./frontend/src/main.ts"), _socket_Connection__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("./frontend/src/socket/Connection.ts"), _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__("./frontend/src/socket/packets/Packet.ts"), _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__("./frontend/src/socket/packets/PacketType.ts");
+            function _typeof(obj) {
+                return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(obj) {
+                    return typeof obj;
+                } : function(obj) {
+                    return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+                }, _typeof(obj);
+            }
+            function _slicedToArray(arr, i) {
+                return function(arr) {
+                    if (Array.isArray(arr)) return arr;
+                }(arr) || function(arr, i) {
+                    var _i = null == arr ? null : "undefined" != typeof Symbol && arr[Symbol.iterator] || arr["@@iterator"];
+                    if (null != _i) {
+                        var _s, _e, _x, _r, _arr = [], _n = !0, _d = !1;
+                        try {
+                            if (_x = (_i = _i.call(arr)).next, 0 === i) {
+                                if (Object(_i) !== _i) return;
+                                _n = !1;
+                            } else for (;!(_n = (_s = _x.call(_i)).done) && (_arr.push(_s.value), _arr.length !== i); _n = !0) ;
+                        } catch (err) {
+                            _d = !0, _e = err;
+                        } finally {
+                            try {
+                                if (!_n && null != _i.return && (_r = _i.return(), Object(_r) !== _r)) return;
+                            } finally {
+                                if (_d) throw _e;
+                            }
+                        }
+                        return _arr;
+                    }
+                }(arr, i) || function(o, minLen) {
+                    if (!o) return;
+                    if ("string" == typeof o) return _arrayLikeToArray(o, minLen);
+                    var n = Object.prototype.toString.call(o).slice(8, -1);
+                    "Object" === n && o.constructor && (n = o.constructor.name);
+                    if ("Map" === n || "Set" === n) return Array.from(o);
+                    if ("Arguments" === n || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+                }(arr, i) || function() {
+                    throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+                }();
+            }
+            function _arrayLikeToArray(arr, len) {
+                (null == len || len > arr.length) && (len = arr.length);
+                for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+                return arr2;
+            }
+            function _defineProperties(target, props) {
+                for (var i = 0; i < props.length; i++) {
+                    var descriptor = props[i];
+                    descriptor.enumerable = descriptor.enumerable || !1, descriptor.configurable = !0, 
+                    "value" in descriptor && (descriptor.writable = !0), Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);
+                }
+            }
+            function _setPrototypeOf(o, p) {
+                return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function(o, p) {
+                    return o.__proto__ = p, o;
+                }, _setPrototypeOf(o, p);
+            }
+            function _createSuper(Derived) {
+                var hasNativeReflectConstruct = function() {
+                    if ("undefined" == typeof Reflect || !Reflect.construct) return !1;
+                    if (Reflect.construct.sham) return !1;
+                    if ("function" == typeof Proxy) return !0;
+                    try {
+                        return Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], (function() {}))), 
+                        !0;
+                    } catch (e) {
+                        return !1;
+                    }
+                }();
+                return function() {
+                    var result, Super = _getPrototypeOf(Derived);
+                    if (hasNativeReflectConstruct) {
+                        var NewTarget = _getPrototypeOf(this).constructor;
+                        result = Reflect.construct(Super, arguments, NewTarget);
+                    } else result = Super.apply(this, arguments);
+                    return _possibleConstructorReturn(this, result);
+                };
+            }
+            function _possibleConstructorReturn(self, call) {
+                if (call && ("object" === _typeof(call) || "function" == typeof call)) return call;
+                if (void 0 !== call) throw new TypeError("Derived constructors may only return object or undefined");
+                return _assertThisInitialized(self);
+            }
+            function _assertThisInitialized(self) {
+                if (void 0 === self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+                return self;
+            }
+            function _getPrototypeOf(o) {
+                return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function(o) {
+                    return o.__proto__ || Object.getPrototypeOf(o);
+                }, _getPrototypeOf(o);
+            }
+            function _toPropertyKey(arg) {
+                var key = function(input, hint) {
+                    if ("object" !== _typeof(input) || null === input) return input;
+                    var prim = input[Symbol.toPrimitive];
+                    if (void 0 !== prim) {
+                        var res = prim.call(input, hint || "default");
+                        if ("object" !== _typeof(res)) return res;
+                        throw new TypeError("@@toPrimitive must return a primitive value.");
+                    }
+                    return ("string" === hint ? String : Number)(input);
+                }(arg, "string");
+                return "symbol" === _typeof(key) ? key : String(key);
+            }
+            var Autoheal = function(_Module) {
+                !function(subClass, superClass) {
+                    if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function");
+                    subClass.prototype = Object.create(superClass && superClass.prototype, {
+                        constructor: {
+                            value: subClass,
+                            writable: !0,
+                            configurable: !0
+                        }
+                    }), Object.defineProperty(subClass, "prototype", {
+                        writable: !1
+                    }), superClass && _setPrototypeOf(subClass, superClass);
+                }(Autoheal, _Module);
+                var Constructor, protoProps, staticProps, _super = _createSuper(Autoheal);
+                function Autoheal() {
+                    var _this, obj, key, value;
+                    return function(instance, Constructor) {
+                        if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
+                    }(this, Autoheal), _this = _super.call(this), obj = _assertThisInitialized(_this), 
+                    value = 0, (key = _toPropertyKey(key = "damageTick")) in obj ? Object.defineProperty(obj, key, {
+                        value,
+                        enumerable: !0,
+                        configurable: !0,
+                        writable: !0
+                    }) : obj[key] = value, _this.lastHealth = 100, _this;
+                }
+                return Constructor = Autoheal, (protoProps = [ {
+                    key: "onUpdate",
+                    value: function(delta) {}
+                }, {
+                    key: "onUnsafeTick",
+                    value: function(tickIndex) {
+                        if (_core_Core__WEBPACK_IMPORTED_MODULE_0__.currentPlayer && this.lastHealth < 100 && tickIndex - this.damageTick > 2) {
+                            for (var i = 0; i < Math.ceil((100 - this.lastHealth) / 20); i++) _socket_Connection__WEBPACK_IMPORTED_MODULE_2__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.SELECT_ITEM, [ 0, !1 ])), 
+                            _socket_Connection__WEBPACK_IMPORTED_MODULE_2__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.ATTACK, [ 1, 0 ])), 
+                            _socket_Connection__WEBPACK_IMPORTED_MODULE_2__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.ATTACK, [ 0, 0 ])), 
+                            _socket_Connection__WEBPACK_IMPORTED_MODULE_2__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.SELECT_ITEM, [ 0, !0 ]));
+                            this.damageTick = 1 / 0;
+                        }
+                    }
+                }, {
+                    key: "onPacketReceive",
+                    value: function(event) {
+                        if (_core_Core__WEBPACK_IMPORTED_MODULE_0__.currentPlayer) {
+                            var packet = event.getPacket();
+                            if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.HEALTH_UPDATE) {
+                                var _packet$data = _slicedToArray(packet.data, 2), sid = _packet$data[0], health = _packet$data[1];
+                                sid === _core_Core__WEBPACK_IMPORTED_MODULE_0__.currentPlayer.sid && (health < this.lastHealth && (this.damageTick = _main__WEBPACK_IMPORTED_MODULE_1__.core.tickEngine.tickIndex), 
+                                this.lastHealth = health);
+                            }
+                        }
+                    }
+                } ]) && _defineProperties(Constructor.prototype, protoProps), staticProps && _defineProperties(Constructor, staticProps), 
+                Object.defineProperty(Constructor, "prototype", {
+                    writable: !1
+                }), Autoheal;
+            }(__webpack_require__("./frontend/src/features/modules/Module.ts").default);
+        },
+        "./frontend/src/injector/BundleProxy.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+            "use strict";
+            __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
+                default: () => __WEBPACK_DEFAULT_EXPORT__
+            });
+            var _util_Logger__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./frontend/src/util/Logger.ts"), _util_StringUtil__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./frontend/src/util/StringUtil.ts"), _transformations_TObjectSpriteLoader__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("./frontend/src/injector/transformations/TObjectSpriteLoader.ts"), _transformations_TSourceMapping__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__("./frontend/src/injector/transformations/TSourceMapping.ts");
+            function _createForOfIteratorHelper(o, allowArrayLike) {
+                var it = "undefined" != typeof Symbol && o[Symbol.iterator] || o["@@iterator"];
+                if (!it) {
+                    if (Array.isArray(o) || (it = function(o, minLen) {
+                        if (!o) return;
+                        if ("string" == typeof o) return _arrayLikeToArray(o, minLen);
+                        var n = Object.prototype.toString.call(o).slice(8, -1);
+                        "Object" === n && o.constructor && (n = o.constructor.name);
+                        if ("Map" === n || "Set" === n) return Array.from(o);
+                        if ("Arguments" === n || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+                    }(o)) || allowArrayLike && o && "number" == typeof o.length) {
+                        it && (o = it);
+                        var i = 0, F = function() {};
+                        return {
+                            s: F,
+                            n: function() {
+                                return i >= o.length ? {
+                                    done: !0
+                                } : {
+                                    done: !1,
+                                    value: o[i++]
+                                };
+                            },
+                            e: function(_e) {
+                                throw _e;
+                            },
+                            f: F
+                        };
+                    }
+                    throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+                }
+                var err, normalCompletion = !0, didErr = !1;
+                return {
+                    s: function() {
+                        it = it.call(o);
+                    },
+                    n: function() {
+                        var step = it.next();
+                        return normalCompletion = step.done, step;
+                    },
+                    e: function(_e2) {
+                        didErr = !0, err = _e2;
+                    },
+                    f: function() {
+                        try {
+                            normalCompletion || null == it.return || it.return();
+                        } finally {
+                            if (didErr) throw err;
+                        }
+                    }
+                };
+            }
+            function _arrayLikeToArray(arr, len) {
+                (null == len || len > arr.length) && (len = arr.length);
+                for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+                return arr2;
+            }
+            var logger = new _util_Logger__WEBPACK_IMPORTED_MODULE_0__.default("bundle-proxy"), transformations = [ _transformations_TObjectSpriteLoader__WEBPACK_IMPORTED_MODULE_2__.default, _transformations_TSourceMapping__WEBPACK_IMPORTED_MODULE_3__.default ];
+            const __WEBPACK_DEFAULT_EXPORT__ = {
+                loadBundle: function(src, injectedApi) {
+                    fetch(src).then((function(res) {
+                        if (res.ok) return res.text();
+                        throw logger.error("failed to load bundle: " + res.status);
+                    })).then((function(code) {
+                        return function(code, injectedApi) {
+                            var _step, _iterator = _createForOfIteratorHelper(transformations.map((function(transformer) {
+                                return Reflect.construct(transformer, []);
+                            })));
+                            try {
+                                for (_iterator.s(); !(_step = _iterator.n()).done; ) {
+                                    code = _step.value.transform(code);
+                                }
+                            } catch (err) {
+                                _iterator.e(err);
+                            } finally {
+                                _iterator.f();
+                            }
+                            !function(code, injectedApi) {
+                                var hash = _util_StringUtil__WEBPACK_IMPORTED_MODULE_1__.default.randomString(10), vm = new Function(hash, "console", code.replace(/\[nvrapi\]/g, hash)), logger = new _util_Logger__WEBPACK_IMPORTED_MODULE_0__.default(window.console, "bundle-vm-" + hash);
+                                vm.call(vm, injectedApi, logger), setTimeout((function() {
+                                    return window.onload && window.onload(new Event("load")), window.captchaCallback();
+                                }), 1);
+                            }(code, injectedApi);
+                        }(code, injectedApi);
+                    }));
+                }
+            };
+        },
+        "./frontend/src/injector/Transformation.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+            "use strict";
+            function _typeof(obj) {
+                return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(obj) {
+                    return typeof obj;
+                } : function(obj) {
+                    return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+                }, _typeof(obj);
+            }
+            function _defineProperties(target, props) {
+                for (var i = 0; i < props.length; i++) {
+                    var descriptor = props[i];
+                    descriptor.enumerable = descriptor.enumerable || !1, descriptor.configurable = !0, 
+                    "value" in descriptor && (descriptor.writable = !0), Object.defineProperty(target, (arg = descriptor.key, 
+                    key = void 0, key = function(input, hint) {
+                        if ("object" !== _typeof(input) || null === input) return input;
+                        var prim = input[Symbol.toPrimitive];
+                        if (void 0 !== prim) {
+                            var res = prim.call(input, hint || "default");
+                            if ("object" !== _typeof(res)) return res;
+                            throw new TypeError("@@toPrimitive must return a primitive value.");
+                        }
+                        return ("string" === hint ? String : Number)(input);
+                    }(arg, "string"), "symbol" === _typeof(key) ? key : String(key)), descriptor);
+                }
+                var arg, key;
+            }
+            function _createClass(Constructor, protoProps, staticProps) {
+                return protoProps && _defineProperties(Constructor.prototype, protoProps), staticProps && _defineProperties(Constructor, staticProps), 
+                Object.defineProperty(Constructor, "prototype", {
+                    writable: !1
+                }), Constructor;
+            }
+            __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
+                default: () => Transformation
+            });
+            var Transformation = _createClass((function Transformation() {
+                !function(instance, Constructor) {
+                    if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
+                }(this, Transformation);
+            }));
+        },
+        "./frontend/src/injector/api/API.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+            "use strict";
+            __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
+                default: () => API
+            });
+            var tsee__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./node_modules/tsee/lib/index.js");
+            function _typeof(obj) {
+                return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(obj) {
+                    return typeof obj;
+                } : function(obj) {
+                    return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+                }, _typeof(obj);
+            }
+            function _defineProperties(target, props) {
+                for (var i = 0; i < props.length; i++) {
+                    var descriptor = props[i];
+                    descriptor.enumerable = descriptor.enumerable || !1, descriptor.configurable = !0, 
+                    "value" in descriptor && (descriptor.writable = !0), Object.defineProperty(target, (arg = descriptor.key, 
+                    key = void 0, key = function(input, hint) {
+                        if ("object" !== _typeof(input) || null === input) return input;
+                        var prim = input[Symbol.toPrimitive];
+                        if (void 0 !== prim) {
+                            var res = prim.call(input, hint || "default");
+                            if ("object" !== _typeof(res)) return res;
+                            throw new TypeError("@@toPrimitive must return a primitive value.");
+                        }
+                        return ("string" === hint ? String : Number)(input);
+                    }(arg, "string"), "symbol" === _typeof(key) ? key : String(key)), descriptor);
+                }
+                var arg, key;
+            }
+            function _setPrototypeOf(o, p) {
+                return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function(o, p) {
+                    return o.__proto__ = p, o;
+                }, _setPrototypeOf(o, p);
+            }
+            function _createSuper(Derived) {
+                var hasNativeReflectConstruct = function() {
+                    if ("undefined" == typeof Reflect || !Reflect.construct) return !1;
+                    if (Reflect.construct.sham) return !1;
+                    if ("function" == typeof Proxy) return !0;
+                    try {
+                        return Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], (function() {}))), 
+                        !0;
+                    } catch (e) {
+                        return !1;
+                    }
+                }();
+                return function() {
+                    var result, Super = _getPrototypeOf(Derived);
+                    if (hasNativeReflectConstruct) {
+                        var NewTarget = _getPrototypeOf(this).constructor;
+                        result = Reflect.construct(Super, arguments, NewTarget);
+                    } else result = Super.apply(this, arguments);
+                    return _possibleConstructorReturn(this, result);
+                };
+            }
+            function _possibleConstructorReturn(self, call) {
+                if (call && ("object" === _typeof(call) || "function" == typeof call)) return call;
+                if (void 0 !== call) throw new TypeError("Derived constructors may only return object or undefined");
+                return _assertThisInitialized(self);
+            }
+            function _assertThisInitialized(self) {
+                if (void 0 === self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+                return self;
+            }
+            function _getPrototypeOf(o) {
+                return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function(o) {
+                    return o.__proto__ || Object.getPrototypeOf(o);
+                }, _getPrototypeOf(o);
+            }
+            var logger = new (__webpack_require__("./frontend/src/util/Logger.ts").default)(window.console, "nvr-api"), API = function(_EventEmitter) {
+                !function(subClass, superClass) {
+                    if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function");
+                    subClass.prototype = Object.create(superClass && superClass.prototype, {
+                        constructor: {
+                            value: subClass,
+                            writable: !0,
+                            configurable: !0
+                        }
+                    }), Object.defineProperty(subClass, "prototype", {
+                        writable: !1
+                    }), superClass && _setPrototypeOf(subClass, superClass);
+                }(API, _EventEmitter);
+                var Constructor, protoProps, staticProps, _super = _createSuper(API);
+                function API() {
+                    var _this;
+                    return function(instance, Constructor) {
+                        if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
+                    }(this, API), _this = _super.call(this), window.nvrapi = _assertThisInitialized(_this), 
+                    _this.references = {}, _this;
+                }
+                return Constructor = API, protoProps = [ {
+                    key: "registerReference",
+                    value: function(name, value) {
+                        var proxify = arguments.length > 2 && void 0 !== arguments[2] && arguments[2];
+                        return this.references[name] = value, logger.log("registered reference:", name), 
+                        proxify ? this.createProxyFor(name, value) : value;
+                    }
+                }, {
+                    key: "createProxyFor",
+                    value: function(name, object) {
+                        return "object" === _typeof(object) ? this.createObjectProxy(name, object) : object;
+                    }
+                }, {
+                    key: "createObjectProxy",
+                    value: function(name, object) {
+                        var _ = this;
+                        return new Proxy(object, {
+                            set: function(target, p, newValue, receiver) {
+                                return _.emit("refPropertySet", name, p, newValue), Reflect.set(target, p, newValue, receiver);
+                            }
+                        });
+                    }
+                } ], protoProps && _defineProperties(Constructor.prototype, protoProps), staticProps && _defineProperties(Constructor, staticProps), 
+                Object.defineProperty(Constructor, "prototype", {
+                    writable: !1
+                }), API;
+            }(tsee__WEBPACK_IMPORTED_MODULE_0__.EventEmitter);
+        },
+        "./frontend/src/injector/transformations/TObjectSpriteLoader.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+            "use strict";
+            function _typeof(obj) {
+                return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(obj) {
+                    return typeof obj;
+                } : function(obj) {
+                    return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+                }, _typeof(obj);
+            }
+            function _defineProperties(target, props) {
+                for (var i = 0; i < props.length; i++) {
+                    var descriptor = props[i];
+                    descriptor.enumerable = descriptor.enumerable || !1, descriptor.configurable = !0, 
+                    "value" in descriptor && (descriptor.writable = !0), Object.defineProperty(target, (arg = descriptor.key, 
+                    key = void 0, key = function(input, hint) {
+                        if ("object" !== _typeof(input) || null === input) return input;
+                        var prim = input[Symbol.toPrimitive];
+                        if (void 0 !== prim) {
+                            var res = prim.call(input, hint || "default");
+                            if ("object" !== _typeof(res)) return res;
+                            throw new TypeError("@@toPrimitive must return a primitive value.");
+                        }
+                        return ("string" === hint ? String : Number)(input);
+                    }(arg, "string"), "symbol" === _typeof(key) ? key : String(key)), descriptor);
+                }
+                var arg, key;
+            }
+            function _setPrototypeOf(o, p) {
+                return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function(o, p) {
+                    return o.__proto__ = p, o;
+                }, _setPrototypeOf(o, p);
+            }
+            function _createSuper(Derived) {
+                var hasNativeReflectConstruct = function() {
+                    if ("undefined" == typeof Reflect || !Reflect.construct) return !1;
+                    if (Reflect.construct.sham) return !1;
+                    if ("function" == typeof Proxy) return !0;
+                    try {
+                        return Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], (function() {}))), 
+                        !0;
+                    } catch (e) {
+                        return !1;
+                    }
+                }();
+                return function() {
+                    var result, Super = _getPrototypeOf(Derived);
+                    if (hasNativeReflectConstruct) {
+                        var NewTarget = _getPrototypeOf(this).constructor;
+                        result = Reflect.construct(Super, arguments, NewTarget);
+                    } else result = Super.apply(this, arguments);
+                    return _possibleConstructorReturn(this, result);
+                };
+            }
+            function _possibleConstructorReturn(self, call) {
+                if (call && ("object" === _typeof(call) || "function" == typeof call)) return call;
+                if (void 0 !== call) throw new TypeError("Derived constructors may only return object or undefined");
+                return function(self) {
+                    if (void 0 === self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+                    return self;
+                }(self);
+            }
+            function _getPrototypeOf(o) {
+                return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function(o) {
+                    return o.__proto__ || Object.getPrototypeOf(o);
+                }, _getPrototypeOf(o);
+            }
+            __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
+                default: () => TObjectSpriteLoader
+            });
+            var TObjectSpriteLoader = function(_Transformation) {
+                !function(subClass, superClass) {
+                    if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function");
+                    subClass.prototype = Object.create(superClass && superClass.prototype, {
+                        constructor: {
+                            value: subClass,
+                            writable: !0,
+                            configurable: !0
+                        }
+                    }), Object.defineProperty(subClass, "prototype", {
+                        writable: !1
+                    }), superClass && _setPrototypeOf(subClass, superClass);
+                }(TObjectSpriteLoader, _Transformation);
+                var Constructor, protoProps, staticProps, _super = _createSuper(TObjectSpriteLoader);
+                function TObjectSpriteLoader() {
+                    return function(instance, Constructor) {
+                        if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
+                    }(this, TObjectSpriteLoader), _super.call(this);
+                }
+                return Constructor = TObjectSpriteLoader, (protoProps = [ {
+                    key: "transform",
+                    value: function(source) {
+                        return source = (source = source.replace(/(var [\w$_]+\s*=\s*)(\{\});(\s*function [\w$_]+\([\w$_]+\)\s*\{\s*var [\w$_]+\s*=\s*[\w$_]+\.y\s*>=[\s\S]*?if\s*\(\s*![\s\S]\s*\)\s*\{\s*var\s+[\s\S]\s*=\s*document\.createElement\(['"]canvas['"]\);)/g, '$1[nvrapi].registerReference("gameObjectSprites",$2,true);$3')).replace(/(var [\w$_]+\s*=\s*)(\[\])(;function [\w$_]+\([\w$_]+,[\w$_]+\)\s*\{\s*var [\w$_]+\s*=\s*[\w$_]+\[[\w$_]+\.id\];if\s*\(![\w$_]+\s*\|\|\s*[\w$_]+\)\s*\{var [\w$_]+\s*=\s*document\.createElement\(['"]canvas['"]\))/g, '$1[nvrapi].registerReference("itemSprites",$2,true);$3');
+                    }
+                } ]) && _defineProperties(Constructor.prototype, protoProps), staticProps && _defineProperties(Constructor, staticProps), 
+                Object.defineProperty(Constructor, "prototype", {
+                    writable: !1
+                }), TObjectSpriteLoader;
+            }(__webpack_require__("./frontend/src/injector/Transformation.ts").default);
+        },
+        "./frontend/src/injector/transformations/TSourceMapping.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+            "use strict";
+            function _typeof(obj) {
+                return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(obj) {
+                    return typeof obj;
+                } : function(obj) {
+                    return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+                }, _typeof(obj);
+            }
+            function _defineProperties(target, props) {
+                for (var i = 0; i < props.length; i++) {
+                    var descriptor = props[i];
+                    descriptor.enumerable = descriptor.enumerable || !1, descriptor.configurable = !0, 
+                    "value" in descriptor && (descriptor.writable = !0), Object.defineProperty(target, (arg = descriptor.key, 
+                    key = void 0, key = function(input, hint) {
+                        if ("object" !== _typeof(input) || null === input) return input;
+                        var prim = input[Symbol.toPrimitive];
+                        if (void 0 !== prim) {
+                            var res = prim.call(input, hint || "default");
+                            if ("object" !== _typeof(res)) return res;
+                            throw new TypeError("@@toPrimitive must return a primitive value.");
+                        }
+                        return ("string" === hint ? String : Number)(input);
+                    }(arg, "string"), "symbol" === _typeof(key) ? key : String(key)), descriptor);
+                }
+                var arg, key;
+            }
+            function _setPrototypeOf(o, p) {
+                return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function(o, p) {
+                    return o.__proto__ = p, o;
+                }, _setPrototypeOf(o, p);
+            }
+            function _createSuper(Derived) {
+                var hasNativeReflectConstruct = function() {
+                    if ("undefined" == typeof Reflect || !Reflect.construct) return !1;
+                    if (Reflect.construct.sham) return !1;
+                    if ("function" == typeof Proxy) return !0;
+                    try {
+                        return Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], (function() {}))), 
+                        !0;
+                    } catch (e) {
+                        return !1;
+                    }
+                }();
+                return function() {
+                    var result, Super = _getPrototypeOf(Derived);
+                    if (hasNativeReflectConstruct) {
+                        var NewTarget = _getPrototypeOf(this).constructor;
+                        result = Reflect.construct(Super, arguments, NewTarget);
+                    } else result = Super.apply(this, arguments);
+                    return _possibleConstructorReturn(this, result);
+                };
+            }
+            function _possibleConstructorReturn(self, call) {
+                if (call && ("object" === _typeof(call) || "function" == typeof call)) return call;
+                if (void 0 !== call) throw new TypeError("Derived constructors may only return object or undefined");
+                return function(self) {
+                    if (void 0 === self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+                    return self;
+                }(self);
+            }
+            function _getPrototypeOf(o) {
+                return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function(o) {
+                    return o.__proto__ || Object.getPrototypeOf(o);
+                }, _getPrototypeOf(o);
+            }
+            __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
+                default: () => TSourceMapping
+            });
+            var TSourceMapping = function(_Transformation) {
+                !function(subClass, superClass) {
+                    if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function");
+                    subClass.prototype = Object.create(superClass && superClass.prototype, {
+                        constructor: {
+                            value: subClass,
+                            writable: !0,
+                            configurable: !0
+                        }
+                    }), Object.defineProperty(subClass, "prototype", {
+                        writable: !1
+                    }), superClass && _setPrototypeOf(subClass, superClass);
+                }(TSourceMapping, _Transformation);
+                var Constructor, protoProps, staticProps, _super = _createSuper(TSourceMapping);
+                function TSourceMapping() {
+                    return function(instance, Constructor) {
+                        if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
+                    }(this, TSourceMapping), _super.call(this);
+                }
+                return Constructor = TSourceMapping, (protoProps = [ {
+                    key: "transform",
+                    value: function(source) {
+                        return source = source.replace(/\/\/# sourceMappingURL=bundle\.js\.map$/g, ";console.log(this);");
+                    }
+                } ]) && _defineProperties(Constructor.prototype, protoProps), staticProps && _defineProperties(Constructor, staticProps), 
+                Object.defineProperty(Constructor, "prototype", {
+                    writable: !1
+                }), TSourceMapping;
+            }(__webpack_require__("./frontend/src/injector/Transformation.ts").default);
+        },
+        "./frontend/src/main.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+            "use strict";
+            __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
+                core: () => core
+            });
+            __webpack_require__("./frontend/style/main.scss");
+            var _core_Core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./frontend/src/core/Core.ts"), _socket_Connection__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("./frontend/src/socket/Connection.ts");
+            function _createForOfIteratorHelper(o, allowArrayLike) {
+                var it = "undefined" != typeof Symbol && o[Symbol.iterator] || o["@@iterator"];
+                if (!it) {
+                    if (Array.isArray(o) || (it = function(o, minLen) {
+                        if (!o) return;
+                        if ("string" == typeof o) return _arrayLikeToArray(o, minLen);
+                        var n = Object.prototype.toString.call(o).slice(8, -1);
+                        "Object" === n && o.constructor && (n = o.constructor.name);
+                        if ("Map" === n || "Set" === n) return Array.from(o);
+                        if ("Arguments" === n || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+                    }(o)) || allowArrayLike && o && "number" == typeof o.length) {
+                        it && (o = it);
+                        var i = 0, F = function() {};
+                        return {
+                            s: F,
+                            n: function() {
+                                return i >= o.length ? {
+                                    done: !0
+                                } : {
+                                    done: !1,
+                                    value: o[i++]
+                                };
+                            },
+                            e: function(_e) {
+                                throw _e;
+                            },
+                            f: F
+                        };
+                    }
+                    throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+                }
+                var err, normalCompletion = !0, didErr = !1;
+                return {
+                    s: function() {
+                        it = it.call(o);
+                    },
+                    n: function() {
+                        var step = it.next();
+                        return normalCompletion = step.done, step;
+                    },
+                    e: function(_e2) {
+                        didErr = !0, err = _e2;
+                    },
+                    f: function() {
+                        try {
+                            normalCompletion || null == it.return || it.return();
+                        } finally {
+                            if (didErr) throw err;
+                        }
+                    }
+                };
+            }
+            function _arrayLikeToArray(arr, len) {
+                (null == len || len > arr.length) && (len = arr.length);
+                for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+                return arr2;
+            }
+            var logger = new (__webpack_require__("./frontend/src/util/Logger.ts").default)("main");
+            (0, _socket_Connection__WEBPACK_IMPORTED_MODULE_2__.inject)(), logger.info("initializing core");
+            var core = new _core_Core__WEBPACK_IMPORTED_MODULE_1__.Core;
+            core || (logger.error("critical: core failed to load!"), alert("critical: core failed to load! please report this to developers!")), 
+            window.addEventListener("DOMContentLoaded", (function() {
+                console.log("renderer init"), core.initializeRenderer(document.getElementById("gameCanvas"));
+            })), window.captchaCallback = function() {}, new MutationObserver((function(mutations, observer) {
+                var _step, _iterator = _createForOfIteratorHelper(mutations);
+                try {
+                    for (_iterator.s(); !(_step = _iterator.n()).done; ) {
+                        var _step2, _iterator2 = _createForOfIteratorHelper(_step.value.addedNodes);
+                        try {
+                            for (_iterator2.s(); !(_step2 = _iterator2.n()).done; ) {
+                                var node = _step2.value;
+                                "SCRIPT" === node.tagName && /bundle\.js$/.test(node.src) && (core.patchBundle(node.src), 
+                                node.addEventListener("beforescriptexecute", (function(e) {
+                                    return e.preventDefault();
+                                }), {
+                                    once: !0
+                                }), node.parentElement.removeChild(node), observer.disconnect());
+                            }
+                        } catch (err) {
+                            _iterator2.e(err);
+                        } finally {
+                            _iterator2.f();
+                        }
+                    }
+                } catch (err) {
+                    _iterator.e(err);
+                } finally {
+                    _iterator.f();
+                }
+            })).observe(document, {
+                subtree: !0,
+                childList: !0
+            });
+        },
+        "./frontend/src/manager/ObjectManager.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+            "use strict";
+            __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
+                default: () => ObjectManager
+            });
+            var _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./frontend/src/data/moomoo/config.ts"), _data_type_GameObject__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./frontend/src/data/type/GameObject.ts"), _data_type_MoomooUtil__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("./frontend/src/data/type/MoomooUtil.ts"), _util_type_SidArray__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__("./frontend/src/util/type/SidArray.ts"), _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__("./frontend/src/util/type/Vector.ts");
+            function _typeof(obj) {
+                return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(obj) {
+                    return typeof obj;
+                } : function(obj) {
+                    return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+                }, _typeof(obj);
+            }
+            function _defineProperties(target, props) {
+                for (var i = 0; i < props.length; i++) {
+                    var descriptor = props[i];
+                    descriptor.enumerable = descriptor.enumerable || !1, descriptor.configurable = !0, 
+                    "value" in descriptor && (descriptor.writable = !0), Object.defineProperty(target, (arg = descriptor.key, 
+                    key = void 0, key = function(input, hint) {
+                        if ("object" !== _typeof(input) || null === input) return input;
+                        var prim = input[Symbol.toPrimitive];
+                        if (void 0 !== prim) {
+                            var res = prim.call(input, hint || "default");
+                            if ("object" !== _typeof(res)) return res;
+                            throw new TypeError("@@toPrimitive must return a primitive value.");
+                        }
+                        return ("string" === hint ? String : Number)(input);
+                    }(arg, "string"), "symbol" === _typeof(key) ? key : String(key)), descriptor);
+                }
+                var arg, key;
+            }
+            var ObjectManager = function() {
+                function ObjectManager() {
+                    !function(instance, Constructor) {
+                        if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
+                    }(this, ObjectManager), this.gameObjects = new _util_type_SidArray__WEBPACK_IMPORTED_MODULE_3__.SidArray, 
+                    this.grids = {}, this.updateObjects = [], Object.defineProperty(window, "objectManager", {
+                        value: this
+                    });
+                }
+                var Constructor, protoProps, staticProps;
+                return Constructor = ObjectManager, (protoProps = [ {
+                    key: "setObjectGrids",
+                    value: function(obj) {
+                        for (var tmpX, tmpY, tmpS = _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__.default.mapScale / _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__.default.colGrid, objX = Math.min(_data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__.default.mapScale, Math.max(0, obj.position.x)), objY = Math.min(_data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__.default.mapScale, Math.max(0, obj.position.y)), x = 0; x < _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__.default.colGrid; ++x) {
+                            tmpX = x * tmpS;
+                            for (var y = 0; y < _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__.default.colGrid; ++y) tmpY = y * tmpS, 
+                            objX + obj.scale >= tmpX && objX - obj.scale <= tmpX + tmpS && objY + obj.scale >= tmpY && objY - obj.scale <= tmpY + tmpS && (this.grids[x + "_" + y] || (this.grids[x + "_" + y] = []), 
+                            this.grids[x + "_" + y].push(obj), obj.gridLocations.push(x + "_" + y));
+                        }
+                    }
+                }, {
+                    key: "removeObjGrid",
+                    value: function(obj) {
+                        for (var tmpIndx, i = 0; i < obj.gridLocations.length; ++i) (tmpIndx = this.grids[obj.gridLocations[i]].indexOf(obj)) >= 0 && this.grids[obj.gridLocations[i]].splice(tmpIndx, 1);
+                    }
+                }, {
+                    key: "disableObj",
+                    value: function(obj) {
+                        if (this.gameObjects.remove(obj), this.removeObjGrid(obj), this.removeObjGrid(obj), 
+                        obj instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_1__.PlayerBuilding) {
+                            var tmpIndx = this.updateObjects.indexOf(obj);
+                            tmpIndx >= 0 && this.updateObjects.splice(tmpIndx, 1);
+                        }
+                    }
+                }, {
+                    key: "getGridArrays",
+                    value: function(xPos, yPos, s) {
+                        var tmpX, tmpY, tmpGrid, tmpArray = [], tmpS = _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__.default.mapScale / _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__.default.colGrid;
+                        tmpX = Math.floor(xPos / tmpS), tmpY = Math.floor(yPos / tmpS), tmpArray.length = 0;
+                        try {
+                            this.grids[tmpX + "_" + tmpY] && tmpArray.push(this.grids[tmpX + "_" + tmpY]), xPos + s >= (tmpX + 1) * tmpS && ((tmpGrid = this.grids[tmpX + 1 + "_" + tmpY]) && tmpArray.push(tmpGrid), 
+                            tmpY && yPos - s <= tmpY * tmpS ? (tmpGrid = this.grids[tmpX + 1 + "_" + (tmpY - 1)]) && tmpArray.push(tmpGrid) : yPos + s >= (tmpY + 1) * tmpS && (tmpGrid = this.grids[tmpX + 1 + "_" + (tmpY + 1)]) && tmpArray.push(tmpGrid)), 
+                            tmpX && xPos - s <= tmpX * tmpS && ((tmpGrid = this.grids[tmpX - 1 + "_" + tmpY]) && tmpArray.push(tmpGrid), 
+                            tmpY && yPos - s <= tmpY * tmpS ? (tmpGrid = this.grids[tmpX - 1 + "_" + (tmpY - 1)]) && tmpArray.push(tmpGrid) : yPos + s >= (tmpY + 1) * tmpS && (tmpGrid = this.grids[tmpX - 1 + "_" + (tmpY + 1)]) && tmpArray.push(tmpGrid)), 
+                            yPos + s >= (tmpY + 1) * tmpS && (tmpGrid = this.grids[tmpX + "_" + (tmpY + 1)]) && tmpArray.push(tmpGrid), 
+                            tmpY && yPos - s <= tmpY * tmpS && (tmpGrid = this.grids[tmpX + "_" + (tmpY - 1)]) && tmpArray.push(tmpGrid);
+                        } catch (e) {}
+                        return tmpArray;
+                    }
+                }, {
+                    key: "add",
+                    value: function(sid, x, y, dir, s, type, data, owner) {
+                        var tmpObj;
+                        (tmpObj = this.gameObjects.findBySid(sid)) || (tmpObj = -1 === owner ? new _data_type_GameObject__WEBPACK_IMPORTED_MODULE_1__.NaturalObject(sid, new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__.default(x, y), dir, s, type) : new _data_type_GameObject__WEBPACK_IMPORTED_MODULE_1__.PlayerBuilding(sid, new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__.default(x, y), dir, s, data, owner), 
+                        this.gameObjects.push(tmpObj)), this.setObjectGrids(tmpObj), this.updateObjects.push(tmpObj);
+                    }
+                }, {
+                    key: "disableBySid",
+                    value: function(sid) {
+                        for (var i = 0; i < this.gameObjects.length; ++i) if (this.gameObjects[i].sid == sid) {
+                            this.disableObj(this.gameObjects[i]);
+                            break;
+                        }
+                    }
+                }, {
+                    key: "removeAllItems",
+                    value: function(sid) {
+                        for (var i = 0; i < this.gameObjects.length; ++i) {
+                            var object = this.gameObjects[i];
+                            object instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_1__.PlayerBuilding && object.owner.sid === sid && this.disableObj(object);
+                        }
+                    }
+                }, {
+                    key: "fetchSpawnObj",
+                    value: function(sid) {
+                        for (var i = 0; i < this.gameObjects.length; ++i) this.gameObjects[i];
+                        return null;
+                    }
+                }, {
+                    key: "checkItemLocation",
+                    value: function(x, y, s, sM, indx, ignoreWater, placer) {
+                        return !0;
+                    }
+                }, {
+                    key: "checkCollision",
+                    value: function(player, other, delta) {
+                        delta = delta || 1;
+                        var dx = player.x - other.x, dy = player.y - other.y, tmpLen = player.scale + other.scale;
+                        if (Math.abs(dx) <= tmpLen || Math.abs(dy) <= tmpLen) {
+                            tmpLen = player.scale + (other.getScale ? other.getScale() : other.scale);
+                            var tmpInt = Math.sqrt(dx * dx + dy * dy) - tmpLen;
+                            if (tmpInt <= 0) {
+                                if (other.ignoreCollision) !other.trap || other.owner == player || other.owner && other.owner.team && other.owner.team == player.team ? other.boostSpeed ? (player.xVel += delta * other.boostSpeed * (other.weightM || 1) * Math.cos(other.dir), 
+                                player.yVel += delta * other.boostSpeed * (other.weightM || 1) * Math.sin(other.dir)) : other.healCol ? player.healCol = other.healCol : other.teleport && (player.x = _data_type_MoomooUtil__WEBPACK_IMPORTED_MODULE_2__.util.randInt(0, _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__.default.mapScale), 
+                                player.y = _data_type_MoomooUtil__WEBPACK_IMPORTED_MODULE_2__.util.randInt(0, _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__.default.mapScale)) : (player.lockMove = !0, 
+                                other.hideFromEnemy = !1); else {
+                                    var tmpDir = _data_type_MoomooUtil__WEBPACK_IMPORTED_MODULE_2__.util.getDirection(player.x, player.y, other.x, other.y);
+                                    if (_data_type_MoomooUtil__WEBPACK_IMPORTED_MODULE_2__.util.getDistance(player.x, player.y, other.x, other.y), 
+                                    other.isPlayer ? (tmpInt = -1 * tmpInt / 2, player.x += tmpInt * Math.cos(tmpDir), 
+                                    player.y += tmpInt * Math.sin(tmpDir), other.x -= tmpInt * Math.cos(tmpDir), other.y -= tmpInt * Math.sin(tmpDir)) : (player.x = other.x + tmpLen * Math.cos(tmpDir), 
+                                    player.y = other.y + tmpLen * Math.sin(tmpDir), player.xVel *= .75, player.yVel *= .75), 
+                                    other.dmg && other.owner != player && (!other.owner || !other.owner.team || other.owner.team != player.team)) {
+                                        player.changeHealth(-other.dmg, other.owner);
+                                        var tmpSpd = 1.5 * (other.weightM || 1);
+                                        player.xVel += tmpSpd * Math.cos(tmpDir), player.yVel += tmpSpd * Math.sin(tmpDir), 
+                                        !other.pDmg || player.skin && player.skin.poisonRes || (player.dmgOverTime.dmg = other.pDmg, 
+                                        player.dmgOverTime.time = 5, player.dmgOverTime.doer = other.owner);
+                                    }
+                                }
+                                return other.zIndex > player.zIndex && (player.zIndex = other.zIndex), !0;
+                            }
+                        }
+                        return !1;
+                    }
+                }, {
+                    key: "wiggleObject",
+                    value: function(sid, dir) {
+                        var object = this.gameObjects.findBySid(sid);
+                        object && object.wiggle.add(new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__.default(_data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__.default.gatherWiggle * Math.cos(dir), _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__.default.gatherWiggle * Math.sin(dir)));
+                    }
+                }, {
+                    key: "update",
+                    value: function(delta) {
+                        for (var i = 0; i < this.updateObjects.length; i++) this.updateObjects[i].update(delta);
+                    }
+                } ]) && _defineProperties(Constructor.prototype, protoProps), staticProps && _defineProperties(Constructor, staticProps), 
+                Object.defineProperty(Constructor, "prototype", {
+                    writable: !1
+                }), ObjectManager;
+            }();
+        },
+        "./frontend/src/render/HoverInfoModule.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+            "use strict";
+            __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
+                default: () => HoverInfoModule
+            });
+            var _core_Core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./frontend/src/core/Core.ts"), _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./frontend/src/data/moomoo/config.ts"), _data_type_GameObject__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("./frontend/src/data/type/GameObject.ts"), _util_DrawUtil__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__("./frontend/src/util/DrawUtil.ts"), _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__("./frontend/src/util/MathUtil.ts"), _util_type_Vector__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__("./frontend/src/util/type/Vector.ts");
+            function _typeof(obj) {
+                return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(obj) {
+                    return typeof obj;
+                } : function(obj) {
+                    return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+                }, _typeof(obj);
+            }
+            function _defineProperties(target, props) {
+                for (var i = 0; i < props.length; i++) {
+                    var descriptor = props[i];
+                    descriptor.enumerable = descriptor.enumerable || !1, descriptor.configurable = !0, 
+                    "value" in descriptor && (descriptor.writable = !0), Object.defineProperty(target, (arg = descriptor.key, 
+                    key = void 0, key = function(input, hint) {
+                        if ("object" !== _typeof(input) || null === input) return input;
+                        var prim = input[Symbol.toPrimitive];
+                        if (void 0 !== prim) {
+                            var res = prim.call(input, hint || "default");
+                            if ("object" !== _typeof(res)) return res;
+                            throw new TypeError("@@toPrimitive must return a primitive value.");
+                        }
+                        return ("string" === hint ? String : Number)(input);
+                    }(arg, "string"), "symbol" === _typeof(key) ? key : String(key)), descriptor);
+                }
+                var arg, key;
+            }
+            function _setPrototypeOf(o, p) {
+                return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function(o, p) {
+                    return o.__proto__ = p, o;
+                }, _setPrototypeOf(o, p);
+            }
+            function _createSuper(Derived) {
+                var hasNativeReflectConstruct = function() {
+                    if ("undefined" == typeof Reflect || !Reflect.construct) return !1;
+                    if (Reflect.construct.sham) return !1;
+                    if ("function" == typeof Proxy) return !0;
+                    try {
+                        return Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], (function() {}))), 
+                        !0;
+                    } catch (e) {
+                        return !1;
+                    }
+                }();
+                return function() {
+                    var result, Super = _getPrototypeOf(Derived);
+                    if (hasNativeReflectConstruct) {
+                        var NewTarget = _getPrototypeOf(this).constructor;
+                        result = Reflect.construct(Super, arguments, NewTarget);
+                    } else result = Super.apply(this, arguments);
+                    return _possibleConstructorReturn(this, result);
+                };
+            }
+            function _possibleConstructorReturn(self, call) {
+                if (call && ("object" === _typeof(call) || "function" == typeof call)) return call;
+                if (void 0 !== call) throw new TypeError("Derived constructors may only return object or undefined");
+                return function(self) {
+                    if (void 0 === self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+                    return self;
+                }(self);
+            }
+            function _getPrototypeOf(o) {
+                return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function(o) {
+                    return o.__proto__ || Object.getPrototypeOf(o);
+                }, _getPrototypeOf(o);
+            }
+            var HoverInfoModule = function(_Renderer) {
+                !function(subClass, superClass) {
+                    if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function");
+                    subClass.prototype = Object.create(superClass && superClass.prototype, {
+                        constructor: {
+                            value: subClass,
+                            writable: !0,
+                            configurable: !0
+                        }
+                    }), Object.defineProperty(subClass, "prototype", {
+                        writable: !1
+                    }), superClass && _setPrototypeOf(subClass, superClass);
+                }(HoverInfoModule, _Renderer);
+                var Constructor, protoProps, staticProps, _super = _createSuper(HoverInfoModule);
+                function HoverInfoModule(renderManager, core) {
+                    var _this;
+                    function createShadowCopy(canvas, outline) {
+                        canvas = function(oldCanvas) {
+                            var newCanvas = document.createElement("canvas"), context = newCanvas.getContext("2d");
+                            return newCanvas.width = oldCanvas.width + 2, newCanvas.height = oldCanvas.height + 2, 
+                            context.drawImage(oldCanvas, 1, 1), newCanvas;
+                        }(canvas);
+                        for (var context = canvas.getContext("2d"), imageData = context.getImageData(0, 0, canvas.width, canvas.height), data = imageData.data, i = 0; i < data.length; i += 4) if (255 == data[i + 3]) {
+                            var original = _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__.default.combineColors([ data[i], data[i + 1], data[i + 2], 1 ], [ 0, 0, 70, .35 ]);
+                            data[i] = Math.min(Math.max(0, original[0] + 20), 255), data[i + 1] = Math.min(Math.max(0, original[1] + 20), 255), 
+                            data[i + 2] = Math.min(Math.max(0, original[2] + 20), 255);
+                        }
+                        return context.putImageData(imageData, 0, 0), context.lineWidth = 3, context.strokeStyle = outline, 
+                        context.lineJoin = "round", _util_DrawUtil__WEBPACK_IMPORTED_MODULE_3__.default.strokeImageOutline(canvas, 1), 
+                        canvas;
+                    }
+                    return function(instance, Constructor) {
+                        if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
+                    }(this, HoverInfoModule), (_this = _super.call(this, renderManager, core)).shadows = {}, 
+                    _this.mouse = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_5__.default, core.bundleAPI.on("refPropertySet", (function(name, property, value) {
+                        if ("gameObjectSprites" == name || "itemSprites" == name) {
+                            var prop = "gameObjectSprites" == name ? property : "item_".concat(String(property));
+                            "itemSprites" == name ? (_this.shadows[prop + "_own"] = createShadowCopy(value, "rgba(64, 255, 64, 1)"), 
+                            _this.shadows[prop + "_team"] = createShadowCopy(value, "rgba(64, 64, 255, 1)"), 
+                            _this.shadows[prop + "_enemy"] = createShadowCopy(value, "rgba(255, 64, 64, 1)")) : _this.shadows[prop] = createShadowCopy(value, "rgba(190, 190, 190, 1)");
+                        }
+                    })), _this.renderManager.on("mousemove", (function(event) {
+                        _this.mouse = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_5__.default(event.clientX, event.clientY);
+                    })), _this;
+                }
+                return Constructor = HoverInfoModule, (protoProps = [ {
+                    key: "render",
+                    value: function(delta) {
+                        var mapPosition = this.renderManager.canvasToMap(this.renderManager.cameraPosition, this.mouse), object = (this.renderManager.canvasToContext(this.renderManager.cameraPosition, this.mouse), 
+                        this.core.objectManager.getGridArrays(mapPosition.x, mapPosition.y, 100).flat(1).filter((function(x) {
+                            return _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__.default.getDistance(mapPosition, x.position) < x.scale;
+                        })).sort((function(a, b) {
+                            return _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__.default.getDistance(mapPosition, a.position) - _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__.default.getDistance(mapPosition, b.position);
+                        }))[0]);
+                        if (object) {
+                            var objectRenderPosition = this.renderManager.mapToContext(this.renderManager.cameraPosition, object.position).add(object.wiggle), isNaturalObject = object instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_2__.NaturalObject, isPlayerBuilding = object instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_2__.PlayerBuilding, index = isNaturalObject ? object.type + "_" + object.scale + "_" + (object.position.y >= _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__.default.mapScale - _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__.default.snowBiomeTop ? 2 : object.position.y <= _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__.default.snowBiomeTop ? 1 : 0) : isPlayerBuilding ? "item_".concat(object.stats.id, "_").concat(object.owner.sid == _core_Core__WEBPACK_IMPORTED_MODULE_0__.currentPlayer.sid ? "own" : "enemy") : "unknown";
+                            if (this.shadows.hasOwnProperty(index)) {
+                                var sprite = this.shadows[index];
+                                this.renderManager.context.save(), this.renderManager.context.translate(objectRenderPosition.x, objectRenderPosition.y), 
+                                this.renderManager.context.rotate(object.dir), this.renderManager.context.drawImage(sprite, sprite.width / -2, sprite.height / -2), 
+                                this.renderManager.context.restore();
+                            } else console.log("uknown sprite:", index);
+                        }
+                    }
+                } ]) && _defineProperties(Constructor.prototype, protoProps), staticProps && _defineProperties(Constructor, staticProps), 
+                Object.defineProperty(Constructor, "prototype", {
+                    writable: !1
+                }), HoverInfoModule;
+            }(__webpack_require__("./frontend/src/render/RenderManager.ts").Renderer);
+        },
+        "./frontend/src/render/InterfaceModule.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+            "use strict";
+            function _typeof(obj) {
+                return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(obj) {
+                    return typeof obj;
+                } : function(obj) {
+                    return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+                }, _typeof(obj);
+            }
+            function _defineProperties(target, props) {
+                for (var i = 0; i < props.length; i++) {
+                    var descriptor = props[i];
+                    descriptor.enumerable = descriptor.enumerable || !1, descriptor.configurable = !0, 
+                    "value" in descriptor && (descriptor.writable = !0), Object.defineProperty(target, (arg = descriptor.key, 
+                    key = void 0, key = function(input, hint) {
+                        if ("object" !== _typeof(input) || null === input) return input;
+                        var prim = input[Symbol.toPrimitive];
+                        if (void 0 !== prim) {
+                            var res = prim.call(input, hint || "default");
+                            if ("object" !== _typeof(res)) return res;
+                            throw new TypeError("@@toPrimitive must return a primitive value.");
+                        }
+                        return ("string" === hint ? String : Number)(input);
+                    }(arg, "string"), "symbol" === _typeof(key) ? key : String(key)), descriptor);
+                }
+                var arg, key;
+            }
+            function _createClass(Constructor, protoProps, staticProps) {
+                return protoProps && _defineProperties(Constructor.prototype, protoProps), staticProps && _defineProperties(Constructor, staticProps), 
+                Object.defineProperty(Constructor, "prototype", {
+                    writable: !1
+                }), Constructor;
+            }
+            __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
+                default: () => InterfaceModule
+            });
+            var InterfaceModule = _createClass((function InterfaceModule(core, renderManager, position, dimensions) {
+                !function(instance, Constructor) {
+                    if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
+                }(this, InterfaceModule), this.core = core, this.renderManager = renderManager, 
+                this.position = position, this.dimensions = dimensions;
+            }));
+        },
         "./frontend/src/render/RenderManager.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
             "use strict";
             __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
                 Renderer: () => Renderer,
                 default: () => RenderManager
             });
-            var tsee__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./node_modules/tsee/lib/index.js"), _util_MathUtil__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./frontend/src/util/MathUtil.ts"), _util_type_Vector__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("./frontend/src/util/type/Vector.ts");
+            var tsee__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./node_modules/tsee/lib/index.js"), _core_Core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./frontend/src/core/Core.ts"), _data_type_MoomooUtil__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("./frontend/src/data/type/MoomooUtil.ts"), _util_MathUtil__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__("./frontend/src/util/MathUtil.ts"), _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__("./frontend/src/util/type/Vector.ts");
             function _typeof(obj) {
                 return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(obj) {
                     return typeof obj;
@@ -2272,8 +3931,8 @@
             function _classCallCheck(instance, Constructor) {
                 if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
             }
-            var Renderer = _createClass((function Renderer(renderManager) {
-                _classCallCheck(this, Renderer), this.renderManager = renderManager;
+            var Renderer = _createClass((function Renderer(renderManager, core) {
+                _classCallCheck(this, Renderer), this.renderManager = renderManager, this.core = core;
             })), RenderManager = function(_EventEmitter) {
                 !function(subClass, superClass) {
                     if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function");
@@ -2291,7 +3950,7 @@
                 function RenderManager(canvas, width, height) {
                     var _this, obj, key, value;
                     _classCallCheck(this, RenderManager), _this = _super.call(this), obj = _assertThisInitialized(_this), 
-                    key = "canvasVertices", value = [ new _util_type_Vector__WEBPACK_IMPORTED_MODULE_2__.default, new _util_type_Vector__WEBPACK_IMPORTED_MODULE_2__.default ], 
+                    key = "canvasVertices", value = [ new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__.default, new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__.default ], 
                     (key = _toPropertyKey(key)) in obj ? Object.defineProperty(obj, key, {
                         value,
                         enumerable: !0,
@@ -2302,11 +3961,11 @@
                     _this.viewport = {
                         width,
                         height
-                    }, _this.cameraPosition = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_2__.default(0, 0), 
-                    _this.renderers = new Map, _this.lastRender = 0;
+                    }, _this.cameraPosition = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__.default(7200, 7200), 
+                    _this.staticCamera = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__.default(7200, 7200), 
+                    _this.renderers = new Map, _this.interfaceRenderers = new Map, _this.lastRender = 0;
                     var resizeListener = function() {
-                        canvas.width = window.innerWidth, canvas.height = window.innerHeight, _this.updateTransformMatrix(), 
-                        _this.context.setTransform(_this.transformMatrix), _this.canvasVertices = [ _this.canvasToContext(0, 0), _this.canvasToContext(window.innerWidth, window.innerHeight) ];
+                        _this.updateTransformMatrix(), _this.canvasVertices = [ _this.canvasToContext(_this.cameraPosition, 0, 0), _this.canvasToContext(_this.cameraPosition, window.innerWidth, window.innerHeight) ];
                     };
                     return resizeListener(), window.addEventListener("resize", resizeListener), canvas.addEventListener("mousemove", (function(e) {
                         return _this.emit("mousemove", e);
@@ -2319,8 +3978,16 @@
                 return _createClass(RenderManager, [ {
                     key: "updateCamera",
                     value: function(delta, targetPosition) {
-                        var distance = _util_MathUtil__WEBPACK_IMPORTED_MODULE_1__.default.getDistance(this.cameraPosition, targetPosition), direction = _util_MathUtil__WEBPACK_IMPORTED_MODULE_1__.default.getDirection(this.cameraPosition, targetPosition), speed = Math.min(.01 * distance * delta, distance);
-                        distance > .05 ? this.cameraPosition.directionMove(direction, speed) : this.cameraPosition.set(targetPosition);
+                        var distance = _util_MathUtil__WEBPACK_IMPORTED_MODULE_3__.default.getDistance(this.cameraPosition, targetPosition), direction = _util_MathUtil__WEBPACK_IMPORTED_MODULE_3__.default.getDirection(this.cameraPosition, targetPosition), speed = .01 * distance * delta;
+                        distance > .05 ? this.cameraPosition.directionMove(direction, speed) : this.cameraPosition.set(targetPosition), 
+                        this.staticCamera.set(targetPosition), _core_Core__WEBPACK_IMPORTED_MODULE_1__.players.forEach((function(player) {
+                            if (player.visible) if (player.forcePos) player.x = player.serverPosX, player.y = player.serverPosY; else {
+                                player.dt += delta;
+                                var overTick = Math.min(1.7, player.dt / 170);
+                                player.x = _data_type_MoomooUtil__WEBPACK_IMPORTED_MODULE_2__.util.lerp(player.clientPosX, player.serverPosX, overTick), 
+                                player.y = _data_type_MoomooUtil__WEBPACK_IMPORTED_MODULE_2__.util.lerp(player.clientPosY, player.serverPosY, overTick);
+                            }
+                        }));
                     }
                 }, {
                     key: "updateTransformMatrix",
@@ -2337,57 +4004,68 @@
                 }, {
                     key: "render",
                     value: function() {
-                        var _this2 = this, currentMs = Date.now(), delta = currentMs - this.lastRender;
-                        this.lastRender = currentMs, this.renderers.forEach((function(renderer) {
+                        var currentMs = Date.now(), delta = currentMs - this.lastRender;
+                        this.lastRender = currentMs, _core_Core__WEBPACK_IMPORTED_MODULE_1__.currentPlayer && _core_Core__WEBPACK_IMPORTED_MODULE_1__.currentPlayer.visible && this.updateCamera(delta, new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__.default(Math.round(_core_Core__WEBPACK_IMPORTED_MODULE_1__.currentPlayer.x), Math.round(_core_Core__WEBPACK_IMPORTED_MODULE_1__.currentPlayer.y))), 
+                        this.renderers.forEach((function(renderer) {
                             renderer.render(delta);
-                        })), window.requestAnimationFrame((function() {
-                            return _this2.render();
+                        })), this.interfaceRenderers.forEach((function(renderer) {
+                            renderer.render(delta);
                         }));
                     }
                 }, {
                     key: "createRenderer",
-                    value: function(id, rendererClass) {
-                        this.renderers.set(id, new rendererClass(this));
+                    value: function(id, rendererClass, core) {
+                        this.renderers.set(id, new rendererClass(this, core));
                     }
                 }, {
-                    key: "startRender",
+                    key: "createInterfaceRenderer",
+                    value: function(id, rendererClass, core) {
+                        this.interfaceRenderers.set(id, new rendererClass(core, this));
+                    }
+                }, {
+                    key: "createRenderHook",
                     value: function() {
-                        var _this3 = this;
-                        this.lastRender = Date.now(), window.requestAnimationFrame((function() {
-                            return _this3.render();
+                        var _this2 = this;
+                        this.lastRender = Date.now();
+                        var _ = this, originalAnimFrame = window.requestAnimationFrame;
+                        window.requestAnimationFrame = function(callback) {
+                            var result = originalAnimFrame.call(this, callback);
+                            return _.render(), result;
+                        }, window.requestAnimationFrame((function() {
+                            return _this2.render();
                         }));
                     }
                 }, {
                     key: "getCameraOffset",
-                    value: function() {
-                        return new _util_type_Vector__WEBPACK_IMPORTED_MODULE_2__.default(this.cameraPosition.x - this.viewport.width / 2, this.cameraPosition.y - this.viewport.height / 2);
+                    value: function(camera) {
+                        return camera.clone().subtract(this.viewport.width / 2, this.viewport.height / 2);
                     }
                 }, {
                     key: "mapToContext",
-                    value: function(param1, param2) {
-                        var offset = this.getCameraOffset();
-                        return "object" === _typeof(param1) ? param1.clone().subtract(offset) : new _util_type_Vector__WEBPACK_IMPORTED_MODULE_2__.default(param1 - offset.x, param2 - offset.y);
+                    value: function(camera, param1, param2) {
+                        var offset = this.getCameraOffset(camera);
+                        return "object" === _typeof(param1) ? param1.clone().subtract(offset) : new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__.default(param1 - offset.x, param2 - offset.y);
                     }
                 }, {
                     key: "canvasToMap",
-                    value: function(param1, param2) {
-                        var offset = this.getCameraOffset();
-                        return "object" === _typeof(param1) ? param1.clone().subtract(this.transformMatrix.e, this.transformMatrix.f).divide(this.transformMatrix.a, this.transformMatrix.d).add(offset) : new _util_type_Vector__WEBPACK_IMPORTED_MODULE_2__.default((param1 - this.transformMatrix.e) / this.transformMatrix.a + offset.x, (param2 - this.transformMatrix.f) / this.transformMatrix.d + offset.y);
+                    value: function(camera, param1, param2) {
+                        var offset = this.getCameraOffset(camera);
+                        return "object" === _typeof(param1) ? param1.clone().subtract(this.transformMatrix.e, this.transformMatrix.f).divide(this.transformMatrix.a, this.transformMatrix.d).add(offset) : new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__.default((param1 - this.transformMatrix.e) / this.transformMatrix.a + offset.x, (param2 - this.transformMatrix.f) / this.transformMatrix.d + offset.y);
                     }
                 }, {
                     key: "canvasToContext",
-                    value: function(param1, param2) {
-                        return "object" === _typeof(param1) ? this.mapToContext(this.canvasToMap(param1)) : this.mapToContext(this.canvasToMap(param1, param2));
+                    value: function(camera, param1, param2) {
+                        return "object" === _typeof(param1) ? this.mapToContext(camera, this.canvasToMap(camera, param1)) : this.mapToContext(camera, this.canvasToMap(camera, param1, param2));
                     }
                 } ]), RenderManager;
             }(tsee__WEBPACK_IMPORTED_MODULE_0__.EventEmitter);
         },
-        "./frontend/src/render/background/BackgroundRenderer.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+        "./frontend/src/render/interface/PacketCountModule.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
             "use strict";
             __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
-                default: () => BackgroundRenderer
+                default: () => PacketCountModule
             });
-            var _util_type_Vector__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./frontend/src/util/type/Vector.ts");
+            var _util_DrawUtil__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./frontend/src/util/DrawUtil.ts"), _util_engine_PacketCountEngine__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./frontend/src/util/engine/PacketCountEngine.ts"), _util_type_Vector__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("./frontend/src/util/type/Vector.ts");
             function _typeof(obj) {
                 return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(obj) {
                     return typeof obj;
@@ -2452,7 +4130,7 @@
                     return o.__proto__ || Object.getPrototypeOf(o);
                 }, _getPrototypeOf(o);
             }
-            var BackgroundRenderer = function(_Renderer) {
+            var PacketCountModule = function(_InterfaceModule) {
                 !function(subClass, superClass) {
                     if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function");
                     subClass.prototype = Object.create(superClass && superClass.prototype, {
@@ -2464,36 +4142,30 @@
                     }), Object.defineProperty(subClass, "prototype", {
                         writable: !1
                     }), superClass && _setPrototypeOf(subClass, superClass);
-                }(BackgroundRenderer, _Renderer);
-                var Constructor, protoProps, staticProps, _super = _createSuper(BackgroundRenderer);
-                function BackgroundRenderer(renderManager) {
-                    var _this;
+                }(PacketCountModule, _InterfaceModule);
+                var Constructor, protoProps, staticProps, _super = _createSuper(PacketCountModule);
+                function PacketCountModule(core, renderManager) {
                     return function(instance, Constructor) {
                         if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-                    }(this, BackgroundRenderer), (_this = _super.call(this, renderManager)).pos = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_0__.default, 
-                    renderManager.on("mousemove", (function(event) {
-                        _this.pos = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_0__.default(event.clientX, event.clientY);
-                    })), _this;
+                    }(this, PacketCountModule), _super.call(this, core, renderManager, new _util_type_Vector__WEBPACK_IMPORTED_MODULE_2__.default(10, 10), new _util_type_Vector__WEBPACK_IMPORTED_MODULE_2__.default(200, 18));
                 }
-                return Constructor = BackgroundRenderer, (protoProps = [ {
+                return Constructor = PacketCountModule, (protoProps = [ {
                     key: "render",
                     value: function(delta) {
-                        var vec = this.renderManager.canvasToMap(this.pos), mapCorner = this.renderManager.canvasToContext(new _util_type_Vector__WEBPACK_IMPORTED_MODULE_0__.default(50, 30));
-                        this.renderManager.context.lineJoin = "round", this.renderManager.context.font = "20px Poppins", 
-                        this.renderManager.context.strokeStyle = "black", this.renderManager.context.fillStyle = "white", 
-                        this.renderManager.context.lineWidth = 5, this.renderManager.context.strokeText(vec.toString(!0), mapCorner.x, mapCorner.y), 
-                        this.renderManager.context.fillText(vec.toString(!0), mapCorner.x, mapCorner.y);
+                        var position = this.renderManager.canvasToContext(this.renderManager.staticCamera, this.position), packetPercent = this.core.packetEngine.packetCount2 / _util_engine_PacketCountEngine__WEBPACK_IMPORTED_MODULE_1__.PacketCountEngine.PACKET_LIMIT2;
+                        _util_DrawUtil__WEBPACK_IMPORTED_MODULE_0__.default.progressBar(this.renderManager.context, packetPercent, position.x, position.y, this.dimensions.x, this.dimensions.y, "#ff0004", "#474232", Math.round(100 * packetPercent) + "%", "#ffffff", "18px Hammersmith One");
                     }
                 } ]) && _defineProperties(Constructor.prototype, protoProps), staticProps && _defineProperties(Constructor, staticProps), 
                 Object.defineProperty(Constructor, "prototype", {
                     writable: !1
-                }), BackgroundRenderer;
-            }(__webpack_require__("./frontend/src/render/RenderManager.ts").Renderer);
+                }), PacketCountModule;
+            }(__webpack_require__("./frontend/src/render/InterfaceModule.ts").default);
         },
         "./frontend/src/socket/Connection.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
             "use strict";
             __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
-                connection: () => connection
+                connection: () => connection,
+                inject: () => inject
             });
             var error_stack_parser__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./node_modules/error-stack-parser/error-stack-parser.js"), error_stack_parser__WEBPACK_IMPORTED_MODULE_0___default = __webpack_require__.n(error_stack_parser__WEBPACK_IMPORTED_MODULE_0__), events__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./node_modules/events/events.js"), events__WEBPACK_IMPORTED_MODULE_1___default = __webpack_require__.n(events__WEBPACK_IMPORTED_MODULE_1__), _event_EventPacket__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("./frontend/src/event/EventPacket.ts"), _util_Logger__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__("./frontend/src/util/Logger.ts"), _packets_Packet__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__("./frontend/src/socket/packets/Packet.ts"), _packets_PacketFactory__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__("./frontend/src/socket/packets/PacketFactory.ts");
             function _typeof(obj) {
@@ -2642,8 +4314,8 @@
                     }
                 }, {
                     key: "send",
-                    value: function(packet) {
-                        this.socket && 1 == this.socket.readyState && this.socket.send(packetFactory.serializePacket(packet), !0);
+                    value: function(packet, allow) {
+                        this.socket && 1 == this.socket.readyState && this.socket[allow ? "ss" : "send"](packetFactory.serializePacket(packet), !0);
                     }
                 } ]), Connection;
             }(events__WEBPACK_IMPORTED_MODULE_1___default());
@@ -2688,64 +4360,97 @@
                         var event = new _event_EventPacket__WEBPACK_IMPORTED_MODULE_2__.default(packetFactory.deserializePacket(data, _packets_Packet__WEBPACK_IMPORTED_MODULE_4__.Side.Server, Date.now()));
                         connection.emit("packetsend", event), event.isCanceled() || _get(_getPrototypeOf(Injection.prototype), "send", this).call(this, packetFactory.serializePacket(event.getPacket()));
                     }
+                }, {
+                    key: "ss",
+                    value: function(data) {
+                        _get(_getPrototypeOf(Injection.prototype), "send", this).call(this, data);
+                    }
                 } ]), Injection;
             }(_wrapNativeSuper(WebSocket));
-            Object.defineProperty(window, "WebSocket", {
-                get: function() {
-                    return console.log(error_stack_parser__WEBPACK_IMPORTED_MODULE_0___default().parse(new Error)), 
-                    Injection;
-                },
-                set: function(a) {
-                    console.log("set:", (new Error).stack, a);
-                }
-            });
+            function inject() {
+                var originalWebSocket = WebSocket;
+                Object.defineProperty(window, "WebSocket", {
+                    get: function() {
+                        var caller = error_stack_parser__WEBPACK_IMPORTED_MODULE_0___default().parse(new Error)[1];
+                        return caller.fileName && caller.functionName && /(?:(?:http|https):\/\/(?:sandbox\.|dev\.)?moomoo\.io\/(?:bundle\.js| line 1 > injectedScript line \d+ > Function)|\(unknown source\)\)|:\d+)/g.test(caller.fileName) && /Object\.connect|connect/g.test(caller.functionName) ? Injection : (logger.warn("accessing WebSocket from unkown source:", caller), 
+                        originalWebSocket);
+                    },
+                    set: function(a) {
+                        console.log("set:", (new Error).stack, a);
+                    }
+                });
+            }
         },
         "./frontend/src/socket/PacketHandler.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
             "use strict";
             __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
                 PacketHandler: () => PacketHandler
             });
-            var _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./frontend/src/data/moomoo/items.ts"), _data_type_GameObject__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./frontend/src/data/type/GameObject.ts"), _data_type_Player__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("./frontend/src/data/type/Player.ts"), _core_Core__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__("./frontend/src/core/Core.ts"), _packets_PacketType__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__("./frontend/src/socket/packets/PacketType.ts");
+            var _data_type_Player__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./frontend/src/data/type/Player.ts"), _core_Core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./frontend/src/core/Core.ts"), _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("./frontend/src/socket/packets/PacketType.ts"), _main__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__("./frontend/src/main.ts");
+            function _toConsumableArray(arr) {
+                return function(arr) {
+                    if (Array.isArray(arr)) return _arrayLikeToArray(arr);
+                }(arr) || function(iter) {
+                    if ("undefined" != typeof Symbol && null != iter[Symbol.iterator] || null != iter["@@iterator"]) return Array.from(iter);
+                }(arr) || function(o, minLen) {
+                    if (!o) return;
+                    if ("string" == typeof o) return _arrayLikeToArray(o, minLen);
+                    var n = Object.prototype.toString.call(o).slice(8, -1);
+                    "Object" === n && o.constructor && (n = o.constructor.name);
+                    if ("Map" === n || "Set" === n) return Array.from(o);
+                    if ("Arguments" === n || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+                }(arr) || function() {
+                    throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+                }();
+            }
+            function _arrayLikeToArray(arr, len) {
+                (null == len || len > arr.length) && (len = arr.length);
+                for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+                return arr2;
+            }
             var PacketHandler = {
                 process: function(packet) {
                     switch (packet.type) {
-                      case _packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.PLAYER_ADD:
-                        var player = new _data_type_Player__WEBPACK_IMPORTED_MODULE_2__.default(packet.data[0][0], packet.data[0][1]);
-                        player.spawn(), player.setData(packet.data[0]), _core_Core__WEBPACK_IMPORTED_MODULE_3__.players.push(player), 
-                        packet.data[1] && (0, _core_Core__WEBPACK_IMPORTED_MODULE_3__.setCurrentPlayer)(player);
+                      case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.PLAYER_ADD:
+                        var _core$renderManager, _core$renderManager2, player = new _data_type_Player__WEBPACK_IMPORTED_MODULE_0__.default(packet.data[0][0], packet.data[0][1]);
+                        if (_core_Core__WEBPACK_IMPORTED_MODULE_1__.players.removeBySid(player.sid), player.spawn(), 
+                        player.visible = !1, player.x2 = void 0, player.y2 = void 0, player.setData(packet.data[0]), 
+                        packet.data[1]) player.visible = !0, (0, _core_Core__WEBPACK_IMPORTED_MODULE_1__.setCurrentPlayer)(player), 
+                        null === (_core$renderManager = _main__WEBPACK_IMPORTED_MODULE_3__.core.renderManager) || void 0 === _core$renderManager || _core$renderManager.cameraPosition.set(player.x, player.y), 
+                        null === (_core$renderManager2 = _main__WEBPACK_IMPORTED_MODULE_3__.core.renderManager) || void 0 === _core$renderManager2 || _core$renderManager2.staticCamera.set(player.x, player.y);
+                        _core_Core__WEBPACK_IMPORTED_MODULE_1__.players.push(player);
                         break;
 
-                      case _packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.PLAYER_UPDATE:
-                        for (var i = 0; i < _core_Core__WEBPACK_IMPORTED_MODULE_3__.players.length; i++) _core_Core__WEBPACK_IMPORTED_MODULE_3__.players[i].visible = !1;
+                      case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.PLAYER_UPDATE:
+                        for (var i = 0; i < _core_Core__WEBPACK_IMPORTED_MODULE_1__.players.length; i++) _core_Core__WEBPACK_IMPORTED_MODULE_1__.players[i].visible = !1;
                         for (var _i = 0; _i < packet.data[0].length / 13; _i++) {
-                            var playerData = packet.data[0].slice(13 * _i, 13 * _i + 13), _player = _core_Core__WEBPACK_IMPORTED_MODULE_3__.players.findBySid(playerData[0]);
-                            _player.x = playerData[1], _player.y = playerData[2], _player.dir = playerData[3], 
-                            _player.buildIndex = playerData[4], _player.weaponIndex = playerData[5], _player.weaponVariant = playerData[6], 
-                            _player.team = playerData[7], _player.isLeader = playerData[8], _player.skinIndex = playerData[9], 
-                            _player.tailIndex = playerData[10], _player.iconIndex = playerData[11], _player.zIndex = playerData[12], 
-                            _player.visible = !0;
+                            var playerData = packet.data[0].slice(13 * _i, 13 * _i + 13), _player = _core_Core__WEBPACK_IMPORTED_MODULE_1__.players.findBySid(playerData[0]);
+                            _player && (_player.clientPosX = _player.x, _player.clientPosY = _player.y, _player.lastTickPosX = _player.serverPosX, 
+                            _player.lastTickPosY = _player.serverPosY, _player.serverPosX = playerData[1], _player.serverPosY = playerData[2], 
+                            _player.dt = 0, _player.dir = playerData[3], _player.buildIndex = playerData[4], 
+                            _player.weaponIndex = playerData[5], _player.weaponVariant = playerData[6], _player.team = playerData[7], 
+                            _player.isLeader = playerData[8], _player.skinIndex = playerData[9], _player.tailIndex = playerData[10], 
+                            _player.iconIndex = playerData[11], _player.zIndex = playerData[12], _player.visible = !0);
                         }
                         break;
 
-                      case _packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.LOAD_GAME_OBJ:
+                      case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.LOAD_GAME_OBJ:
                         for (var _i2 = 0; _i2 < packet.data[0].length / 8; _i2++) {
-                            var objectData = packet.data[0].slice(8 * _i2, 8 * _i2 + 8), _object = _core_Core__WEBPACK_IMPORTED_MODULE_3__.buildings.findBySid(objectData[0]);
-                            _object || (_object = new _data_type_GameObject__WEBPACK_IMPORTED_MODULE_1__.GameObject(objectData[0])), 
-                            _object.init(objectData[1], objectData[2], objectData[3], objectData[4], objectData[5], _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[objectData[6]], objectData[7] >= 0 ? {
-                                sid: objectData[7]
-                            } : null), _core_Core__WEBPACK_IMPORTED_MODULE_3__.buildings.push(_object);
+                            var _core$objectManager, data = packet.data[0].slice(8 * _i2, 8 * _i2 + 8);
+                            (_core$objectManager = _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager).add.apply(_core$objectManager, _toConsumableArray(data));
                         }
                         break;
 
-                      case _packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.REMOVE_GAME_OBJ:
-                        _core_Core__WEBPACK_IMPORTED_MODULE_3__.buildings.findBySid(packet.data[0]) && _core_Core__WEBPACK_IMPORTED_MODULE_3__.buildings.removeBySid(packet.data[0]);
+                      case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.REMOVE_GAME_OBJ:
+                        _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager.disableBySid(packet.data[0]);
                         break;
 
-                      case _packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.REMOVE_ALL_OBJ:
-                        for (var _i3 = 0; _i3 < _core_Core__WEBPACK_IMPORTED_MODULE_3__.buildings.length; _i3++) {
-                            var building = _core_Core__WEBPACK_IMPORTED_MODULE_3__.buildings[_i3];
-                            building.active && building.owner && building.owner.sid == packet.data[0] && (building.active = !1);
-                        }
+                      case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.REMOVE_ALL_OBJ:
+                        _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager.removeAllItems(packet.data[0]);
+                        break;
+
+                      case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.WIGGLE:
+                        _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager.wiggleObject(packet.data[1], packet.data[0]);
                     }
                 }
             };
@@ -2929,9 +4634,6 @@
             }, packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.UPDATE_AGE] = {
                 value: "15",
                 side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
-            }, packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.UPDATE_HEALTH] = {
-                value: "h",
-                side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
             }, packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.CLAN_NOTIFY_SERVER] = {
                 value: "14",
                 side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Server
@@ -2968,7 +4670,7 @@
             }, packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.IO_INIT] = {
                 value: "io-init",
                 side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
-            }, packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.HEALTH_CHANGE] = {
+            }, packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.DAMAGE_TEXT] = {
                 value: "t",
                 side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
             }, packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.JOIN_REQUEST] = {
@@ -3057,63 +4759,85 @@
                 PacketType[PacketType.GATHER_ANIM = 14] = "GATHER_ANIM", PacketType[PacketType.AUTO_ATK = 15] = "AUTO_ATK", 
                 PacketType[PacketType.WIGGLE = 16] = "WIGGLE", PacketType[PacketType.CLAN_CREATE = 17] = "CLAN_CREATE", 
                 PacketType[PacketType.LEAVE_CLAN = 18] = "LEAVE_CLAN", PacketType[PacketType.CLAN_REQ_JOIN = 19] = "CLAN_REQ_JOIN", 
-                PacketType[PacketType.UPDATE_HEALTH = 20] = "UPDATE_HEALTH", PacketType[PacketType.CLAN_ACC_JOIN = 21] = "CLAN_ACC_JOIN", 
-                PacketType[PacketType.CLAN_KICK = 22] = "CLAN_KICK", PacketType[PacketType.ITEM_BUY = 23] = "ITEM_BUY", 
-                PacketType[PacketType.UPDATE_AGE = 24] = "UPDATE_AGE", PacketType[PacketType.UPDATE_ITEMS = 25] = "UPDATE_ITEMS", 
-                PacketType[PacketType.CHAT = 26] = "CHAT", PacketType[PacketType.CLAN_DEL = 27] = "CLAN_DEL", 
-                PacketType[PacketType.PLAYER_SET_CLAN = 28] = "PLAYER_SET_CLAN", PacketType[PacketType.SET_CLAN_PLAYERS = 29] = "SET_CLAN_PLAYERS", 
-                PacketType[PacketType.CLAN_ADD = 30] = "CLAN_ADD", PacketType[PacketType.MINIMAP = 31] = "MINIMAP", 
-                PacketType[PacketType.UPDATE_STORE = 32] = "UPDATE_STORE", PacketType[PacketType.DISCONN = 33] = "DISCONN", 
-                PacketType[PacketType.WINDOW_FOCUS = 34] = "WINDOW_FOCUS", PacketType[PacketType.PLAYER_ADD = 35] = "PLAYER_ADD", 
-                PacketType[PacketType.SPAWN = 36] = "SPAWN", PacketType[PacketType.IO_INIT = 37] = "IO_INIT", 
-                PacketType[PacketType.UPDATE_ANIMALS = 38] = "UPDATE_ANIMALS", PacketType[PacketType.CLAN_LIST = 39] = "CLAN_LIST", 
-                PacketType[PacketType.BUY_AND_EQUIP = 40] = "BUY_AND_EQUIP", PacketType[PacketType.DEATH = 41] = "DEATH", 
-                PacketType[PacketType.CLAN_NOTIFY_SERVER = 42] = "CLAN_NOTIFY_SERVER", PacketType[PacketType.CLAN_NOTIFY_CLIENT = 43] = "CLAN_NOTIFY_CLIENT", 
-                PacketType[PacketType.HEALTH_CHANGE = 44] = "HEALTH_CHANGE", PacketType[PacketType.JOIN_REQUEST = 45] = "JOIN_REQUEST", 
-                PacketType[PacketType.REMOVE_GAME_OBJ = 46] = "REMOVE_GAME_OBJ", PacketType[PacketType.REMOVE_ALL_OBJ = 47] = "REMOVE_ALL_OBJ", 
-                PacketType[PacketType.UPDATE_PLACE_LIMIT = 48] = "UPDATE_PLACE_LIMIT", PacketType[PacketType.ADD_PROJECTILE = 49] = "ADD_PROJECTILE", 
-                PacketType[PacketType.UPDATE_PROJECTILES = 50] = "UPDATE_PROJECTILES";
+                PacketType[PacketType.CLAN_ACC_JOIN = 20] = "CLAN_ACC_JOIN", PacketType[PacketType.CLAN_KICK = 21] = "CLAN_KICK", 
+                PacketType[PacketType.ITEM_BUY = 22] = "ITEM_BUY", PacketType[PacketType.UPDATE_AGE = 23] = "UPDATE_AGE", 
+                PacketType[PacketType.UPDATE_ITEMS = 24] = "UPDATE_ITEMS", PacketType[PacketType.CHAT = 25] = "CHAT", 
+                PacketType[PacketType.CLAN_DEL = 26] = "CLAN_DEL", PacketType[PacketType.PLAYER_SET_CLAN = 27] = "PLAYER_SET_CLAN", 
+                PacketType[PacketType.SET_CLAN_PLAYERS = 28] = "SET_CLAN_PLAYERS", PacketType[PacketType.CLAN_ADD = 29] = "CLAN_ADD", 
+                PacketType[PacketType.MINIMAP = 30] = "MINIMAP", PacketType[PacketType.UPDATE_STORE = 31] = "UPDATE_STORE", 
+                PacketType[PacketType.DISCONN = 32] = "DISCONN", PacketType[PacketType.WINDOW_FOCUS = 33] = "WINDOW_FOCUS", 
+                PacketType[PacketType.PLAYER_ADD = 34] = "PLAYER_ADD", PacketType[PacketType.SPAWN = 35] = "SPAWN", 
+                PacketType[PacketType.IO_INIT = 36] = "IO_INIT", PacketType[PacketType.UPDATE_ANIMALS = 37] = "UPDATE_ANIMALS", 
+                PacketType[PacketType.CLAN_LIST = 38] = "CLAN_LIST", PacketType[PacketType.BUY_AND_EQUIP = 39] = "BUY_AND_EQUIP", 
+                PacketType[PacketType.DEATH = 40] = "DEATH", PacketType[PacketType.CLAN_NOTIFY_SERVER = 41] = "CLAN_NOTIFY_SERVER", 
+                PacketType[PacketType.CLAN_NOTIFY_CLIENT = 42] = "CLAN_NOTIFY_CLIENT", PacketType[PacketType.DAMAGE_TEXT = 43] = "DAMAGE_TEXT", 
+                PacketType[PacketType.JOIN_REQUEST = 44] = "JOIN_REQUEST", PacketType[PacketType.REMOVE_GAME_OBJ = 45] = "REMOVE_GAME_OBJ", 
+                PacketType[PacketType.REMOVE_ALL_OBJ = 46] = "REMOVE_ALL_OBJ", PacketType[PacketType.UPDATE_PLACE_LIMIT = 47] = "UPDATE_PLACE_LIMIT", 
+                PacketType[PacketType.ADD_PROJECTILE = 48] = "ADD_PROJECTILE", PacketType[PacketType.UPDATE_PROJECTILES = 49] = "UPDATE_PROJECTILES";
             }(PacketType || (PacketType = {}));
         },
-        "./frontend/src/util/DocumentUtil.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+        "./frontend/src/util/DrawUtil.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
             "use strict";
             __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
                 default: () => __WEBPACK_DEFAULT_EXPORT__
             });
-            var listeners_waitForElement = [], observer = new MutationObserver((function(mutations) {
-                for (var i = 0, length = mutations.length; i < length; i++) {
-                    var mutation = mutations[i];
-                    if ("childList" == mutation.type) for (var j = 0, length2 = mutation.addedNodes.length; j < length2; j++) {
-                        var node = mutation.addedNodes[j];
-                        if (node instanceof HTMLElement) for (var k = 0, length3 = listeners_waitForElement.length; k < length3; k++) {
-                            var listener = listeners_waitForElement[k];
-                            node.matches(listener[0]) && (listener[1](node), listeners_waitForElement.splice(listeners_waitForElement.indexOf(listener), 1));
-                        }
+            var Geom = {
+                d3_geom_contourDx: [ 1, 0, 1, 1, -1, 0, -1, 1, 0, 0, 0, 0, -1, 0, -1, NaN ],
+                d3_geom_contourDy: [ 0, -1, 0, 0, 0, -1, 0, 0, 1, -1, 1, 1, 0, -1, 0, NaN ],
+                d3_geom_contourStart: function(grid) {
+                    for (var x = 0, y = 0; ;) {
+                        if (grid(x, y)) return [ x, y ];
+                        0 === x ? (x = y + 1, y = 0) : (x -= 1, y += 1);
                     }
-                }
-            }));
-            const __WEBPACK_DEFAULT_EXPORT__ = {
-                init: function(doc) {
-                    observer.observe(doc.body, {
-                        childList: !0,
-                        subtree: !0
-                    });
                 },
-                waitForElement: function(selector, callback) {
-                    var el;
-                    (el = document.querySelector(selector)) ? callback(el) : listeners_waitForElement.push([ selector, callback ]);
+                contour: function(grid, start) {
+                    var s = start, c = [], x = s[0], y = s[1], dx = 0, dy = 0, pdx = NaN, pdy = NaN, i = 0;
+                    do {
+                        i = 0, grid(x - 1, y - 1) && (i += 1), grid(x, y - 1) && (i += 2), grid(x - 1, y) && (i += 4), 
+                        grid(x, y) && (i += 8), 6 === i ? (dx = -1 === pdy ? -1 : 1, dy = 0) : 9 === i ? (dx = 0, 
+                        dy = 1 === pdx ? -1 : 1) : (dx = this.d3_geom_contourDx[i], dy = this.d3_geom_contourDy[i]), 
+                        dx != pdx && dy != pdy && (c.push([ x, y ]), pdx = dx, pdy = dy), x += dx, y += dy;
+                    } while (s[0] != x || s[1] != y);
+                    return c;
+                }
+            };
+            const __WEBPACK_DEFAULT_EXPORT__ = {
+                progressBar: function(context, currentProgress, x, y, width, height, barFillColor, emptyFillColor, text, textFillColor, textFont) {
+                    context.save(), context.beginPath(), emptyFillColor || (emptyFillColor = "black"), 
+                    barFillColor || (barFillColor = "white");
+                    var radius = height / 2, halfradians = 2 * Math.PI / 2, quarterradians = 2 * Math.PI / 4;
+                    context.arc(radius + x, radius + y, radius, -quarterradians, halfradians, !0), context.lineTo(x, y + height - radius), 
+                    context.arc(radius + x, height - radius + y, radius, halfradians, quarterradians, !0), 
+                    context.lineTo(x + width - radius, y + height), context.arc(x + width - radius, y + height - radius, radius, quarterradians, 0, !0), 
+                    context.lineTo(x + width, y + radius), context.arc(x + width - radius, y + radius, radius, 0, -quarterradians, !0), 
+                    context.lineTo(x + radius, y), context.fillStyle = emptyFillColor, context.fill(), 
+                    context.stroke(), context.closePath(), context.clip();
+                    var tst = currentProgress * width + (x - width);
+                    context.beginPath(), context.arc(radius + tst, radius + y, radius, -quarterradians, halfradians, !0), 
+                    context.lineTo(tst, y + height - radius), context.arc(radius + tst, height - radius + y, radius, halfradians, quarterradians, !0), 
+                    context.lineTo(tst + width - radius, y + height), context.arc(tst + width - radius, y + height - radius, radius, quarterradians, 0, !0), 
+                    context.lineTo(tst + width, y + radius), context.arc(tst + width - radius, y + radius, radius, 0, -quarterradians, !0), 
+                    context.lineTo(tst + radius, y), context.fillStyle = barFillColor, context.fill(), 
+                    context.font = textFont, context.fillStyle = textFillColor, context.textAlign = "center", 
+                    context.fillText(text, x + width / 2, y + height / 2), context.closePath(), context.restore();
+                },
+                strokeImageOutline: function(canvas, maxTransparency) {
+                    var context = canvas.getContext("2d"), data = context.getImageData(0, 0, canvas.width, canvas.height).data;
+                    function defineNonTransparent(x, y) {
+                        return data[4 * (y * canvas.width + x) + 3] >= maxTransparency;
+                    }
+                    var start = Geom.d3_geom_contourStart(defineNonTransparent), points = Geom.contour(defineNonTransparent, start);
+                    context.beginPath(), context.moveTo(points[0][0], points[0][4]);
+                    for (var i = 0; i < points.length; i++) {
+                        var point = points[i];
+                        context.lineTo(point[0], point[1]);
+                    }
+                    context.closePath(), context.stroke();
                 }
             };
         },
         "./frontend/src/util/Logger.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
             "use strict";
-            function _typeof(obj) {
-                return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(obj) {
-                    return typeof obj;
-                } : function(obj) {
-                    return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-                }, _typeof(obj);
-            }
             function _toConsumableArray(arr) {
                 return function(arr) {
                     if (Array.isArray(arr)) return _arrayLikeToArray(arr);
@@ -3134,6 +4858,13 @@
                 (null == len || len > arr.length) && (len = arr.length);
                 for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
                 return arr2;
+            }
+            function _typeof(obj) {
+                return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(obj) {
+                    return typeof obj;
+                } : function(obj) {
+                    return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+                }, _typeof(obj);
             }
             function _defineProperties(target, props) {
                 for (var i = 0; i < props.length; i++) {
@@ -3158,7 +4889,7 @@
                 default: () => __WEBPACK_DEFAULT_EXPORT__
             }), function(Level) {
                 Level[Level.LOG = 0] = "LOG", Level[Level.INFO = 1] = "INFO", Level[Level.WARN = 2] = "WARN", 
-                Level[Level.ERROR = 3] = "ERROR";
+                Level[Level.ERROR = 3] = "ERROR", Level[Level.TRACE = 4] = "TRACE";
             }(Level || (Level = {}));
             var LogLevel = new Map;
             function format(loggerId, level) {
@@ -3166,44 +4897,51 @@
                 return [ "NVR | ".concat(loggerId, ": [").concat(LogLevel.get(level), "] ->") ].concat(msg);
             }
             LogLevel.set(Level.LOG, "LOG"), LogLevel.set(Level.INFO, "INFO"), LogLevel.set(Level.WARN, "WARN"), 
-            LogLevel.set(Level.ERROR, "ERROR");
+            LogLevel.set(Level.ERROR, "ERROR"), LogLevel.set(Level.TRACE, "TRACE");
             const __WEBPACK_DEFAULT_EXPORT__ = function() {
-                function Logger(id) {
+                function Logger(arg0, arg1) {
                     !function(instance, Constructor) {
                         if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-                    }(this, Logger), this.id = id, this.profilers = new Map;
+                    }(this, Logger), this.id = "string" == typeof arg0 ? arg0 : arg1, this.profilers = new Map, 
+                    this.console = "object" == _typeof(arg0) ? arg0 : window.console;
                 }
                 var Constructor, protoProps, staticProps;
                 return Constructor = Logger, protoProps = [ {
                     key: "log",
                     value: function() {
-                        for (var _console, _len2 = arguments.length, message = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) message[_key2] = arguments[_key2];
-                        (_console = console).log.apply(_console, _toConsumableArray(format.apply(void 0, [ this.id, Level.LOG ].concat(message))));
+                        for (var _this$console, _len2 = arguments.length, message = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) message[_key2] = arguments[_key2];
+                        (_this$console = this.console).log.apply(_this$console, _toConsumableArray(format.apply(void 0, [ this.id, Level.LOG ].concat(message))));
                     }
                 }, {
                     key: "info",
                     value: function() {
-                        for (var _console2, _len3 = arguments.length, message = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) message[_key3] = arguments[_key3];
-                        (_console2 = console).log.apply(_console2, _toConsumableArray(format.apply(void 0, [ this.id, Level.INFO ].concat(message))));
+                        for (var _this$console2, _len3 = arguments.length, message = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) message[_key3] = arguments[_key3];
+                        (_this$console2 = this.console).log.apply(_this$console2, _toConsumableArray(format.apply(void 0, [ this.id, Level.INFO ].concat(message))));
                     }
                 }, {
                     key: "warn",
                     value: function() {
-                        for (var _console3, _len4 = arguments.length, message = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) message[_key4] = arguments[_key4];
-                        (_console3 = console).log.apply(_console3, _toConsumableArray(format.apply(void 0, [ this.id, Level.WARN ].concat(message))));
+                        for (var _this$console3, _len4 = arguments.length, message = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) message[_key4] = arguments[_key4];
+                        (_this$console3 = this.console).log.apply(_this$console3, _toConsumableArray(format.apply(void 0, [ this.id, Level.WARN ].concat(message))));
                     }
                 }, {
                     key: "error",
                     value: function() {
-                        for (var _console4, _len5 = arguments.length, message = new Array(_len5), _key5 = 0; _key5 < _len5; _key5++) message[_key5] = arguments[_key5];
-                        (_console4 = console).log.apply(_console4, _toConsumableArray(format.apply(void 0, [ this.id, Level.ERROR ].concat(message))));
+                        for (var _this$console4, _len5 = arguments.length, message = new Array(_len5), _key5 = 0; _key5 < _len5; _key5++) message[_key5] = arguments[_key5];
+                        (_this$console4 = this.console).log.apply(_this$console4, _toConsumableArray(format.apply(void 0, [ this.id, Level.ERROR ].concat(message))));
+                    }
+                }, {
+                    key: "trace",
+                    value: function() {
+                        for (var _this$console5, _len6 = arguments.length, message = new Array(_len6), _key6 = 0; _key6 < _len6; _key6++) message[_key6] = arguments[_key6];
+                        (_this$console5 = this.console).trace.apply(_this$console5, _toConsumableArray(format.apply(void 0, [ this.id, Level.TRACE ].concat(message))));
                     }
                 }, {
                     key: "profile",
                     value: function(profileId) {
                         if (this.profilers.has(profileId)) {
-                            for (var _console5, _len6 = arguments.length, message = new Array(_len6 > 1 ? _len6 - 1 : 0), _key6 = 1; _key6 < _len6; _key6++) message[_key6 - 1] = arguments[_key6];
-                            (_console5 = console).log.apply(_console5, _toConsumableArray(format.apply(void 0, [ this.id, Level.LOG ].concat(message, [ "(took ".concat(Date.now() - this.profilers.get(profileId), " ms)") ])))), 
+                            for (var _this$console6, _len7 = arguments.length, message = new Array(_len7 > 1 ? _len7 - 1 : 0), _key7 = 1; _key7 < _len7; _key7++) message[_key7 - 1] = arguments[_key7];
+                            (_this$console6 = this.console).log.apply(_this$console6, _toConsumableArray(format.apply(void 0, [ this.id, Level.LOG ].concat(message, [ "(took ".concat(Date.now() - this.profilers.get(profileId), " ms)") ])))), 
                             this.profilers.delete(profileId);
                         } else this.profilers.set(profileId, Date.now());
                     }
@@ -3236,7 +4974,7 @@
                     return pos1.clone().subtract(pos2).hypot();
                 },
                 getDirection: function(from, to) {
-                    return Math.atan2(to.y - from.y, to.x - from.y);
+                    return Math.atan2(to.y - from.y, to.x - from.x);
                 },
                 getAngleDist: function(a, b) {
                     var p = Math.abs(b - a) % (2 * Math.PI);
@@ -3246,8 +4984,137 @@
                     Math.abs(value2 - value1) > Math.PI && (value1 > value2 ? value2 += 2 * Math.PI : value1 += 2 * Math.PI);
                     var value = value2 + (value1 - value2) * amount;
                     return value >= 0 && value <= 2 * Math.PI ? value : value % Math.PI * 2;
+                },
+                combineColors: function(base, added) {
+                    var mix = [];
+                    return mix[3] = 1 - (1 - added[3]) * (1 - base[3]), mix[0] = Math.round(added[0] * added[3] / mix[3] + base[0] * base[3] * (1 - added[3]) / mix[3]), 
+                    mix[1] = Math.round(added[1] * added[3] / mix[3] + base[1] * base[3] * (1 - added[3]) / mix[3]), 
+                    mix[2] = Math.round(added[2] * added[3] / mix[3] + base[2] * base[3] * (1 - added[3]) / mix[3]), 
+                    mix;
+                },
+                averageOfArray: function(array) {
+                    return array.reduce((function(previous, acumulator) {
+                        return previous + acumulator;
+                    }), 0) / array.length;
                 }
             };
+        },
+        "./frontend/src/util/StringUtil.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+            "use strict";
+            __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
+                default: () => __WEBPACK_DEFAULT_EXPORT__
+            });
+            const __WEBPACK_DEFAULT_EXPORT__ = {
+                randomString: function(length) {
+                    for (var text = "", possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", i = 0; i < length; i++) text += possible.charAt(Math.floor(Math.random() * possible.length));
+                    return text;
+                },
+                escapeRegex: function(string) {
+                    return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, "\\$&");
+                }
+            };
+        },
+        "./frontend/src/util/engine/InteractionEngine.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+            "use strict";
+            __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
+                default: () => InteractionEngine
+            });
+            var tsee__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./node_modules/tsee/lib/index.js");
+            function _typeof(obj) {
+                return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(obj) {
+                    return typeof obj;
+                } : function(obj) {
+                    return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+                }, _typeof(obj);
+            }
+            function _defineProperties(target, props) {
+                for (var i = 0; i < props.length; i++) {
+                    var descriptor = props[i];
+                    descriptor.enumerable = descriptor.enumerable || !1, descriptor.configurable = !0, 
+                    "value" in descriptor && (descriptor.writable = !0), Object.defineProperty(target, (arg = descriptor.key, 
+                    key = void 0, key = function(input, hint) {
+                        if ("object" !== _typeof(input) || null === input) return input;
+                        var prim = input[Symbol.toPrimitive];
+                        if (void 0 !== prim) {
+                            var res = prim.call(input, hint || "default");
+                            if ("object" !== _typeof(res)) return res;
+                            throw new TypeError("@@toPrimitive must return a primitive value.");
+                        }
+                        return ("string" === hint ? String : Number)(input);
+                    }(arg, "string"), "symbol" === _typeof(key) ? key : String(key)), descriptor);
+                }
+                var arg, key;
+            }
+            function _setPrototypeOf(o, p) {
+                return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function(o, p) {
+                    return o.__proto__ = p, o;
+                }, _setPrototypeOf(o, p);
+            }
+            function _createSuper(Derived) {
+                var hasNativeReflectConstruct = function() {
+                    if ("undefined" == typeof Reflect || !Reflect.construct) return !1;
+                    if (Reflect.construct.sham) return !1;
+                    if ("function" == typeof Proxy) return !0;
+                    try {
+                        return Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], (function() {}))), 
+                        !0;
+                    } catch (e) {
+                        return !1;
+                    }
+                }();
+                return function() {
+                    var result, Super = _getPrototypeOf(Derived);
+                    if (hasNativeReflectConstruct) {
+                        var NewTarget = _getPrototypeOf(this).constructor;
+                        result = Reflect.construct(Super, arguments, NewTarget);
+                    } else result = Super.apply(this, arguments);
+                    return _possibleConstructorReturn(this, result);
+                };
+            }
+            function _possibleConstructorReturn(self, call) {
+                if (call && ("object" === _typeof(call) || "function" == typeof call)) return call;
+                if (void 0 !== call) throw new TypeError("Derived constructors may only return object or undefined");
+                return function(self) {
+                    if (void 0 === self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+                    return self;
+                }(self);
+            }
+            function _getPrototypeOf(o) {
+                return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function(o) {
+                    return o.__proto__ || Object.getPrototypeOf(o);
+                }, _getPrototypeOf(o);
+            }
+            var InteractionEngine = function(_EventEmitter) {
+                !function(subClass, superClass) {
+                    if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function");
+                    subClass.prototype = Object.create(superClass && superClass.prototype, {
+                        constructor: {
+                            value: subClass,
+                            writable: !0,
+                            configurable: !0
+                        }
+                    }), Object.defineProperty(subClass, "prototype", {
+                        writable: !1
+                    }), superClass && _setPrototypeOf(subClass, superClass);
+                }(InteractionEngine, _EventEmitter);
+                var Constructor, protoProps, staticProps, _super = _createSuper(InteractionEngine);
+                function InteractionEngine(core) {
+                    var _this;
+                    return function(instance, Constructor) {
+                        if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
+                    }(this, InteractionEngine), (_this = _super.call(this)).core = core, _this;
+                }
+                return Constructor = InteractionEngine, (protoProps = [ {
+                    key: "checkPlacementSpace",
+                    value: function(player, object, angle) {
+                        var _object$placeOffset, offset = player.scale + object.scale + (null !== (_object$placeOffset = object.placeOffset) && void 0 !== _object$placeOffset ? _object$placeOffset : 0), placeX = player.x + offset * Math.cos(angle), placeY = player.y + offset * Math.sin(angle);
+                        return this.core.objectManager.checkItemLocation(placeX, placeY, object.scale, .6, object.id, !1, player);
+                    }
+                } ]) && _defineProperties(Constructor.prototype, protoProps), staticProps && _defineProperties(Constructor, staticProps), 
+                Object.defineProperty(Constructor, "prototype", {
+                    writable: !1
+                }), InteractionEngine;
+            }(tsee__WEBPACK_IMPORTED_MODULE_0__.EventEmitter);
         },
         "./frontend/src/util/engine/PacketCountEngine.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
             "use strict";
@@ -3329,7 +5196,7 @@
                 }(arg, "string");
                 return "symbol" === _typeof(key) ? key : String(key);
             }
-            var PacketCountEngine = function(_EventEmitter) {
+            var logger = new (__webpack_require__("./frontend/src/util/Logger.ts").default)("packet-engine"), PacketCountEngine = function(_EventEmitter) {
                 !function(subClass, superClass) {
                     if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function");
                     subClass.prototype = Object.create(superClass && superClass.prototype, {
@@ -3348,28 +5215,27 @@
                     !function(instance, Constructor) {
                         if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
                     }(this, PacketCountEngine), (_this = _super.call(this)).timer = PacketCountEngine.TIMER_MAX, 
-                    _this.packetCount = 0;
-                    return _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.on("packetsend", (function(packet) {
-                        _this.packetCount++;
+                    _this.packetCount = 1, _this.s60Counter = 0, _this.packetCount2 = 1;
+                    return _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.on("packetsend", (function(event) {
+                        _this.packetCount++, _this.packetCount2++;
                     })), _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.on("packetreceive", (function(event) {
                         event.getPacket().type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.IO_INIT && (_this.timer = PacketCountEngine.TIMER_MAX, 
-                        _this.packetCount = 1, core.on("update", (function(delta) {
-                            if (_this.timer -= delta, _this.timer < 0) {
-                                var excession = -1 * _this.timer;
-                                _this.timer = PacketCountEngine.TIMER_MAX - excession, _this.packetCount = 0;
+                        _this.packetCount = 1, _this.s60Counter = 0, _this.packetCount2 = 1, core.on("update", (function(delta) {
+                            if (_this.timer - delta <= -2 * PacketCountEngine.SAFETY ? (_this.packetCount = 0, 
+                            _this.timer = PacketCountEngine.TIMER_MAX - delta % PacketCountEngine.TIMER_MAX, 
+                            logger.log("compensated for delta excession (".concat(delta, " ms)")), _this.s60Counter += Math.floor(delta / 1e3)) : _this.timer -= delta, 
+                            _this.timer <= -PacketCountEngine.SAFETY) {
+                                var excession = -1 * _this.timer % PacketCountEngine.TIMER_MAX - PacketCountEngine.SAFETY;
+                                _this.timer = PacketCountEngine.TIMER_MAX - excession, _this.packetCount = 0, _this.s60Counter++;
                             }
+                            _this.s60Counter >= 60 && (_this.s60Counter -= 60, _this.packetCount2 = 0);
                         })));
                     })), _this;
                 }
                 return Constructor = PacketCountEngine, (protoProps = [ {
-                    key: "handleFirstPing",
+                    key: "handlePing",
                     value: function(ping) {
-                        this.timer -= ping;
-                    }
-                }, {
-                    key: "available",
-                    get: function() {
-                        return Math.max(PacketCountEngine.AVAILABLE - this.packetCount, 0);
+                        ping > PacketCountEngine.SAFETY && ping - PacketCountEngine.SAFETY < 110 && (PacketCountEngine.SAFETY = ping);
                     }
                 }, {
                     key: "availableTotal",
@@ -3381,21 +5247,42 @@
                     writable: !1
                 }), PacketCountEngine;
             }(tsee__WEBPACK_IMPORTED_MODULE_0__.EventEmitter);
-            _defineProperty(PacketCountEngine, "TIMER_MAX", 6e4), _defineProperty(PacketCountEngine, "PACKET_LIMIT", 3e3), 
-            _defineProperty(PacketCountEngine, "AVAILABLE", PacketCountEngine.PACKET_LIMIT - 750);
+            _defineProperty(PacketCountEngine, "TIMER_MAX", 1e3), _defineProperty(PacketCountEngine, "SAFETY", 15), 
+            _defineProperty(PacketCountEngine, "PACKET_LIMIT", 90), _defineProperty(PacketCountEngine, "PACKET_LIMIT2", 5400);
         },
         "./frontend/src/util/engine/TickEngine.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
             "use strict";
             __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
                 TickEngine: () => TickEngine
             });
-            var events__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./node_modules/events/events.js"), events__WEBPACK_IMPORTED_MODULE_0___default = __webpack_require__.n(events__WEBPACK_IMPORTED_MODULE_0__), _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./frontend/src/data/moomoo/config.ts"), _socket_Connection__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("./frontend/src/socket/Connection.ts"), _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__("./frontend/src/socket/packets/PacketType.ts");
+            var tsee__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./node_modules/tsee/lib/index.js"), _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./frontend/src/data/moomoo/config.ts"), _socket_Connection__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("./frontend/src/socket/Connection.ts"), _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__("./frontend/src/socket/packets/PacketType.ts"), _MathUtil__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__("./frontend/src/util/MathUtil.ts");
             function _typeof(obj) {
                 return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(obj) {
                     return typeof obj;
                 } : function(obj) {
                     return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
                 }, _typeof(obj);
+            }
+            function _toConsumableArray(arr) {
+                return function(arr) {
+                    if (Array.isArray(arr)) return _arrayLikeToArray(arr);
+                }(arr) || function(iter) {
+                    if ("undefined" != typeof Symbol && null != iter[Symbol.iterator] || null != iter["@@iterator"]) return Array.from(iter);
+                }(arr) || function(o, minLen) {
+                    if (!o) return;
+                    if ("string" == typeof o) return _arrayLikeToArray(o, minLen);
+                    var n = Object.prototype.toString.call(o).slice(8, -1);
+                    "Object" === n && o.constructor && (n = o.constructor.name);
+                    if ("Map" === n || "Set" === n) return Array.from(o);
+                    if ("Arguments" === n || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+                }(arr) || function() {
+                    throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+                }();
+            }
+            function _arrayLikeToArray(arr, len) {
+                (null == len || len > arr.length) && (len = arr.length);
+                for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+                return arr2;
             }
             function _defineProperties(target, props) {
                 for (var i = 0; i < props.length; i++) {
@@ -3472,17 +5359,28 @@
                     var _this;
                     return function(instance, Constructor) {
                         if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-                    }(this, TickEngine), (_this = _super.call(this)).tickIndex = 0, _this.pingQueue = [], 
-                    _this.ping = 0, _this.lastTick = 0, _this.nextTick = 0, _socket_Connection__WEBPACK_IMPORTED_MODULE_2__.connection.on("packetsend", (function(packet) {
-                        packet.type == _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.PING && _this.pingQueue.push(Date.now());
+                    }(this, TickEngine), (_this = _super.call(this)).tickIndex = -1, _this.pingQueue = [], 
+                    _this.lastPing = 0, _this.ping = 0, _this.lastTick = 0, _this.predictionTick = -1, 
+                    _this.emittedPredictionTick = -1, _this.pings = [], _this.deltas = [], _socket_Connection__WEBPACK_IMPORTED_MODULE_2__.connection.on("packetsend", (function(event) {
+                        event.getPacket().type == _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.PING && (_this.pingQueue.push(Date.now()), 
+                        _this.lastPing = Date.now());
                     })), _socket_Connection__WEBPACK_IMPORTED_MODULE_2__.connection.on("packetreceive", (function(event) {
                         var packet = event.getPacket();
-                        packet.type == _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.PING ? (_this.ping = (Date.now() - _this.pingQueue.shift()) / 2, 
-                        _this.emit("ping", _this.ping)) : packet.type == _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.PLAYER_UPDATE && (_this.lastTick = Date.now() - _this.ping, 
-                        _this.serverLag > 0 && _this.emit("serverlag", _this.serverLag), _this.nextTick = _this.lastTick + 1e3 / _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__.default.serverUpdateRate, 
-                        _this.emit("tick", ++_this.tickIndex));
+                        if (packet.type == _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.PING) {
+                            var shift = _this.pingQueue.shift();
+                            _this.ping = (Date.now() - shift) / 2, _this.pings.length > 5 ? (_this.pings.pop(), 
+                            _this.pings.push(_this.ping), _this.pings.shift()) : _this.pings.push(_this.ping), 
+                            _this.emit("ping", _this.ping);
+                        } else packet.type == _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.PLAYER_UPDATE && (_this.tickIndex++, 
+                        _this.lastTick = Date.now() - _this.ping, _this.serverLag > 0 && _this.emit("serverlag", _this.serverLag), 
+                        _this.emit("tick", _this.tickIndex));
                     })), core.on("update", (function(delta) {
-                        Date.now() + _this.ping + _this.serverLag + 1.15 * delta >= _this.nextTick && _this.emit("unsafetick", _this.tickIndex + 1);
+                        _this.pings.length >= 5 && _this.pingQueue.length > 0 && (_this.pings[5] = (Date.now() - _this.lastPing) / 2), 
+                        _this.deltas.push(delta), _this.deltas.length >= 8 && _this.deltas.shift();
+                        var maxDelta = Math.max.apply(Math, _toConsumableArray(_this.deltas)), avgDelta = _MathUtil__WEBPACK_IMPORTED_MODULE_4__.default.averageOfArray(_this.deltas), maxPing = Math.max.apply(Math, _toConsumableArray(_this.pings)), avgPing = _MathUtil__WEBPACK_IMPORTED_MODULE_4__.default.averageOfArray(_this.pings), safe = 1.35 * (maxPing > 1.8 * avgPing ? avgPing : maxPing) + 1.2 * (maxDelta > 1.3 * avgDelta ? avgDelta : maxDelta);
+                        _this.predictionTick = _this.tickIndex + Math.ceil(safe / (1e3 / _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__.default.serverUpdateRate)), 
+                        _this.predictionTick > _this.emittedPredictionTick && (_this.emit("pretick", _this.predictionTick), 
+                        _this.emittedPredictionTick = _this.predictionTick);
                     })), _this;
                 }
                 return Constructor = TickEngine, (protoProps = [ {
@@ -3493,13 +5391,13 @@
                 }, {
                     key: "serverLag",
                     get: function() {
-                        return Math.max(Date.now() - this.nextTick, 0);
+                        return Math.max(Date.now() - this.lastTick + 1e3 / _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__.default.serverUpdateRate, 0);
                     }
                 } ]) && _defineProperties(Constructor.prototype, protoProps), staticProps && _defineProperties(Constructor, staticProps), 
                 Object.defineProperty(Constructor, "prototype", {
                     writable: !1
                 }), TickEngine;
-            }(events__WEBPACK_IMPORTED_MODULE_0___default());
+            }(tsee__WEBPACK_IMPORTED_MODULE_0__.EventEmitter);
         },
         "./frontend/src/util/type/SidArray.ts": (__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
             "use strict";
@@ -3624,8 +5522,8 @@
                     key: "findBySid",
                     value: function(sid) {
                         for (var i = 0, length = this.length; i < length; i++) {
-                            var player = this[i];
-                            if (player.sid === sid) return player;
+                            var item = this[i];
+                            if (item.sid === sid) return item;
                         }
                         return null;
                     }
@@ -3633,7 +5531,7 @@
                     key: "remove",
                     value: function(item) {
                         var index = this.indexOf(item);
-                        index > -1 && this.splice(index, 1);
+                        return index > -1 ? this.splice(index, 1)[0] : null;
                     }
                 }, {
                     key: "removeBySid",
@@ -3684,6 +5582,11 @@
                 }
                 var Constructor, protoProps, staticProps;
                 return Constructor = Vector, (protoProps = [ {
+                    key: "isNull",
+                    value: function() {
+                        return 0 == this.x && 0 == this.y;
+                    }
+                }, {
                     key: "add",
                     value: function(param1, param2) {
                         return "object" === _typeof(param1) ? (this.x += param1.x, this.y += param1.y) : "number" == typeof param2 ? (this.x += param1, 
@@ -5203,14 +7106,18 @@
             __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
                 default: () => __WEBPACK_DEFAULT_EXPORT__
             });
-            var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js"), _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default = __webpack_require__.n(_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__), _node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./node_modules/style-loader/dist/runtime/styleDomAPI.js"), _node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1___default = __webpack_require__.n(_node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1__), _node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("./node_modules/style-loader/dist/runtime/insertBySelector.js"), _node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2___default = __webpack_require__.n(_node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2__), _node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__("./node_modules/style-loader/dist/runtime/setAttributesWithoutAttributes.js"), _node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3___default = __webpack_require__.n(_node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3__), _node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__("./node_modules/style-loader/dist/runtime/insertStyleElement.js"), _node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4___default = __webpack_require__.n(_node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4__), _node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__("./node_modules/style-loader/dist/runtime/styleTagTransform.js"), _node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5___default = __webpack_require__.n(_node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5__), _node_modules_css_loader_dist_cjs_js_node_modules_sass_loader_dist_cjs_js_main_scss__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__("./node_modules/css-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js!./frontend/style/main.scss"), options = {};
-            options.styleTagTransform = _node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5___default(), 
-            options.setAttributes = _node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3___default(), 
-            options.insert = _node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2___default().bind(null, "head"), 
-            options.domAPI = _node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1___default(), 
-            options.insertStyleElement = _node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4___default();
-            _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default()(_node_modules_css_loader_dist_cjs_js_node_modules_sass_loader_dist_cjs_js_main_scss__WEBPACK_IMPORTED_MODULE_6__.default, options);
-            const __WEBPACK_DEFAULT_EXPORT__ = _node_modules_css_loader_dist_cjs_js_node_modules_sass_loader_dist_cjs_js_main_scss__WEBPACK_IMPORTED_MODULE_6__.default && _node_modules_css_loader_dist_cjs_js_node_modules_sass_loader_dist_cjs_js_main_scss__WEBPACK_IMPORTED_MODULE_6__.default.locals ? _node_modules_css_loader_dist_cjs_js_node_modules_sass_loader_dist_cjs_js_main_scss__WEBPACK_IMPORTED_MODULE_6__.default.locals : void 0;
+            var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js"), _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default = __webpack_require__.n(_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__), _node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./node_modules/style-loader/dist/runtime/styleDomAPI.js"), _node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1___default = __webpack_require__.n(_node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1__), _node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("./node_modules/style-loader/dist/runtime/setAttributesWithoutAttributes.js"), _node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_2___default = __webpack_require__.n(_node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_2__), _node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__("./node_modules/style-loader/dist/runtime/insertStyleElement.js"), _node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_3___default = __webpack_require__.n(_node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_3__), _node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__("./node_modules/style-loader/dist/runtime/styleTagTransform.js"), _node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_4___default = __webpack_require__.n(_node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_4__), _node_modules_css_loader_dist_cjs_js_node_modules_sass_loader_dist_cjs_js_main_scss__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__("./node_modules/css-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js!./frontend/style/main.scss"), options = {};
+            options.styleTagTransform = _node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_4___default(), 
+            options.setAttributes = _node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_2___default(), 
+            options.insert = function(element, options) {
+                console.log("inserting style"), document.head ? (console.log("head free"), document.head.appendChild(element)) : (console.log("waiting for dom to load"), 
+                window.addEventListener("DOMContentLoaded", (() => {
+                    console.log("dom loaded"), document.head.appendChild(element);
+                })));
+            }, options.domAPI = _node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1___default(), 
+            options.insertStyleElement = _node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_3___default();
+            _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default()(_node_modules_css_loader_dist_cjs_js_node_modules_sass_loader_dist_cjs_js_main_scss__WEBPACK_IMPORTED_MODULE_5__.default, options);
+            const __WEBPACK_DEFAULT_EXPORT__ = _node_modules_css_loader_dist_cjs_js_node_modules_sass_loader_dist_cjs_js_main_scss__WEBPACK_IMPORTED_MODULE_5__.default && _node_modules_css_loader_dist_cjs_js_node_modules_sass_loader_dist_cjs_js_main_scss__WEBPACK_IMPORTED_MODULE_5__.default.locals ? _node_modules_css_loader_dist_cjs_js_node_modules_sass_loader_dist_cjs_js_main_scss__WEBPACK_IMPORTED_MODULE_5__.default.locals : void 0;
         },
         "./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js": module => {
             "use strict";
@@ -5269,26 +7176,6 @@
                     }
                     lastIdentifiers = newLastIdentifiers;
                 };
-            };
-        },
-        "./node_modules/style-loader/dist/runtime/insertBySelector.js": module => {
-            "use strict";
-            var memo = {};
-            module.exports = function(insert, style) {
-                var target = function(target) {
-                    if (void 0 === memo[target]) {
-                        var styleTarget = document.querySelector(target);
-                        if (window.HTMLIFrameElement && styleTarget instanceof window.HTMLIFrameElement) try {
-                            styleTarget = styleTarget.contentDocument.head;
-                        } catch (e) {
-                            styleTarget = null;
-                        }
-                        memo[target] = styleTarget;
-                    }
-                    return memo[target];
-                }(insert);
-                if (!target) throw new Error("Couldn't find a style target. This probably means that the value for the 'insert' parameter is invalid.");
-                target.appendChild(style);
             };
         },
         "./node_modules/style-loader/dist/runtime/insertStyleElement.js": module => {
@@ -5477,19 +7364,5 @@
             value: !0
         });
     }, __webpack_require__.nc = void 0;
-    var __webpack_exports__ = {};
-    (() => {
-        "use strict";
-        __webpack_require__.r(__webpack_exports__), __webpack_require__.d(__webpack_exports__, {
-            core: () => core
-        });
-        __webpack_require__("./frontend/style/main.scss");
-        var _core_Core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./frontend/src/core/Core.ts"), _render_background_BackgroundRenderer__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("./frontend/src/render/background/BackgroundRenderer.ts"), _render_RenderManager__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__("./frontend/src/render/RenderManager.ts"), _util_DocumentUtil__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__("./frontend/src/util/DocumentUtil.ts"), logger = new (__webpack_require__("./frontend/src/util/Logger.ts").default)("main");
-        _util_DocumentUtil__WEBPACK_IMPORTED_MODULE_4__.default.init(document), _util_DocumentUtil__WEBPACK_IMPORTED_MODULE_4__.default.waitForElement("#gameCanvas", (function(element) {
-            var renderManager = new _render_RenderManager__WEBPACK_IMPORTED_MODULE_3__.default(element, 1920, 1080);
-            renderManager.createRenderer("background", _render_background_BackgroundRenderer__WEBPACK_IMPORTED_MODULE_2__.default), 
-            renderManager.startRender();
-        })), logger.info("initializing core");
-        var core = new _core_Core__WEBPACK_IMPORTED_MODULE_1__.Core;
-    })();
+    __webpack_require__("./frontend/src/main.ts");
 })();

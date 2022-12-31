@@ -103,22 +103,28 @@ class Injection extends WebSocket {
     }
 }
 
-const originalWebSocket = WebSocket;
+function inject() {
+    const originalWebSocket = WebSocket;
 
-Object.defineProperty(window, "WebSocket", {
-    get() {
-        const caller = ErrorStackParser.parse(new Error())[1];
-        if (!caller.fileName || !(/(?:(?:http|https):\/\/(?:sandbox\.|dev\.)?moomoo\.io\/bundle\.js|\(unknown source\)\))/g.test(caller.fileName)) || caller.functionName != "Object.connect") {
-            logger.warn("accessing WebSocket from unkown source:", caller);
-            return originalWebSocket;
+    Object.defineProperty(window, "WebSocket", {
+        get() {
+            const caller = ErrorStackParser.parse(new Error())[1];
+    
+            const allowedFunctions = ["Object.connect", "connect"]
+
+            const fileName = /(?:(?:http|https):\/\/(?:sandbox\.|dev\.)?moomoo\.io\/(?:bundle\.js| line 1 > injectedScript line \d+ > Function)|\(unknown source\)\)|:\d+)/g;
+            const functionName = /Object\.connect|connect/g
+
+            if (!caller.fileName || !caller.functionName || !fileName.test(caller.fileName) || !functionName.test(caller.functionName)) {
+                logger.warn("accessing WebSocket from unkown source:", caller);
+                return originalWebSocket;
+            }
+            return Injection;
+        },
+        set(a) {
+            console.log("set:", new Error().stack, a);
         }
-        return Injection;
-    },
-    set(a) {
-        console.log("set:", new Error().stack, a);
-    }
-});
+    });
+}
 
-//window.WebSocket = Injection;
-
-export { connection }
+export { connection, inject }

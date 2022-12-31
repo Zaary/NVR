@@ -1,6 +1,8 @@
-import { Core } from "../core/Core";
+import e from "cors";
+import { Core, currentPlayer } from "../core/Core";
 import config from "../data/moomoo/config";
 import { NaturalObject, PlayerBuilding } from "../data/type/GameObject";
+import DrawUtil from "../util/DrawUtil";
 import MathUtil from "../util/MathUtil";
 import Vector from "../util/type/Vector";
 import RenderManager, { Renderer } from "./RenderManager";
@@ -16,25 +18,29 @@ export default class HoverInfoModule extends Renderer {
         this.shadows = {};
         this.mouse = new Vector();
 
+        /**
+         * Copies canvas on a new canvas and expands it by 1 pixel
+         * in every side (outline alghoritm has problems otherwise)
+         */
         function cloneCanvas(oldCanvas: HTMLCanvasElement) {
             var newCanvas = document.createElement('canvas');
             var context = newCanvas.getContext('2d')!;
         
             //set dimensions
-            newCanvas.width = oldCanvas.width;
-            newCanvas.height = oldCanvas.height;
+            newCanvas.width = oldCanvas.width + 2;
+            newCanvas.height = oldCanvas.height + 2;
         
             //apply the old canvas to the new one
-            context.drawImage(oldCanvas, 0, 0);
+            context.drawImage(oldCanvas, 1, 1);
         
             //return the new canvas
             return newCanvas;
         }
 
-        function createShadowCopy(canvas: HTMLCanvasElement): HTMLCanvasElement {
+        function createShadowCopy(canvas: HTMLCanvasElement, outline: string): HTMLCanvasElement {
             canvas = cloneCanvas(canvas);
 
-            const factor = 0;
+            const factor = 20;
 
             const context = canvas.getContext("2d")!;
             const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
@@ -43,28 +49,44 @@ export default class HoverInfoModule extends Renderer {
             for (let i = 0; i < data.length; i += 4) {
                 if (data[i + 3] != 255) continue;
 
-                const original = MathUtil.combineColors([data[i] / 255, data[i + 1] / 255, data[i + 2] / 255, 1], [0, 0, 70 / 255, 0.35]);
+                const original = MathUtil.combineColors([data[i], data[i + 1], data[i + 2], 1], [0, 0, 70, 0.35]);
 
-                data[i] = Math.max(original[0] * 255 - factor, 0);
-                data[i + 1] = Math.max(original[1] * 255 - factor, 0);
-                data[i + 2] = Math.max(original[2] * 255 - factor, 0);
+                data[i] = Math.min(Math.max(0, original[0] + factor), 255);
+                data[i + 1] = Math.min(Math.max(0, original[1] + factor), 255);
+                data[i + 2] = Math.min(Math.max(0, original[2] + factor), 255);
             }
 
             context.putImageData(imageData, 0, 0);
 
+            context.lineWidth = 3;
+            context.strokeStyle = outline;
+            context.lineJoin = "round";
+            DrawUtil.strokeImageOutline(canvas, 1);
+
             return canvas;
         }
 
-        if (core && core.bundleAPI && core.bundleAPI.references) {
-            const gameObjectSprites = (core.bundleAPI.references["gameObjectSprites"] ?? {})
-            for (const sprite in gameObjectSprites) {
-                this.shadows[sprite] = createShadowCopy(gameObjectSprites[sprite]);
+        /*const loadReference = (ref: string) => {
+            if (core && core.bundleAPI && core.bundleAPI.references) {
+                const sprites = (core.bundleAPI.references[ref] ?? {})
+                for (const sprite in sprites) {
+                    this.shadows[sprite] = createShadowCopy(sprites[sprite]);
+                }
             }
         }
-
+        loadReference("gameObjectSprites");
+        loadReference("itemSprites");*/
+        
         core.bundleAPI.on("refPropertySet", (name, property, value) => {
-            if (name == "gameObjectSprites") {
-                this.shadows[<string> property] = createShadowCopy(value);
+            if (name == "gameObjectSprites" || name == "itemSprites") {
+                const prop = <string> (name == "gameObjectSprites" ? property : `item_${String(property)}`);;
+                if (name == "itemSprites") {
+                    this.shadows[prop + "_own"] = createShadowCopy(value, "rgba(64, 255, 64, 1)");
+                    this.shadows[prop + "_team"] = createShadowCopy(value, "rgba(64, 64, 255, 1)");
+                    this.shadows[prop + "_enemy"] = createShadowCopy(value, "rgba(255, 64, 64, 1)");
+                } else {
+                    this.shadows[prop] = createShadowCopy(value, "rgba(190, 190, 190, 1)");
+                }
             }
         });
 
@@ -89,25 +111,29 @@ export default class HoverInfoModule extends Renderer {
         const object = gridArrays.flat(1).filter(x => MathUtil.getDistance(mapPosition, x.position) < x.scale).sort((a, b) => MathUtil.getDistance(mapPosition, a.position) - MathUtil.getDistance(mapPosition, b.position))[0];
 
         if (object) {
-            const objectRenderPosition = this.renderManager.mapToContext(this.renderManager.cameraPosition, object.position);
+            const objectRenderPosition = this.renderManager.mapToContext(this.renderManager.cameraPosition, object.position).add(object.wiggle);
 
-            if (object instanceof NaturalObject) {
-                var biomeID = (object.position.y >= config.mapScale - config.snowBiomeTop) ? 2 : ((object.position.y <= config.snowBiomeTop) ? 1 : 0);
-                var tmpIndex = (object.type + "_" + object.scale + "_" + biomeID);
+            const isNaturalObject = object instanceof NaturalObject;
+            const isPlayerBuilding = object instanceof PlayerBuilding;
+            const index = isNaturalObject ? 
+            (object.type + "_" + object.scale + "_" + ((object.position.y >= config.mapScale - config.snowBiomeTop) ? 2 : ((object.position.y <= config.snowBiomeTop) ? 1 : 0)))
+            : isPlayerBuilding ? `item_${object.stats.id}_${object.owner.sid == currentPlayer!.sid ? "own" : "enemy"}` : "unknown";
 
-                if (this.shadows.hasOwnProperty(tmpIndex)) {
-                    const sprite = this.shadows[tmpIndex];
-                    this.renderManager.context.drawImage(sprite, objectRenderPosition.x - sprite.width / 2, objectRenderPosition.y - sprite.height / 2);
-                }
+            if (this.shadows.hasOwnProperty(index)) {
+                const sprite = this.shadows[index];
+                this.renderManager.context.save();
+                this.renderManager.context.translate(objectRenderPosition.x, objectRenderPosition.y);
+                this.renderManager.context.rotate(object.dir);
+                this.renderManager.context.drawImage(sprite, sprite.width / -2, sprite.height / -2);
+                this.renderManager.context.restore();
+            } else {
+                console.log("uknown sprite:", index);
             }
 
-            /*this.renderManager.context.fillStyle = "rgba(0, 0, 0, 0.3)";
-            this.renderManager.context.beginPath();
-            this.renderManager.context.arc(objectRenderPosition.x, objectRenderPosition.y, object.scale, 0, Math.PI * 2);
-            this.renderManager.context.closePath();
-            this.renderManager.context.fill();*/
+            /*
             this.renderManager.context.fillStyle = "white";
             this.renderManager.context.fillText(object.position.toString(true), mm.x, mm.y);
+            */
         }
     }
     

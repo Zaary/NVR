@@ -8,6 +8,10 @@ export default class Vector {
         this.y = y ?? 0;
     }
 
+    isNull() {
+        return this.x == 0 && this.y == 0;
+    }
+
     add(vector: Vector): this;
     add(x: number, y: number): this;
     add(amount: number): this;

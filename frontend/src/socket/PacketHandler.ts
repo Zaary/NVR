@@ -91,11 +91,10 @@ function process(packet: Packet) {
         case PacketType.LOAD_GAME_OBJ:
             for (let i = 0; i < packet.data[0].length / 8; i++) {
                 const data = packet.data[0].slice(i * 8, i * 8 + 8);
-                console.log(data);
                 // type (data[5]) is null for player buildings but set for natural objects
                 // id (data[6]) is null for natural objects but is set for player buildings
                 // owner sid (data[7]) is -1 for natural objects otherwise is set.
-                core.objectManager.add(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
+                core.objectManager.add(...(<[number, number, number, number, number, number, any, any]> data));
             }
             break;
         case PacketType.REMOVE_GAME_OBJ:
@@ -103,6 +102,11 @@ function process(packet: Packet) {
             break;
         case PacketType.REMOVE_ALL_OBJ:
             core.objectManager.removeAllItems(packet.data[0]);
+            break;
+        case PacketType.WIGGLE:
+            // first argument is ID and second argument is direction
+            // however packet content is [direction, ID]
+            core.objectManager.wiggleObject(packet.data[1], packet.data[0]);
             break;
     }
 }
