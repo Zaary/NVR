@@ -420,7 +420,7 @@ interface Item {
 	name: string;
 	desc: string;
 	req: (string | number)[];
-	consume?: (doer: any) => any;
+	//consume?: (doer: any) => any;
 	scale: number;
 	holdOffset: number;
 	projDmg?: boolean;
@@ -457,9 +457,9 @@ const list: Item[] = [{
 	name: "apple",
 	desc: "restores 20 health when consumed",
 	req: ["food", 10],
-	consume: function(doer: Player) {
+	/*consume: function(doer: Player) {
 		return doer.changeHealth(20, doer);
-	},
+	},*/
 	scale: 22,
 	holdOffset: 15
 }, {
@@ -469,9 +469,9 @@ const list: Item[] = [{
 	name: "cookie",
 	desc: "restores 40 health when consumed",
 	req: ["food", 15],
-	consume: function(doer: Player) {
+	/*consume: function(doer: Player) {
 		return doer.changeHealth(40, doer);
-	},
+	},*/
 	scale: 27,
 	holdOffset: 15
 }, {
@@ -481,7 +481,7 @@ const list: Item[] = [{
 	name: "cheese",
 	desc: "restores 30 health and another 50 over 5 seconds",
 	req: ["food", 25],
-	consume: function(doer: Player) {
+	/*consume: function(doer: Player) {
 		if (doer.changeHealth(30, doer) || doer.health < 100) {
 			doer.dmgOverTime.dmg = -10;
 			doer.dmgOverTime.doer = doer;
@@ -489,7 +489,7 @@ const list: Item[] = [{
 			return true;
 		}
 		return false;
-	},
+	},*/
 	scale: 27,
 	holdOffset: 15
 }, {

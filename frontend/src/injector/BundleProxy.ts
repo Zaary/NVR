@@ -1,3 +1,4 @@
+import NVRLoader from "../loader/NVRLoader";
 import Logger from "../util/Logger";
 import StringUtil from "../util/StringUtil";
 import { Class } from "../util/type/Definitions";
@@ -7,12 +8,15 @@ import TSourceMapping from "./transformations/TSourceMapping";
 
 const logger = new Logger("bundle-proxy");
 
+let isCaptchaReady = false;
+
 const transformations: Class<Transformation>[] = [
     TObjectSpriteLoader,
     TSourceMapping
 ];
 
 function loadBundle(src: string, injectedApi: any) {
+    window.captchaCallback = () => (isCaptchaReady = true);
     fetch(src).then(res => {
         if (res.ok) return res.text();
         throw logger.error("failed to load bundle: " + res.status);
@@ -35,9 +39,18 @@ function evalBundle(code: string, injectedApi: any) {
 
     const logger = new Logger(window.console, "bundle-vm-" + hash);
 
-    vm.call(/*window*/vm, injectedApi, logger);
-    setTimeout(() => (window.onload && window.onload(new Event("load")), window.captchaCallback!()), 1);
-    
+    const exec = () => {
+        vm.call(/*window*/vm, injectedApi, logger);
+        setTimeout(() => (window.onload && window.onload(new Event("load")), window.captchaCallback!()), 1);
+    }
+
+    NVRLoader.start(() => {
+        if (isCaptchaReady) {
+            exec();
+        } else {
+            window.captchaCallback = exec;
+        }
+    });
 }
 
 export default { loadBundle };

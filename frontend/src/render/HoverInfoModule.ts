@@ -1,6 +1,7 @@
 import e from "cors";
 import { Core, currentPlayer } from "../core/Core";
 import config from "../data/moomoo/config";
+import { items } from "../data/moomoo/items";
 import { NaturalObject, PlayerBuilding } from "../data/type/GameObject";
 import DrawUtil from "../util/DrawUtil";
 import MathUtil from "../util/MathUtil";
@@ -99,6 +100,47 @@ export default class HoverInfoModule extends Renderer {
 
             //console.log(object);
         });
+
+        // force bundle to load all objects
+
+        const fcs = (() => {
+            const { getResSprite, getItemSprite } = core.bundleAPI.functions;
+            return { getResSprite, getItemSprite };
+        })();
+
+
+        if (fcs.getResSprite && fcs.getItemSprite) {
+            autoload(fcs.getResSprite, fcs.getItemSprite)
+        } else {
+            core.bundleAPI.on("functionReg", (name, func) => {
+                if (name == "getResSprite" || name == "getItemSprite") {
+                    fcs[name] = func;
+                    if (fcs.getResSprite && fcs.getItemSprite) autoload(fcs.getResSprite, fcs.getItemSprite);
+                }
+            });
+        }
+
+        function autoload(getResSprite: Function, getItemSprite: Function) {
+            function loadObjects(id: number, scale: number) {
+                console.log("loading natural object", id);
+                getResSprite({ type: id, scale, y: 0 }, { type: id, scale, y: 0 });
+                getResSprite({ type: id, scale, y: config.snowBiomeTop + 500 }, { type: id, scale, y: config.snowBiomeTop + 500 });
+                getResSprite({ type: id, scale, y: config.mapScale }, { type: id, scale, y: config.mapScale });
+            }
+    
+            // load items
+            for (const item of items.list) {
+                console.log("loading item", item.id);
+                getItemSprite(item, false);
+            }
+    
+            for (const treeScale of config.treeScales) loadObjects(0, treeScale);
+            for (const bushScale of config.bushScales) loadObjects(1, bushScale);
+            for (const rockScale of config.rockScales) {
+                loadObjects(2, rockScale);
+                loadObjects(3, rockScale);
+            }
+        }
     }
 
     render(delta: number): void {

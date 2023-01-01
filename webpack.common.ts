@@ -11,6 +11,12 @@ const commonConfig: Configuration = {
 	},
   	module: {
 	    rules: [{
+			test: /\.html$/i,
+			loader: "html-loader",
+			options: {
+				minimize: true,
+			},
+		}, {
 			test: /\.(ts|js)?$/,
 			exclude: /node_modules/,
 			use: {
@@ -32,15 +38,11 @@ const commonConfig: Configuration = {
 						// we recommend use only ECMA 5 features,
 						// but it is depends what browsers you want to support
 						insert: function insertIntoTarget(element: Element, options: any) {
-							console.log("inserting style");
 							if (document.head) {
-								console.log("head free");
 								document.head.appendChild(element);
 							} else {
-								console.log("waiting for dom to load");
-								window.addEventListener("DOMContentLoaded", () => {
-									console.log("dom loaded");
-									document.head.appendChild(element);//bet i have bomb settle last test or bye bye
+								window.addEventListener("DOMContentLoaded", function() {
+									document.head.appendChild(element);
 								});
 							}
 						}

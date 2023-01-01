@@ -22,13 +22,14 @@ window.addEventListener("DOMContentLoaded", () => {
     core.initializeRenderer(<HTMLCanvasElement> document.getElementById("gameCanvas"));
 });
 
-window.captchaCallback = function() {};
 
-//let observerTasks = 2;
 const observer = new MutationObserver((mutations: MutationRecord[], observer: MutationObserver) => {
     for (const mutation of mutations) {
         for (const node of mutation.addedNodes) {
-            if ((<HTMLElement> node).tagName === "SCRIPT" && /bundle\.js$/.test((<HTMLScriptElement> node).src)) {
+            if ((<HTMLElement> node).tagName === "SCRIPT" && /var loadedScript/.test((<HTMLScriptElement> node).innerText)) {
+                node.addEventListener("beforescriptexecute", (e) => e.preventDefault(), { once: true });
+                node.parentElement!.removeChild(node);
+            } else if ((<HTMLElement> node).tagName === "SCRIPT" && /bundle\.js$/.test((<HTMLScriptElement> node).src)) {
                 core.patchBundle((<HTMLScriptElement> node).src);
 
                 // firefox executes script even if its removed
@@ -36,12 +37,7 @@ const observer = new MutationObserver((mutations: MutationRecord[], observer: Mu
 
                 node.parentElement!.removeChild(node);
                 observer.disconnect();
-            }/* else if ((<HTMLElement> node).tagName == "CANVAS" && (<HTMLCanvasElement> node).id == "gameCanvas") {
-                core.initializeRenderer(<HTMLCanvasElement> node);
-                observerTasks--;
             }
-
-            if (observerTasks <= 0) observer.disconnect();*/
         }
     }
 });
