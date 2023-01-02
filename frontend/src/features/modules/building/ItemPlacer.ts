@@ -1,4 +1,3 @@
-import { currentPlayer } from "../../../core/Core";
 import { Item, items } from "../../../data/moomoo/items";
 import { core } from "../../../main";
 import { connection } from "../../../socket/Connection";
@@ -16,7 +15,7 @@ class Placer {
 
     private active: boolean;
     private type: PlacerType;
-    private placingObject: { id: number };
+    private placingObjectGroup: number;
 
     constructor(type: PlacerType) {
         this.active = false;
@@ -24,16 +23,16 @@ class Placer {
 
         switch (type) {
             case PlacerType.SPIKE:
-                this.placingObject = items.groups[2]
+                this.placingObjectGroup = 2;
                 break;
             case PlacerType.TRAP:
-                this.placingObject = items.groups[5];
+                this.placingObjectGroup = 4;
                 break;
             case PlacerType.WINDMILL:
-                this.placingObject = items.groups[3];
+                this.placingObjectGroup = 3;
                 break;
         }
-    } // bro wants to qhold :skull:
+    }
 
     setStatus(active: boolean) {
         this.active = active;
@@ -44,13 +43,10 @@ class Placer {
     }
     
     run(tickIndex: number) {
-        const canPlace = core.interactionEngine.checkPlacementSpace(currentPlayer!, items.list[1], 0); // ill test with walls for now
-        if (canPlace) {
-            connection.send(new Packet(PacketType.SELECT_ITEM, [3, false]));
-            connection.send(new Packet(PacketType.ATTACK, [1, 0]));
-            connection.send(new Packet(PacketType.ATTACK, [0, 0]));
-            connection.send(new Packet(PacketType.SELECT_ITEM, [0, true]));
-        }
+        const item = items.list[core.playerManager.myPlayer.inventory.items[this.placingObjectGroup]];
+        if (!item) return;
+
+        core.interactionEngine.safePlacement(item, core.mouseAngle);
     }
 }
 
@@ -74,7 +70,7 @@ export default class ItemPlacer extends Module {
     }
 
     onUpdate(delta: number): void {
-        if (this.activePlacer && currentPlayer) this.activePlacer.run(0);
+        if (this.activePlacer && core.playerManager.myPlayer) this.activePlacer.run(0);
     }
 
     onKeydown(keyCode: number): void {

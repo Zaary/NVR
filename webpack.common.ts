@@ -1,5 +1,7 @@
 import path from "path";
-import { Configuration, ProvidePlugin } from "webpack";
+import fs from "fs";
+import { Configuration, ProvidePlugin, BannerPlugin } from "webpack";
+import TerserPlugin from "terser-webpack-plugin";
 
 const commonConfig: Configuration = {
   	entry: {
@@ -8,6 +10,9 @@ const commonConfig: Configuration = {
 	cache: {
 		type: "filesystem",
 		cacheDirectory: path.join(process.cwd(), ".cache", "webpack")
+	},
+	experiments: {
+		topLevelAwait: true
 	},
   	module: {
 	    rules: [{
@@ -62,14 +67,21 @@ const commonConfig: Configuration = {
 	resolve: {
 		extensions: [".ts", ".js"]
 	},
+	optimization: {
+		minimizer: [
+			new TerserPlugin({
+				extractComments: false
+			}),
+		]
+	},
   	plugins: [
 		new ProvidePlugin({
 			process: "process/browser",
 		}),
-		/*new DefinePlugin({
-			
-		})*/
-	  ]
+		new BannerPlugin({
+			banner: fs.readFileSync(path.join(process.cwd(), "frontend", "userscript_header.txt")).toString('utf8')
+		})
+	]
 }
 
 export default commonConfig;

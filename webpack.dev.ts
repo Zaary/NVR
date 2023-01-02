@@ -6,7 +6,7 @@ import commonConfig from "./webpack.common";
 const devConfig: Configuration = merge(commonConfig, {
     mode: "development",
     devtool: false,
-    plugins: [
+    /*plugins: [
         new TerserPlugin({
             terserOptions: {
                 mangle: false,
@@ -15,7 +15,7 @@ const devConfig: Configuration = merge(commonConfig, {
                 }
             }
         })
-    ]
+    ]*/
 });
 
 export default devConfig;

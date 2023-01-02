@@ -19,6 +19,8 @@ class TickEngine extends EventEmitter<{
     private pingQueue: number[];
     private lastPing: number;
     public ping: number;
+    private firstPinged: boolean;
+    private firstPonged: boolean;
     private lastTick: number;
 
     private predictionTick: number;
@@ -34,6 +36,8 @@ class TickEngine extends EventEmitter<{
         this.pingQueue = [];
         this.lastPing = 0;
         this.ping = 0;
+        this.firstPinged = false;
+        this.firstPonged = false;
         this.lastTick = 0;
 
         this.predictionTick = -1;
@@ -44,6 +48,9 @@ class TickEngine extends EventEmitter<{
 
         connection.on("packetsend", (event: EventPacket) => {
             if (event.getPacket().type == PacketType.PING) {
+                if (!this.firstPonged && this.firstPinged) return;
+                if (!this.firstPinged) this.firstPinged = true;
+
                 this.pingQueue.push(Date.now());
                 this.lastPing = Date.now();
             }
@@ -53,7 +60,11 @@ class TickEngine extends EventEmitter<{
             const packet = event.getPacket();
             
             if (packet.type == PacketType.PING) {
+                if (!this.firstPonged) this.firstPonged = true;
+
                 const shift = this.pingQueue.shift()!;
+                if (!shift) return;
+
                 this.ping = (Date.now() - shift) / 2;
 
                 if (this.pings.length > 5) {
@@ -76,7 +87,8 @@ class TickEngine extends EventEmitter<{
         });
 
         core.on("update", (delta: number) => {
-            if (this.pings.length >= 5 && this.pingQueue.length > 0) this.pings[5] = (Date.now() - this.lastPing) / 2;
+            const now = Date.now();
+            if (this.pings.length >= 5 && this.pingQueue.length > 0) this.pings[5] = (now - this.lastPing) / 2;
 
             this.deltas.push(delta);
             if (this.deltas.length >= 8) this.deltas.shift();
@@ -92,10 +104,21 @@ class TickEngine extends EventEmitter<{
             const safe = safePing * 1.35 + safeDelta * 1.2;
 
             this.predictionTick = this.tickIndex + Math.ceil(safe / (1000 / config.serverUpdateRate));
+            
 
             if (this.predictionTick > this.emittedPredictionTick) {
                 this.emit("pretick", this.predictionTick);
                 this.emittedPredictionTick = this.predictionTick;
+            }
+
+            // clean all predicted buildings if we didnt receive confirming placement packet
+            // use a while loop since we are splicing inside of it
+            const predictedPlacements = core.objectManager.predictedPlacements;
+            let i = predictedPlacements.length;
+            while (i--) {
+                if (now - predictedPlacements[i].placedTimestamp > safePing * 2 + safeDelta + (1000 / config.serverUpdateRate)) {
+                    predictedPlacements.splice(i, 1);
+                }
             }
         });
     }

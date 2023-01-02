@@ -15,7 +15,10 @@ const transformations: Class<Transformation>[] = [
     TSourceMapping
 ];
 
-function loadBundle(src: string, injectedApi: any) {
+let _promise: Promise<void>;
+
+function loadBundle(src: string, injectedApi: any, promise: Promise<void>) {
+    _promise = promise;
     window.captchaCallback = () => (isCaptchaReady = true);
     fetch(src).then(res => {
         if (res.ok) return res.text();
@@ -39,18 +42,23 @@ function evalBundle(code: string, injectedApi: any) {
 
     const logger = new Logger(window.console, "bundle-vm-" + hash);
 
-    const exec = () => {
+    const exec = async () => {
         vm.call(/*window*/vm, injectedApi, logger);
-        setTimeout(() => (window.onload && window.onload(new Event("load")), window.captchaCallback!()), 1);
+        const old: [Function | null, Function | undefined] = [window.onload, window.captchaCallback];
+        window.onload = window.captchaCallback = () => {};
+        if (_promise) await _promise;
+        setTimeout(() => (old[0] && old[0](new Event("load")), (old[1] && old[1]()), NVRLoader.stop()), 1);
     }
 
-    NVRLoader.start(() => {
-        if (isCaptchaReady) {
-            exec();
-        } else {
-            window.captchaCallback = exec;
-        }
-    });
+    if (isCaptchaReady) {
+        exec();
+    } else {
+        window.captchaCallback = exec;
+    }
 }
 
-export default { loadBundle };
+function clearPromise() {
+    _promise = <Promise<void>> <unknown> undefined;
+}
+
+export default { loadBundle, clearPromise };

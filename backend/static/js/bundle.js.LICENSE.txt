@@ -1,4 +1,22 @@
+/*!
+ * // ==UserScript==
+ * // @name         NVR
+ * // @namespace    http://tampermonkey.net/
+ * // @version      0.1
+ * // @description  try to take over the world!
+ * // @author       You
+ * // @match        *://*.moomoo.io/*
+ * // @icon         https://media.discordapp.net/attachments/1026024421925855302/1058027305764667452/UMrA0xrKmPkAAAAASUVORK5CYII.png
+ * // @grant        none
+ * // @run-at       document-start
+ * // ==/UserScript==
+ */
+
 /*! !!../../node_modules/css-loader/dist/cjs.js!../../node_modules/sass-loader/dist/cjs.js!./main.scss */
+
+/*! !!../../node_modules/css-loader/dist/cjs.js!../../node_modules/sass-loader/dist/cjs.js!./moomoo.scss */
+
+/*! !!raw-loader!./NVRWorker.js */
 
 /*! !../../node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js */
 
@@ -9,8 +27,6 @@
 /*! !../../node_modules/style-loader/dist/runtime/styleDomAPI.js */
 
 /*! !../../node_modules/style-loader/dist/runtime/styleTagTransform.js */
-
-/*! ../../../core/Core */
 
 /*! ../../../data/moomoo/items */
 
@@ -36,6 +52,8 @@
 
 /*! ../../util/Logger */
 
+/*! ../../util/StringUtil */
+
 /*! ../../util/engine/PacketCountEngine */
 
 /*! ../../util/type/Vector */
@@ -50,9 +68,9 @@
 
 /*! ../Transformation */
 
-/*! ../core/Core */
-
 /*! ../data/moomoo/config */
+
+/*! ../data/moomoo/items */
 
 /*! ../data/type/GameObject */
 
@@ -68,15 +86,15 @@
 
 /*! ../injector/api/API */
 
+/*! ../loader/NVRLoader */
+
 /*! ../main */
 
 /*! ../manager/ObjectManager */
 
-/*! ../moomoo/accessories */
+/*! ../manager/PlayerManager */
 
 /*! ../moomoo/config */
-
-/*! ../moomoo/hats */
 
 /*! ../moomoo/items */
 
@@ -85,6 +103,8 @@
 /*! ../render/RenderManager */
 
 /*! ../render/interface/PacketCountModule */
+
+/*! ../render/interface/PacketGraphModule */
 
 /*! ../socket/Connection */
 
@@ -96,9 +116,7 @@
 
 /*! ../style/main.scss */
 
-/*! ../type/MoomooUtil */
-
-/*! ../util/DrawUtil */
+/*! ../style/moomoo.scss */
 
 /*! ../util/Logger */
 
@@ -122,11 +140,15 @@
 
 /*! ./Event */
 
+/*! ./MathUtil */
+
 /*! ./Packet */
 
 /*! ./PacketType */
 
 /*! ./RenderManager */
+
+/*! ./SecurityManager */
 
 /*! ./buffer-global */
 
@@ -171,6 +193,10 @@
 /*! ./ext-unpacker */
 
 /*! ./flex-buffer */
+
+/*! ./loader.html */
+
+/*! ./loader/NVRLoader */
 
 /*! ./modules/building/ItemPlacer */
 
@@ -222,6 +248,8 @@
 
 /*! msgpack-lite */
 
+/*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/facebook/regenerator/blob/main/LICENSE */
+
 /*! stackframe */
 
 /*! tsee */
@@ -237,6 +265,10 @@
 /*!***********************************!*\
   !*** ./frontend/src/core/Core.ts ***!
   \***********************************/
+
+/*!************************************!*\
+  !*** ./frontend/style/moomoo.scss ***!
+  \************************************/
 
 /*!*************************************!*\
   !*** ./frontend/src/core/Action.ts ***!
@@ -287,12 +319,12 @@
   \*****************************************/
 
 /*!*****************************************!*\
-  !*** ./frontend/src/util/StringUtil.ts ***!
+  !*** ./frontend/src/loader/loader.html ***!
   \*****************************************/
 
-/*!******************************************!*\
-  !*** ./frontend/src/data/moomoo/hats.ts ***!
-  \******************************************/
+/*!*****************************************!*\
+  !*** ./frontend/src/util/StringUtil.ts ***!
+  \*****************************************/
 
 /*!******************************************!*\
   !*** ./frontend/src/data/type/Player.ts ***!
@@ -300,6 +332,10 @@
 
 /*!******************************************!*\
   !*** ./frontend/src/injector/api/API.ts ***!
+  \******************************************/
+
+/*!******************************************!*\
+  !*** ./frontend/src/loader/NVRLoader.ts ***!
   \******************************************/
 
 /*!******************************************!*\
@@ -355,6 +391,10 @@
   \***********************************************/
 
 /*!***********************************************!*\
+  !*** ./frontend/src/manager/PlayerManager.ts ***!
+  \***********************************************/
+
+/*!***********************************************!*\
   !*** ./frontend/src/socket/packets/Packet.ts ***!
   \***********************************************/
 
@@ -368,6 +408,10 @@
 
 /*!************************************************!*\
   !*** ./frontend/src/features/ModuleManager.ts ***!
+  \************************************************/
+
+/*!************************************************!*\
+  !*** ./frontend/src/loader/SecurityManager.ts ***!
   \************************************************/
 
 /*!************************************************!*\
@@ -385,10 +429,6 @@
 /*!************************************************!*\
   !*** ./node_modules/msgpack-lite/lib/codec.js ***!
   \************************************************/
-
-/*!*************************************************!*\
-  !*** ./frontend/src/data/moomoo/accessories.ts ***!
-  \*************************************************/
 
 /*!*************************************************!*\
   !*** ./frontend/src/features/modules/Module.ts ***!
@@ -530,6 +570,10 @@
   !*** ./frontend/src/render/interface/PacketCountModule.ts ***!
   \************************************************************/
 
+/*!************************************************************!*\
+  !*** ./frontend/src/render/interface/PacketGraphModule.ts ***!
+  \************************************************************/
+
 /*!**************************************************************!*\
   !*** ./frontend/src/features/modules/building/ItemPlacer.ts ***!
   \**************************************************************/
@@ -570,6 +614,10 @@
   !*** ./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js ***!
   \****************************************************************************/
 
+/*!********************************************************************************!*\
+  !*** ./node_modules/raw-loader/dist/cjs.js!./frontend/src/loader/NVRWorker.js ***!
+  \********************************************************************************/
+
 /*!**********************************************************************************!*\
   !*** ./node_modules/style-loader/dist/runtime/setAttributesWithoutAttributes.js ***!
   \**********************************************************************************/
@@ -577,6 +625,10 @@
 /*!***************************************************************************************************************!*\
   !*** ./node_modules/css-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js!./frontend/style/main.scss ***!
   \***************************************************************************************************************/
+
+/*!*****************************************************************************************************************!*\
+  !*** ./node_modules/css-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js!./frontend/style/moomoo.scss ***!
+  \*****************************************************************************************************************/
 
 /**
  * event-lite.js - Light-weight EventEmitter (less than 1KB when gzipped)

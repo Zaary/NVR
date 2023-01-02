@@ -33,6 +33,12 @@ export default class API extends EventEmitter<{
         return proxify ? this.createProxyFor(name, value) : value;
     }
 
+    linkPrimitive(initialValue: any) {
+        let object = [initialValue];
+        object.toString = () => object[0];
+        return object;
+    }
+
     private createProxyFor(name: string, object: any): any {
         switch (typeof object) {
             case "object":

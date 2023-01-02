@@ -10,7 +10,7 @@ const logger = new Logger("connection");
 
 let connection: Connection;
 const packetFactory = PacketFactory.getInstance();
-let was = false;
+
 class Connection extends EventEmitter {
 
     public socket: Injection | null;
@@ -94,7 +94,7 @@ class Injection extends WebSocket {
         connection.emit("packetsend", event);
 
         if (event.isCanceled()) return;
-        
+
         super.send(packetFactory.serializePacket(event.getPacket()));
     }
 

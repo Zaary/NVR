@@ -27,6 +27,10 @@ class GameObject {
             this.wiggle.multiply(Math.pow(0.99, delta));
         }
     }
+
+    getScale() {
+        return (this instanceof NaturalObject && this.type === 0) ? this.scale * 0.6 : this.scale;
+    }
 }
 
 class NaturalObject extends GameObject {

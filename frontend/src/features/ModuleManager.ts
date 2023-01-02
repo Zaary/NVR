@@ -1,6 +1,7 @@
 import EventPacket from "../event/EventPacket";
 import Logger from "../util/Logger";
 import { Class } from "../util/type/Definitions";
+import AutoPlacer from "./modules/building/AutoPlacer";
 import ItemPlacer from "./modules/building/ItemPlacer";
 import Autoheal from "./modules/combat/Autoheal";
 import Module from "./modules/Module";
@@ -9,8 +10,9 @@ const logger = new Logger("module-manager");
 
 export default class ModuleManager {
     private static classes: Class<Module>[] = [
+        AutoPlacer,
         ItemPlacer,
-        Autoheal
+        Autoheal,
     ];
 
     private modules: Module[] = [];

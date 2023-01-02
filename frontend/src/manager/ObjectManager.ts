@@ -1,11 +1,20 @@
 import { players } from "../core/Core";
 import config from "../data/moomoo/config";
-import { items } from "../data/moomoo/items";
+import { Item, items } from "../data/moomoo/items";
 import { GameObject, NaturalObject, PlayerBuilding } from "../data/type/GameObject";
 import { util } from "../data/type/MoomooUtil";
-import Player from "../data/type/Player";
+import { Player } from "../data/type/Player";
+import MathUtil from "../util/MathUtil";
 import { SidArray } from "../util/type/SidArray";
 import Vector from "../util/type/Vector";
+
+class PredictedPlacement extends PlayerBuilding {
+    public placedTimestamp: number;
+    constructor(position: Vector, dir: number, scale: number, type: number, placedTimestamp: number) {
+        super(-1, position, dir, scale, type, -1);
+        this.placedTimestamp = placedTimestamp;
+    }
+}
 
 export default class ObjectManager {
 
@@ -13,14 +22,78 @@ export default class ObjectManager {
     private grids: Record<string, any>;
     private updateObjects: GameObject[];
 
+    public predictedPlacements: PredictedPlacement[];
+
     constructor() {
         this.gameObjects = new SidArray<GameObject>();
         this.grids = {};
         this.updateObjects = [];
 
+        this.predictedPlacements = [];
+
         Object.defineProperty(window, "objectManager", {
             value: this
         }); // lemme test it
+    }
+
+    canPlaceObject(source: [Vector, number, number], item: Item, lookupPredictions = false) {
+        const [position, scale, angle] = source;
+
+        const placeOffset = scale + item.scale + (item.placeOffset ?? 0);
+        const targetPosition = position.clone().directionMove(angle, placeOffset);
+        
+        return this.isPositionFree(targetPosition, item.scale, lookupPredictions);
+    }
+
+    private isPositionFree(placementVector: Vector, scale: number, lookupPredictions = false) {
+        const grids = this.getGridArrays(placementVector.x, placementVector.y, scale);
+        return grids.flat(1).filter(x => MathUtil.getDistance(x.position, placementVector) <= x.getScale() + scale).length === 0 && (!lookupPredictions || this.predictedPlacements.filter(x => MathUtil.getDistance(x.position, placementVector) <= x.getScale() + scale).length === 0);
+    }
+
+    /**
+     * @param source[0] position from where the item is placed
+     * @param source[1] scale of placing entity
+     * @param source[2] angle at which is the item being placed at
+     */
+    addPlacementAttempt(source: [Vector, number, number], item: Item) {
+        const [position, scale, angle] = source;
+
+        const placeOffset = scale + item.scale + (item.placeOffset ?? 0);
+        const targetPosition = position.clone().directionMove(angle, placeOffset);
+        
+        if (this.isPositionFree(targetPosition, item.scale)) {
+            this.predictedPlacements.push(new PredictedPlacement(targetPosition, angle, item.scale, item.id, Date.now()));
+        }
+    }
+
+    findPlacementAngles(source: [Vector, number], item: Item) {
+        const [position, scale] = source;
+        const placeOffset = scale + item.scale + (item.placeOffset ?? 0);
+        const grids = this.getGridArrays(position.x, position.y, placeOffset + item.scale).flat(1);
+
+        let blocks: [number, number][] = [];
+        for (let i = 0; i < grids.length; i++) {
+            const object = grids[i];
+
+            const offsetpow2 = Math.pow(placeOffset, 2);
+            const hypot = object.scale + item.scale;
+            const span = Math.acos(-(Math.pow(hypot, 2) - offsetpow2 * 2) / (2 * offsetpow2));
+            const straight = MathUtil.getDirection(position, object.position);
+            const _bounds = [straight + span / 2, straight - span / 2];
+            blocks.push([Math.min(_bounds[0], _bounds[1]), Math.max(_bounds[0], _bounds[1])]);
+        }
+
+        let allows: [number, number][] = [];
+        let lastOpener = 0;
+        for (let i = 0; i < blocks.length; i++) {
+            const block = blocks[i];
+
+            if (lastOpener != block[0]) allows.push([lastOpener, block[0]]);
+            lastOpener = block[1];
+        }
+        allows.push([lastOpener, Math.PI * 2]);
+
+        return allows;
     }
 
     // SET OBJECT GRIDS
@@ -133,6 +206,15 @@ export default class ObjectManager {
     // ADD NEW:
     add(sid: number, x: number, y: number, dir: number, s: number, type: number, data: any, owner: any) {
         let tmpObj;
+
+        if (owner !== -1) { 
+            const predicted = this.predictedPlacements.find(obj => MathUtil.getDistance(obj.position, new Vector(x, y)) < 5 && obj.stats.id === data);
+            if (predicted) {
+                // building prediction succeeded, remove item from predictions
+                this.predictedPlacements.splice(this.predictedPlacements.indexOf(predicted), 1);
+                console.log("prediction done!!", predicted);
+            }
+        }
 
         tmpObj = this.gameObjects.findBySid(sid);
 
@@ -252,7 +334,7 @@ export default class ObjectManager {
     };*/
 
     // CHECK PLAYER COLLISION:
-    checkCollision(player: Player, other: any, delta: number) {
+    /*checkCollision(player: Player, other: any, delta: number) {
         delta = delta||1;
         var dx = player.x - other.x;
         var dy = player.y - other.y;
@@ -278,7 +360,7 @@ export default class ObjectManager {
                     }
                     if (other.dmg && other.owner != player && !(other.owner &&
                         other.owner.team && other.owner.team == player.team)) {
-                        player.changeHealth(-other.dmg, other.owner/*, other*/);
+                        player.changeHealth(-other.dmg, other.owner/*, other*//*);
                         var tmpSpd = 1.5 * (other.weightM||1);
                         player.xVel += tmpSpd * Math.cos(tmpDir);
                         player.yVel += tmpSpd * Math.sin(tmpDir);
@@ -286,13 +368,13 @@ export default class ObjectManager {
                             player.dmgOverTime.dmg = other.pDmg;
                             player.dmgOverTime.time = 5;
                             player.dmgOverTime.doer = other.owner;
-                        }
+                        }*/
                         /*if (player.colDmg && other.health) {
                             if (other.changeHealth(-player.colDmg)) this.disableObj(other);
                             this.hitObj(other, UTILS.getDirection(player.x, player.y, other.x, other.y));
                         }*/
-                    }
-                } else if (other.trap/* && !player.noTrap*/ && other.owner != player && !(other.owner &&
+                    /*}
+                } else if (other.trap/* && !player.noTrap*//* && other.owner != player && !(other.owner &&
                     other.owner.team && other.owner.team == player.team)) {
                     player.lockMove = true;
                     other.hideFromEnemy = false;
@@ -310,7 +392,7 @@ export default class ObjectManager {
             }
         }
         return false;
-    }
+    }*/
 
     wiggleObject(sid: number, dir: number) {
         const object = this.gameObjects.findBySid(sid);

@@ -12,6 +12,10 @@ export default class Vector {
         return this.x == 0 && this.y == 0;
     }
 
+    isNaN() {
+        return isNaN(this.x) || isNaN(this.y);
+    }
+
     add(vector: Vector): this;
     add(x: number, y: number): this;
     add(amount: number): this;
@@ -102,9 +106,10 @@ export default class Vector {
         return this;
     }
 
-    directionMove(direction: number, amount: number) {
+    directionMove(direction: number, amount: number): this {
         this.x += Math.cos(direction) * amount;
         this.y += Math.sin(direction) * amount;
+        return this;
     }
 
     clone(): Vector {

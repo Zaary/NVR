@@ -1,9 +1,10 @@
 import { EventEmitter } from "tsee";
 import { Core } from "../../core/Core";
-import { Item } from "../../data/moomoo/items";
+import { Item, items } from "../../data/moomoo/items";
 import { GameObject } from "../../data/type/GameObject";
-import Player from "../../data/type/Player";
-
+import { connection } from "../../socket/Connection";
+import { Packet } from "../../socket/packets/Packet";
+import { PacketType } from "../../socket/packets/PacketType";
 
 export default class InteractionEngine extends EventEmitter {
 
@@ -14,10 +15,15 @@ export default class InteractionEngine extends EventEmitter {
         this.core = core;
     }
 
-    checkPlacementSpace(player: Player, object: Item, angle: number) {
-        const offset: number = player.scale + object.scale + (object.placeOffset ?? 0);
-        const placeX: number = player.x + offset * Math.cos(angle);
-        const placeY: number = player.y + offset * Math.sin(angle);
-        return this.core.objectManager.checkItemLocation(placeX, placeY, object.scale, 0.6, object.id, false, player);
+    safePlacement(item: Item, angle: number) {
+        const canPlace = this.core.objectManager.canPlaceObject([this.core.playerManager.myPlayer.serverPos, 35, angle], item, true);
+        
+        if (canPlace) {
+            this.core.objectManager.addPlacementAttempt([this.core.playerManager.myPlayer.serverPos, 35, angle], item);
+            connection.send(new Packet(PacketType.SELECT_ITEM, [item.id, false]));
+            connection.send(new Packet(PacketType.ATTACK, [1, angle]));
+            connection.send(new Packet(PacketType.ATTACK, [0, angle]));
+            connection.send(new Packet(PacketType.SELECT_ITEM, [this.core.playerManager.myPlayer.inventory.weapons[0], true]));
+        }
     }
 }

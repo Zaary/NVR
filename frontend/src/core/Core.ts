@@ -1,5 +1,5 @@
 import EventEmitter from "events";
-import Player from "../data/type/Player";
+import { Player } from "../data/type/Player";
 //import { Pathfinder } from "../pathfinding/Pathfinder";
 import { connection } from "../socket/Connection";
 import { PacketHandler } from "../socket/PacketHandler";
@@ -22,10 +22,13 @@ import InteractionEngine from "../util/engine/InteractionEngine";
 import { core } from "../main";
 import BundleProxy from "../injector/BundleProxy";
 import API from "../injector/api/API";
+import PacketGraphModule from "../render/interface/PacketGraphModule";
+import PlayerManager from "../manager/PlayerManager";
+import MathUtil from "../util/MathUtil";
+import Vector from "../util/type/Vector";
 
 const logger = new Logger("core");
 
-let currentPlayer: Player | null = null;
 let target: Player | null = null;
 
 const players = new SidArray<Player>();
@@ -40,10 +43,6 @@ function pathfind(path: any[]) {
     window.path = path;
 }
 */
-function setCurrentPlayer(player: Player | null) {
-    logger.log("set current player:", player);
-    currentPlayer = player;
-}
 
 function setTarget(player: Player | null) {
     target = player;
@@ -60,12 +59,15 @@ class Core extends EventEmitter {
     public bundleAPI: API;
 
     public objectManager: ObjectManager;
+    public playerManager: PlayerManager;
     public renderManager: RenderManager | null;
     public moduleManager: ModuleManager;
 
     public tickEngine: TickEngine;
     public packetEngine: PacketCountEngine;
     public interactionEngine: InteractionEngine;
+
+    public mouseAngle: number;
 
     constructor() {
         super();
@@ -79,6 +81,7 @@ class Core extends EventEmitter {
         this.scheduledActions = [];
 
         this.objectManager = new ObjectManager();
+        this.playerManager = new PlayerManager();
         this.renderManager = null;
         this.moduleManager = new ModuleManager();
 
@@ -100,6 +103,7 @@ class Core extends EventEmitter {
 
         this.tickEngine.on("tick", this.moduleManager.onTick.bind(this.moduleManager));
 
+        this.mouseAngle = 0;
 
         document.addEventListener("keydown", event => {
             this.emit("keydown", event);
@@ -113,22 +117,29 @@ class Core extends EventEmitter {
 
         // listen for received packets (always process the packet before passing it to modules)
         connection.on("packetreceive", (event: EventPacket) => {
-            PacketHandler.process(event.getPacket());
+            PacketHandler.processIn(event.getPacket());
             this.moduleManager.onPacketReceive(event);
         });
 
         setInterval(this.update.bind(this), 1);
     }
 
-    patchBundle(src: string) {
-        BundleProxy.loadBundle(src, this.bundleAPI);
+    patchBundle(src: string, promise: Promise<void>) {
+        BundleProxy.loadBundle(src, this.bundleAPI, promise);
     }
 
-    initializeRenderer(canvas: HTMLCanvasElement) {
-        this.renderManager = new RenderManager(canvas, 1920, 1080);
-        this.renderManager.createRenderer("background", HoverInfoModule, this);
-        this.renderManager.createInterfaceRenderer("packetCount", PacketCountModule, this);
-        this.renderManager!.createRenderHook();
+    async initializeRenderer(canvas: HTMLCanvasElement) {
+        this.renderManager = new RenderManager(this, canvas, 1920, 1080);
+        
+        await this.renderManager.createRenderer("background", HoverInfoModule, this);
+        await this.renderManager.createInterfaceRenderer("packetCount", PacketCountModule, this);
+        await this.renderManager.createInterfaceRenderer("packetGraph", PacketGraphModule, this);
+        
+        this.renderManager.createRenderHook();
+
+        this.renderManager.on("mousemove", event => {
+            this.mouseAngle = MathUtil.getDirection(new Vector(window.innerWidth / 2, window.innerHeight / 2), new Vector(event.clientX, event.clientY));
+        });
     }
 
     update() {
@@ -178,4 +189,4 @@ class Core extends EventEmitter {
     }
 }
 
-export { Core, currentPlayer, target, setCurrentPlayer, setTarget, players, animals, buildings/*, pathfinder*/ }
+export { Core, target, setTarget, players, animals, buildings/*, pathfinder*/ }

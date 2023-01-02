@@ -1,8 +1,8 @@
 import { EventEmitter } from "tsee";
-import { Core, currentPlayer, players } from "../core/Core";
+import { Core, players } from "../core/Core";
 import config from "../data/moomoo/config";
 import { util } from "../data/type/MoomooUtil";
-import Player from "../data/type/Player";
+import { Player } from "../data/type/Player";
 import MathUtil from "../util/MathUtil";
 import { Class } from "../util/type/Definitions";
 import Vector from "../util/type/Vector";
@@ -14,7 +14,7 @@ type Dimensions = {
 }
 
 type RendererID = "background";
-type InterfaceRendererID = "packetCount";
+type InterfaceRendererID = "packetCount" | "packetGraph";
 
 export abstract class Renderer {
     protected renderManager: RenderManager;
@@ -26,6 +26,7 @@ export abstract class Renderer {
     }
 
     abstract render(delta: number): void;
+    abstract load(): Promise<void>;
 }
 
 export default class RenderManager extends EventEmitter<{
@@ -33,6 +34,7 @@ export default class RenderManager extends EventEmitter<{
     mousedown: (event: MouseEvent) => void;
     mouseup: (event: MouseEvent) => void;
 }> {
+    private core: Core;
     private canvas: HTMLCanvasElement;
     public context: CanvasRenderingContext2D;
     public transformMatrix: DOMMatrix;
@@ -46,8 +48,9 @@ export default class RenderManager extends EventEmitter<{
     private interfaceRenderers: Map<InterfaceRendererID, InterfaceModule>;
     private lastRender: number;
 
-    constructor(canvas: HTMLCanvasElement, width: number, height: number) {
+    constructor(core: Core, canvas: HTMLCanvasElement, width: number, height: number) {
         super();
+        this.core = core;
         this.canvas = canvas;
         this.context = canvas.getContext("2d")!;
         this.transformMatrix = new DOMMatrix([1, 0, 0, 1, 0, 0]);
@@ -93,19 +96,27 @@ export default class RenderManager extends EventEmitter<{
 
         this.staticCamera.set(targetPosition);
 
-        players.forEach((player: Player) => {
+        this.core.playerManager.playerList.forEach((player: Player) => {
             if (player.visible) {
-                if (player.forcePos) {
-                    player.x = player.serverPosX;
-                    player.y = player.serverPosY;
+                if (player.forcePos && !player.renderPos.isNaN()) {
+                    player.renderPos.set(player.serverPos);
                 } else {
                     // lerp position
-                    const rate = 170;
                     player.dt += delta;
 
-                    const overTick = Math.min(1.7, player.dt / rate);
-                    player.x = util.lerp(player.clientPosX, player.serverPosX, overTick);
-                    player.y = util.lerp(player.clientPosY, player.serverPosY, overTick);
+                    const overTick = Math.min(1.7, player.dt / 170);
+                    /*player.renderPosition.set(
+                        util.lerp(player.clientPosition.x, player.serverPosition.x, overTick),
+                        util.lerp(player.clientPosition.y, player.serverPosition.y, overTick)
+                    );*/
+
+                    if (player.lerpPos.isNaN()) player.lerpPos.set(player.serverPos);
+
+                    player.renderPos = new Vector();
+                    player.renderPos.x = util.lerp(player.lerpPos.x, player.serverPos.x, overTick);
+                    player.renderPos.y = util.lerp(player.lerpPos.y, player.serverPos.y, overTick);
+
+                    //console.log(player.renderPosition.toString(true));
 
                     // lerp direction
                     /*const positionDelta = player.positionTimestamp - player.lastPositionTimestamp;
@@ -140,9 +151,11 @@ export default class RenderManager extends EventEmitter<{
         const delta = currentMs - this.lastRender;
         this.lastRender = currentMs;
 
-        if (currentPlayer && currentPlayer.visible) {
-            this.updateCamera(delta, new Vector(Math.round(currentPlayer.x), Math.round(currentPlayer.y)));
-            //console.log(this.cameraPosition.toString(true));
+        const myPlayer = this.core.playerManager.myPlayer;
+
+        if (myPlayer && myPlayer.renderPos) {
+            this.updateCamera(delta, /*new Vector(myPlayer.renderPos.x, myPlayer.renderPos.y)*/myPlayer.renderPos);
+            //console.log(myPlayer.renderPos);
         }
 
         //this.clear();
@@ -150,11 +163,13 @@ export default class RenderManager extends EventEmitter<{
         this.interfaceRenderers.forEach(renderer => { renderer.render(delta) });
     }
 
-    createRenderer(id: RendererID, rendererClass: Class<Renderer>, core: Core) {
-        this.renderers.set(id, new rendererClass(this, core));
+    async createRenderer(id: RendererID, rendererClass: Class<Renderer>, core: Core) {
+        const instance = new rendererClass(this, core);
+        await instance.load();
+        this.renderers.set(id, instance);
     }
 
-    createInterfaceRenderer(id: InterfaceRendererID, rendererClass: Class<InterfaceModule>, core: Core) {
+    async createInterfaceRenderer(id: InterfaceRendererID, rendererClass: Class<InterfaceModule>, core: Core) {
         this.interfaceRenderers.set(id, new rendererClass(core, this));
     }
 
@@ -163,7 +178,7 @@ export default class RenderManager extends EventEmitter<{
         const _ = this;
 
         const originalAnimFrame = window.requestAnimationFrame;
-        window.requestAnimationFrame = function(callback: FrameRequestCallback): number {
+        window.requestAnimFrame = window.requestAnimationFrame = function(callback: FrameRequestCallback): number {
             // call moomoo's renderer
             const result = originalAnimFrame.call(this, callback);
             // then call our renderer
@@ -171,7 +186,8 @@ export default class RenderManager extends EventEmitter<{
             // and finally return result from moomoo's renderer
             return result;
         }
-        window.requestAnimationFrame(() => this.render());
+
+        originalAnimFrame(() => this.render());
     }
 
     private getCameraOffset(camera: Vector) {

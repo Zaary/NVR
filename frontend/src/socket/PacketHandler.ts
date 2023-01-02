@@ -1,44 +1,31 @@
 import { items } from "../data/moomoo/items";
 import { GameObject } from "../data/type/GameObject";
-import Player from "../data/type/Player";
-import { buildings, currentPlayer/*, pathfinder*/, players, setCurrentPlayer, setTarget, target } from "../core/Core";
+import { Player } from "../data/type/Player";
+import { buildings/*, pathfinder*/, players, setTarget, target } from "../core/Core";
 //import { playerUtil } from "../util/PlayerUtil";
 import { Packet } from "./packets/Packet";
 import { PacketType } from "./packets/PacketType";
 import { core } from "../main";
+import Vector from "../util/type/Vector";
+import PlayerManager from "../manager/PlayerManager";
 
 let lastPath = 0;
 
-function process(packet: Packet) {
+function processIn(packet: Packet) {
     switch (packet.type) {
         case PacketType.PLAYER_ADD:
-            const player = new Player(packet.data[0][0], packet.data[0][1]);
-            players.removeBySid(player.sid);
-
-            player.spawn();
-            player.visible = false;
-            player.x2 = undefined;
-            player.y2 = undefined;
-            player.setData(packet.data[0]);
-            
-            if (packet.data[1]) {
-                player.visible = true;
-                setCurrentPlayer(player);
-                core.renderManager?.cameraPosition.set(player.x, player.y);
-                core.renderManager?.staticCamera.set(player.x, player.y);
-            }
-
-            players.push(player);
+            const playerData = packet.data[0];
+            core.playerManager.spawnPlayer(playerData[0], playerData[1], playerData[2], new Vector(playerData[3], playerData[4]), playerData[5], playerData[6], playerData[7], playerData[8], playerData[9], packet.data[1]);
             break;
         case PacketType.PLAYER_UPDATE:
-            for (let i = 0; i < players.length; i++) {
-                players[i].visible = false;
+            for (let i = 0; i < core.playerManager.playerList.length; i++) {
+                core.playerManager.playerList[i].visible = false;
             }
             
             for (let i = 0; i < packet.data[0].length / 13; i++) {
                 const playerData = packet.data[0].slice(i * 13, i * 13 + 13);
-                const player = players.findBySid(playerData[0]);
-
+                const player = core.playerManager.playerList.findBySid(playerData[0]);
+                
                 if (player) {
                     /*player.dt = 0;
 
@@ -53,21 +40,36 @@ function process(packet: Packet) {
 
                     //player.lastPositionTimestamp = player.positionTimestamp; // t1
                     //player.positionTimestamp = Date.now(); // t2
-                    player.clientPosX = player.x; // x1
-                    player.clientPosY = player.y; // y1
+                    //player.clientPosX = player.x; // x1
+                    //player.clientPosY = player.y; // y1
                     //player.lastDir = player.serverDir; // d1
 
-                    player.lastTickPosX = player.serverPosX;
-                    player.lastTickPosY = player.serverPosY;
+                    //player.lastTickPosX = player.serverPosX;
+                    //player.lastTickPosY = player.serverPosY;
 
-                    player.serverPosX = playerData[1]; // x2
-                    player.serverPosY = playerData[2]; // y2
+                    /*player.clientPosition.set(player.renderPosition);
+
+                    player.serverPosition.set(
+                        playerData[1],
+                        playerData[2]
+                    );*/
+
+                    player.lerpPos = new Vector(player.renderPos.x, player.renderPos.y) // clientPos
+                    //player.lastDir = player.serverDir; // d1
+
+                    //player.lastTickPosX = player.serverPosX;
+                    //player.lastTickPosY = player.serverPosY;
+
+                    player.serverPos = new Vector(playerData[1], playerData[2]) // serverPos
+
+                    //player.serverPosX = playerData[1]; // x2
+                    //player.serverPosY = playerData[2]; // y2
 
                     //player.serverDir = info[3]; // d2
                     player.dt = 0; // dt
 
                     player.dir = playerData[3];
-                    player.buildIndex = playerData[4];
+                    /*player.buildIndex = playerData[4];
                     player.weaponIndex = playerData[5];
                     player.weaponVariant = playerData[6];
                     player.team = playerData[7];
@@ -75,7 +77,7 @@ function process(packet: Packet) {
                     player.skinIndex = playerData[9];
                     player.tailIndex = playerData[10];
                     player.iconIndex = playerData[11];
-                    player.zIndex = playerData[12];
+                    player.zIndex = playerData[12];*/
                     player.visible = true;
                 }
             }
@@ -108,10 +110,22 @@ function process(packet: Packet) {
             // however packet content is [direction, ID]
             core.objectManager.wiggleObject(packet.data[1], packet.data[0]);
             break;
+        case PacketType.UPDATE_ITEMS:
+            if (packet.data[0]) core.playerManager.myPlayer.inventory[packet.data[1] ? 'weapons' : 'items'] = packet.data[0];
+            break;
+        case PacketType.DEATH:
+            core.playerManager.myPlayer.inventory.reset();
+            break;
     }
 }
+/*
+function processOut(packet: Packet) {
+    switch (packet.type) {
 
-const PacketHandler = { process };
+    }
+}*/
+
+const PacketHandler = { processIn/*, processOut*/ };
 
 export { PacketHandler }
 /*
