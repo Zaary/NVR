@@ -65,10 +65,6 @@ export default class ItemPlacer extends Module {
         this.placers.set(78, new Placer(PlacerType.WINDMILL));
     }
 
-    onUnsafeTick(tickIndex: number): void {
-        
-    }
-
     onUpdate(delta: number): void {
         if (this.activePlacer && core.playerManager.myPlayer) this.activePlacer.run(0);
     }

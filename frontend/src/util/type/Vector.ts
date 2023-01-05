@@ -116,7 +116,7 @@ export default class Vector {
         return new Vector(this.x, this.y);
     }
 
-    hypot(): number {
+    length(): number {
         return Math.hypot(this.x, this.y);
     }
 

@@ -31,10 +31,6 @@ const logger = new Logger("core");
 
 let target: Player | null = null;
 
-const players = new SidArray<Player>();
-const animals = new SidArray<any>();
-const buildings = new SidArray<GameObject>();
-
 /*
 const pathfinder = new Pathfinder();
 
@@ -189,4 +185,4 @@ class Core extends EventEmitter {
     }
 }
 
-export { Core, target, setTarget, players, animals, buildings/*, pathfinder*/ }
+export { Core, target, setTarget/*, pathfinder*/ }

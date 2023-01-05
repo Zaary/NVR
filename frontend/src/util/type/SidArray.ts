@@ -1,10 +1,14 @@
-export class SidArray<T> extends Array<T & { sid: number }> {
+interface IndexedItem {
+    sid: number;
+}
+
+export class SidArray<T> extends Array<T extends IndexedItem ? T : never> {
 
     constructor(size: number = 0) {
         super(size);
     }
 
-    findBySid(sid: number): T | null {
+    findBySid(sid: number): T | null { 
         for (let i = 0, length = this.length; i < length; i++) {
             const item = this[i];
             if (item.sid === sid) {

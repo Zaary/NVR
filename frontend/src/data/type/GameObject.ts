@@ -4,6 +4,7 @@ import { Item, items } from "../moomoo/items";
 class GameObject {
     // base properties
     public sid: number;
+    public type: number;
     public position: Vector;
     public dir: number = 0;
     public scale: number = 0;
@@ -11,10 +12,12 @@ class GameObject {
     public wiggle: Vector;
 
     // for object manager
+    public wiggles: [number, number][] = [];
     public gridLocations: any[] = [];
     
-    constructor(sid: number, position: Vector, dir: number, scale: number) {
+    constructor(sid: number, type: number, position: Vector, dir: number, scale: number) {
         this.sid = sid;
+        this.type = type;
         this.position = position;
         this.dir = dir;
         this.scale = scale;
@@ -29,7 +32,7 @@ class GameObject {
     }
 
     getScale() {
-        return (this instanceof NaturalObject && this.type === 0) ? this.scale * 0.6 : this.scale;
+        return this instanceof NaturalObject ? (this.type === 0 ? this.scale * 0.6 : this.scale) : this.scale * (items.list[this.type].colDiv ?? 1);
     }
 }
 
@@ -38,7 +41,7 @@ class NaturalObject extends GameObject {
     public type: number;
 
     constructor(sid: number, position: Vector, dir: number, scale: number, type: number) {
-        super(sid, position, dir, scale);
+        super(sid, type, position, dir, scale);
         this.type = type;
     }
 }
@@ -55,7 +58,7 @@ class PlayerBuilding extends GameObject {
     public health: number;
 
     constructor(sid: number, position: Vector, dir: number, scale: number, type: number, owner: number) {
-        super(sid, position, dir, scale);
+        super(sid, type, position, dir, scale);
         this.stats = items.list[type];
         this.owner = { sid: owner };
 

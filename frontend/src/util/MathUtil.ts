@@ -21,7 +21,7 @@ function decel(val: number, cel: number) {
 
 
 function getDistance(pos1: Vector, pos2: Vector): number {
-	return pos1.clone().subtract(pos2).hypot();
+	return pos1.clone().subtract(pos2).length();
 }
 
 function getDirection(from: Vector, to: Vector): number {
@@ -63,6 +63,18 @@ function averageOfArray(array: number[]) {
 	return array.reduce((previous, acumulator) => previous + acumulator, 0) / array.length;
 }
 
+function roundTo(value: number, places: number) {
+	const placesMlt = places * 10;
+	return Math.round(value * placesMlt) / placesMlt;
+}
+
+function lineSpan(origin: Vector, p1: Vector, p2: Vector) {
+    var AB = Math.sqrt(Math.pow(origin.x - p1.x, 2) + Math.pow(origin.y - p1.y, 2));
+    var BC = Math.sqrt(Math.pow(origin.x - p2.x, 2) + Math.pow(origin.y - p2.y, 2));
+    var AC = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+    return Math.acos((BC * BC + AB * AB - AC * AC) / (2 * BC * AB));
+}
+
 export default {
     randInt,
     randFloat,
@@ -73,5 +85,7 @@ export default {
     getAngleDist,
     lerpAngle,
 	combineColors,
-	averageOfArray
+	averageOfArray,
+	roundTo,
+	lineSpan
 }

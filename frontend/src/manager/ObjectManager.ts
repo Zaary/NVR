@@ -1,4 +1,3 @@
-import { players } from "../core/Core";
 import config from "../data/moomoo/config";
 import { Item, items } from "../data/moomoo/items";
 import { GameObject, NaturalObject, PlayerBuilding } from "../data/type/GameObject";
@@ -394,12 +393,29 @@ export default class ObjectManager {
         return false;
     }*/
 
-    wiggleObject(sid: number, dir: number) {
+    wiggleObject(sid: number, dir: number, tickIndex: number) {
         const object = this.gameObjects.findBySid(sid);
-        if (object) object.wiggle.add(new Vector(
-            config.gatherWiggle * Math.cos(dir),
-            config.gatherWiggle * Math.sin(dir)
-        ));
+        if (object) {
+                object.wiggle.add(new Vector(
+                    config.gatherWiggle * Math.cos(dir),
+                    config.gatherWiggle * Math.sin(dir)
+                ));
+                object.wiggles.push([dir, tickIndex]);
+        }
+    }
+
+    resetWiggles(tickIndex: number) {
+        for (let i = 0; i < this.gameObjects.length; i++) {
+            const wiggles = this.gameObjects[i].wiggles;
+
+            let j = wiggles.length;
+            while (j--) {
+                const wiggle = wiggles[j];
+                if (tickIndex >= wiggle[1] + 1) {
+                    wiggles.splice(j, 1);
+                }
+            }
+        }
     }
 
     update(delta: number) {

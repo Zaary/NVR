@@ -7,7 +7,7 @@ export default class TObjectSpriteLoader extends Transformation {
     }
 
     transform(source: string): string {
-        const gameObjectRegex = /(var [\w$_]+\s*=\s*)({});(\s*function ([\w$_]+)\([\w$_]+)\)\s*{(\s*var [\w$_]+\s*=\s*\(?[\w$_]+\.y\s*>=.*?if\s*\(\s*![\w$_]+\s*\)\s*{\s*var\s+[\w$_]+\s*=\s*document\.createElement\(['"]canvas['"]\);.+?([\w$_]+)\.scale\s*\*\s*\([\w$_]+?\?\s*.+5\s*:\s*1\).+?}\s*return [\w$_]+;?\s*)}\s*var/s;
+        const gameObjectRegex = /(var [\w$_]+\s*=\s*)({});(\s*function ([\w$_]+)\([\w$_]+)\)\s*{(\s*var [\w$_]+\s*=\s*\(?[\w$_]+\.y\s*>=.*?if\s*\(\s*![\w$_]+\s*\)\s*{\s*var\s+[\w$_]+\s*=\s*document\.createElement\(['"]canvas['"]\);.+?([\w$_]+)\.scale\s*\*\s*\([\w$_]+?\s*\?\s*\.+5\s*:\s*1\).+?[\w$_]+\[[\w$_]+\]\s*=\s*[\w$_]+\s*}\s*return [\w$_]+;?\s*)}\s*var/s;
         const itemSpriteRegex = /(var [\w$_]+\s*=\s*)(\[\])(;\s*function ([\w$_]+)\([\w$_]+,\s*[\w$_]+\)\s*{\s*var [\w$_]+\s*=\s*[\w$_]+\[[\w$_]+\.id\];\s*if\s*\(![\w$_]+\s*\|\|\s*[\w$_]+\)\s*{\s*var [\w$_]+\s*=\s*document\.createElement\(['"]canvas['"]\).+?return [\w$_]+;?\s*})/s;
 
         // also adds one parameter to the function because it depends on an out of scope object which is set before getting the sprite in game code

@@ -17,8 +17,13 @@ export default class PlayerManager {
         if (player) {
             player.updateData(id, sid, name, position, dir, health, maxHealth, scale, skinColor);
         } else {
-            player = new Player(id, sid, name, position, dir, health, maxHealth, scale, skinColor);
-            this.playerList.push(player);
+            if (isMyPlayer) {
+                player = new ClientPlayer(id, sid, name, position, dir, health, maxHealth, scale, skinColor);
+                this.playerList.unshift(player);
+            } else {
+                player = new Player(id, sid, name, position, dir, health, maxHealth, scale, skinColor);
+                this.playerList.push(player);
+            }
         }
 
         if (isMyPlayer) {
@@ -27,5 +32,13 @@ export default class PlayerManager {
         }
 
         return player;
+    }
+
+    findTarget() {
+        return this.playerList.slice(1).sort((a, b) => a.serverPos.clone().subtract(this.myPlayer.serverPos).length() - b.serverPos.clone().subtract(this.myPlayer.serverPos).length())[0];
+    }
+
+    getNearby(distance: number, condition?: (player: Player) => boolean) {
+        return this.playerList.filter(player => player.serverPos.clone().subtract(this.myPlayer.serverPos).length() <= distance && (!condition || condition(player)))[0];
     }
 }

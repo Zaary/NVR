@@ -82,6 +82,8 @@ class TickEngine extends EventEmitter<{
                 this.lastTick = Date.now() - this.ping;
                 if (this.serverLag > 0) this.emit("serverlag", this.serverLag);
 
+                core.objectManager.resetWiggles(this.tickIndex);
+
                 this.emit("tick", this.tickIndex);
             }
         });
@@ -125,6 +127,10 @@ class TickEngine extends EventEmitter<{
 
     tick() {
         this.lastTick = Date.now();
+    }
+
+    get timeToNextTick() {
+        return Date.now() - this.lastTick - this.ping;
     }
 
     get serverLag(): number {

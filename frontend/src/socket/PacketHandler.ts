@@ -1,13 +1,15 @@
 import { items } from "../data/moomoo/items";
-import { GameObject } from "../data/type/GameObject";
+import { GameObject, PlayerBuilding } from "../data/type/GameObject";
 import { Player } from "../data/type/Player";
-import { buildings/*, pathfinder*/, players, setTarget, target } from "../core/Core";
 //import { playerUtil } from "../util/PlayerUtil";
 import { Packet } from "./packets/Packet";
 import { PacketType } from "./packets/PacketType";
 import { core } from "../main";
 import Vector from "../util/type/Vector";
 import PlayerManager from "../manager/PlayerManager";
+import { MeleeWeapon } from "../data/type/Weapon";
+import MathUtil from "../util/MathUtil";
+import { util } from "../data/type/MoomooUtil";
 
 let lastPath = 0;
 
@@ -54,21 +56,23 @@ function processIn(packet: Packet) {
                         playerData[2]
                     );*/
 
-                    player.lerpPos = new Vector(player.renderPos.x, player.renderPos.y) // clientPos
+                    player.updatePlayer(core.objectManager, playerData[1], playerData[2], playerData[3], playerData[4], playerData[5], playerData[6], playerData[7], playerData[8], playerData[9], playerData[10], playerData[11], playerData[12]);
+
+                    //player.lerpPos = new Vector(player.renderPos.x, player.renderPos.y) // clientPos
                     //player.lastDir = player.serverDir; // d1
 
                     //player.lastTickPosX = player.serverPosX;
                     //player.lastTickPosY = player.serverPosY;
 
-                    player.serverPos = new Vector(playerData[1], playerData[2]) // serverPos
+                    //player.serverPos = new Vector(playerData[1], playerData[2]) // serverPos
 
                     //player.serverPosX = playerData[1]; // x2
                     //player.serverPosY = playerData[2]; // y2
 
                     //player.serverDir = info[3]; // d2
-                    player.dt = 0; // dt
+                    //player.dt = 0; // dt
 
-                    player.dir = playerData[3];
+                    //player.dir = playerData[3];
                     /*player.buildIndex = playerData[4];
                     player.weaponIndex = playerData[5];
                     player.weaponVariant = playerData[6];
@@ -81,7 +85,6 @@ function processIn(packet: Packet) {
                     player.visible = true;
                 }
             }
-
             /*setTarget(playerUtil.findTarget(players));
             if (target && currentPlayer && Date.now() - lastPath > 500) {
                 lastPath = Date.now();
@@ -108,7 +111,10 @@ function processIn(packet: Packet) {
         case PacketType.WIGGLE:
             // first argument is ID and second argument is direction
             // however packet content is [direction, ID]
-            core.objectManager.wiggleObject(packet.data[1], packet.data[0]);
+
+            // use tickIndex + 1 because wiggle packet is sent before player update
+            // so tickIndex is not updated yet
+            core.objectManager.wiggleObject(packet.data[1], packet.data[0], core.tickEngine.tickIndex + 1);
             break;
         case PacketType.UPDATE_ITEMS:
             if (packet.data[0]) core.playerManager.myPlayer.inventory[packet.data[1] ? 'weapons' : 'items'] = packet.data[0];
@@ -116,6 +122,41 @@ function processIn(packet: Packet) {
         case PacketType.DEATH:
             core.playerManager.myPlayer.inventory.reset();
             break;
+        case PacketType.GATHER_ANIM: {
+            const player = core.playerManager.playerList.findBySid(packet.data[0]);
+            if (!player) return;
+
+            // handle object damage
+
+            const weapon = <MeleeWeapon> player.inventory.weaponSelected;
+            const grids = core.objectManager.getGridArrays(player.serverPos.x, player.serverPos.y, weapon.stats.range + player.velocity.length() * 2).flat(1);
+
+            for (let i = 0; i < grids.length; i++) {
+                const object = grids[i];
+                // use object.scale because .getScale returns collision box while .scale is hitbox
+                if (MathUtil.getDistance(object.position, player.lastTickServerPos) - object.scale <= weapon.stats.range + player.velocity.length() * 2) {
+                    for (const wiggle of object.wiggles) {
+                        const gatherAngle = MathUtil.roundTo(MathUtil.getDirection(player.serverPos, object.position), 1);
+                        const safeSpan = MathUtil.lineSpan(object.position.clone(), player.lastTickServerPos.clone(), player.serverPos.clone().add(player.velocity));
+
+                        if (MathUtil.getAngleDist(wiggle[0], gatherAngle) <= safeSpan + Number.EPSILON) {
+                            if (object instanceof PlayerBuilding) {
+                                // damage the building depending on the player's weapon damage
+                                object.health -= weapon.stats.dmg;
+                                console.log("damaged object! health:", object.health);
+                            }
+
+                            // remove the wiggle as its confirmed by gather packet
+                            object.wiggles.splice(object.wiggles.indexOf(wiggle), 1);
+                        } else {
+                            // this should NOT happen and if it does, there is a 99% chance it is a bug
+                        }
+                    }
+                }
+            }
+            break;
+        }
+        // case: ...
     }
 }
 /*

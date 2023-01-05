@@ -1,5 +1,5 @@
 import { EventEmitter } from "tsee";
-import { Core, players } from "../core/Core";
+import { Core } from "../core/Core";
 import config from "../data/moomoo/config";
 import { util } from "../data/type/MoomooUtil";
 import { Player } from "../data/type/Player";
