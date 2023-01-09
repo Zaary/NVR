@@ -1,3 +1,4 @@
+import { Action } from "../../core/Action";
 import EventPacket from "../../event/EventPacket";
 
 export default abstract class Module {
@@ -7,4 +8,6 @@ export default abstract class Module {
     onKeydown(keyCode: number) {};
     onKeyup(keyCode: number) {};
     onPacketReceive(event: EventPacket) {};
+    onRender(delta: number) {};
+    onActionRun(action: Action) {};
 }

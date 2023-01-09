@@ -161,6 +161,8 @@ export default class RenderManager extends EventEmitter<{
         //this.clear();
         this.renderers.forEach(renderer => { renderer.render(delta) });
         this.interfaceRenderers.forEach(renderer => { renderer.render(delta) });
+        
+        this.core.moduleManager.onRender(delta);
     }
 
     async createRenderer(id: RendererID, rendererClass: Class<Renderer>, core: Core) {

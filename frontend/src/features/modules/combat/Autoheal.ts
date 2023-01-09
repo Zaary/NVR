@@ -1,3 +1,4 @@
+import { items } from "../../../data/moomoo/items";
 import EventPacket from "../../../event/EventPacket";
 import { core } from "../../../main";
 import { connection } from "../../../socket/Connection";
@@ -19,15 +20,12 @@ export default class Autoheal extends Module {
     }
     
     onUpdate(delta: number): void {
-        if (core.playerManager.myPlayer && this.lastHealth < 100 && Date.now() - this.damageTime > 120 && this.hasFoodInHand === false) {
+        if (core.playerManager.myPlayer.alive && this.lastHealth < 100 && Date.now() - this.damageTime > 120 && this.hasFoodInHand === false) {
             const foodType = core.playerManager.myPlayer.inventory.items[0];
             const healsUp = foodType == 0 ? 20 : 40;
 
             for (let i = 0; i < Math.ceil((100 - this.lastHealth) / healsUp); i++) {
-                connection.send(new Packet(PacketType.SELECT_ITEM, [foodType, false]));
-                connection.send(new Packet(PacketType.ATTACK, [1, null]));
-                connection.send(new Packet(PacketType.ATTACK, [0, null]));
-                connection.send(new Packet(PacketType.SELECT_ITEM, [core.playerManager.myPlayer.inventory.weapons[0], true]));
+                core.interactionEngine.vanillaPlaceItem(items.list[foodType], core.mouseAngle);
             }
             this.damageTime = Date.now();
         } // ok

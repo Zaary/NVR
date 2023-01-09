@@ -47,10 +47,20 @@ function setTarget(player: Player | null) {
 class Core extends EventEmitter {
 
     public static VER = "1.0";
-    public static AUTHORS = ["Zaary"];
+    public static AUTHORS = ["Zaary", "Splex"];
 
     private lastUpdate: number;
+    private lastActionState: {
+        hat: number;
+        tail: number;
+        attack: number;
+        aim: number;
+        weapon: number;
+    };
     private scheduledActions: Action[];
+    private actionIdCounter = 0;
+    private packetBlockIdCounter = 0;
+    private packetBlocks: Record<number, number[]>;
 
     public bundleAPI: API;
 
@@ -75,6 +85,15 @@ class Core extends EventEmitter {
 
         this.lastUpdate = Date.now();
         this.scheduledActions = [];
+        this.lastActionState = {
+            hat: 0,
+            tail: 0,
+            attack: 0,
+            aim: 0,
+            weapon: 0
+        }
+
+        this.packetBlocks = {};
 
         this.objectManager = new ObjectManager();
         this.playerManager = new PlayerManager();
@@ -91,10 +110,11 @@ class Core extends EventEmitter {
             this.moduleManager.onUnsafeTick(tick);
 
             // run actions based on priority
-            /*this.runUppermostAction(ActionType.HAT, tick);
+            this.runUppermostAction(ActionType.HAT, tick);
             this.runUppermostAction(ActionType.TAIL, tick);
+            this.runUppermostAction(ActionType.WEAPON, tick); // important to switch weapon before attack
             this.runUppermostAction(ActionType.ATTACK, tick);
-            connection.send(new Packet(PacketType.CHAT, ["server lag: " + this.tickEngine.serverLag]));*/
+            this.scheduledActions = [];
         });
 
         this.tickEngine.on("tick", this.moduleManager.onTick.bind(this.moduleManager));
@@ -109,6 +129,45 @@ class Core extends EventEmitter {
         document.addEventListener("keyup", event => {
             this.emit("keyup", event)
             this.moduleManager.onKeyup(event.keyCode);
+        });
+
+        // listen for packet send (post) - after its impossible to cancel
+        connection.on("packetsendp", (packet: Packet) => {
+            if (packet.type === PacketType.BUY_AND_EQUIP) {
+                if (packet.data[0] === 0) {
+                    if (!packet.data[2]) {
+                        this.lastActionState.hat = packet.data[1];
+                    } else {
+                        this.lastActionState.tail = packet.data[1];
+                    }
+                }
+            } else if (packet.type === PacketType.ATTACK) {
+                this.lastActionState.attack = packet.data[0];
+                this.lastActionState.aim = packet.data[1];
+            } else if (packet.type === PacketType.SET_ANGLE) {
+                this.lastActionState.aim = packet.data[0];
+            } else if (packet.type === PacketType.SELECT_ITEM) {
+                if (packet.data[1]) {
+                    this.lastActionState.weapon = packet.data[0];
+                }
+            }
+        });
+
+        // cancels aim packets because it only spams packets
+        // and messes up autobreak aim (kinda lazy solution)
+        // should be fixed explicitly in the future and
+        // remove the packet cancelling
+        connection.on("packetsend", (event: EventPacket) => {
+            const packet = event.getPacket();
+            //console.log(packet);
+            if (this.packetBlocks.hasOwnProperty(packet.type)) {
+                if (this.packetBlocks[packet.type].length > 0) {
+                    event.cancel();
+                    return;
+                }
+            }
+
+            PacketHandler.processOut(event.getPacket());
         });
 
         // listen for received packets (always process the packet before passing it to modules)
@@ -127,7 +186,7 @@ class Core extends EventEmitter {
     async initializeRenderer(canvas: HTMLCanvasElement) {
         this.renderManager = new RenderManager(this, canvas, 1920, 1080);
         
-        await this.renderManager.createRenderer("background", HoverInfoModule, this);
+        //await this.renderManager.createRenderer("background", HoverInfoModule, this);
         await this.renderManager.createInterfaceRenderer("packetCount", PacketCountModule, this);
         await this.renderManager.createInterfaceRenderer("packetGraph", PacketGraphModule, this);
         
@@ -146,13 +205,33 @@ class Core extends EventEmitter {
         // emit event to be used in other modules
         this.emit("update", delta);
         
+        this.playerManager.update(delta);
         this.objectManager.update(delta);
         this.moduleManager.onUpdate(delta);
     }
 
+    createPacketBlock(type: PacketType) {
+        const id = this.packetBlockIdCounter++;
+        if (!this.packetBlocks.hasOwnProperty(type)) {
+            this.packetBlocks[type] = [];
+        }
+        this.packetBlocks[type].push(id);
+        return id;
+    }
+
+    removePacketBlock(type: PacketType, id: number) {
+        const index = this.packetBlocks[type].indexOf(id);
+        if (index > -1) this.packetBlocks[type].splice(index, 1);
+    }
+
     runUppermostAction(action: ActionType, tick: number) {
         // filter and sort by highest priority
-        const sorted = this.scheduledActions.filter(a => a.type == action && a.executeTick == tick).sort((a, b) => b.priority - a.priority);
+        const sorted = this.scheduledActions.filter(a => a.type == action && a.executeTick == tick && (() => {
+            if (a.type === ActionType.HAT && !this.playerManager.myPlayer.ownedHats.includes(a.data[0])) return false;
+            if (a.type === ActionType.TAIL && !this.playerManager.myPlayer.ownedTails.includes(a.data[0])) return false;
+            if (a.type === ActionType.WEAPON && !this.playerManager.myPlayer.inventory.hasWeapon(a.data[0])) return false;
+            return true;
+        })()).sort((a, b) => b.priority - a.priority);
         if (sorted.length > 0) {
             // run action
             const action = sorted[0];
@@ -169,19 +248,31 @@ class Core extends EventEmitter {
     runAction(action: Action) {
         switch (action.type) {
             case ActionType.HAT:
+                if (action.data[0] === this.lastActionState.hat) return;
                 connection.send(new Packet(PacketType.BUY_AND_EQUIP, [0, action.data[0], 0]));
                 break;
             case ActionType.TAIL:
+                if (action.data[0] === this.lastActionState.tail) return;
                 connection.send(new Packet(PacketType.BUY_AND_EQUIP, [0, action.data[0], 1]));
                 break;
             case ActionType.ATTACK:
+                if (action.data[0] === this.lastActionState.attack && action.data[1] === this.lastActionState.aim) return;
                 connection.send(new Packet(PacketType.ATTACK, action.data));
                 break;
+            case ActionType.WEAPON:
+                if (action.data[0] === this.lastActionState.weapon) return;
+                connection.send(new Packet(PacketType.SELECT_ITEM, [action.data[0], true]));
+            default:
+                return;
         }
+
+        this.moduleManager.onActionRun(action);
     }
 
-    scheduleAction(action: ActionType, priority: ActionPriority, tick: number = this.tickEngine.tickIndex + 1, data: any[]) {
-        this.scheduledActions.push(new Action(action, priority, tick, data));
+    scheduleAction(action: ActionType, priority: ActionPriority, tick: number = this.tickEngine.tickIndex + 1, data: any[]): number {
+        const ac = new Action(this.actionIdCounter++, action, priority, tick, data);
+        this.scheduledActions.push(ac);
+        return ac.id;
     }
 }
 

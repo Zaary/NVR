@@ -1,18 +1,23 @@
+import { Action } from "../core/Action";
 import EventPacket from "../event/EventPacket";
 import Logger from "../util/Logger";
 import { Class } from "../util/type/Definitions";
+import AutoBreak from "./modules/building/AutoBreak";
 import AutoPlacer from "./modules/building/AutoPlacer";
 import ItemPlacer from "./modules/building/ItemPlacer";
 import Autoheal from "./modules/combat/Autoheal";
 import Module from "./modules/Module";
+import AutoHat from "./modules/player/AutoHat";
 
 const logger = new Logger("module-manager");
 
 export default class ModuleManager {
     private static classes: Class<Module>[] = [
+        AutoBreak,
         AutoPlacer,
         ItemPlacer,
         Autoheal,
+        AutoHat
     ];
 
     private modules: Module[] = [];
@@ -57,6 +62,18 @@ export default class ModuleManager {
     onPacketReceive(event: EventPacket) {
         for (const module of this.modules) {
             module.onPacketReceive(event);
+        }
+    }
+
+    onRender(delta: number) {
+        for (const module of this.modules) {
+            module.onRender(delta);
+        }
+    }
+
+    onActionRun(action: Action) {
+        for (const module of this.modules) {
+            module.onActionRun(action);
         }
     }
 

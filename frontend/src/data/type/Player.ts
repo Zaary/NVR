@@ -4,38 +4,96 @@ import config from "../moomoo/config";
 import hats, { Hat } from "../moomoo/hats";
 import { Item, items } from "../moomoo/items";
 import Vector from "../../util/type/Vector";
-import { MeleeWeapon, Weapon, weaponList } from "./Weapon";
+import { MeleeWeapon, RangedWeapon, Weapon, weaponList, Weapons, WeaponSlot } from "./Weapon";
 import MathUtil from "../../util/MathUtil";
 import MovementProcessor from "../../util/processor/MovementProcessor";
 import ObjectManager from "../../manager/ObjectManager";
-import { NaturalObject } from "./GameObject";
+import { GameObject, NaturalObject, PlayerBuilding } from "./GameObject";
+
+enum WeaponFinder {
+	BUILDING_BREAK,
+	MOVEMENT_SPEED
+}
 
 class Inventory {
-//i need range of it xd
-	public weapons: [number, number | null];
+
+	public static WeaponFinders = WeaponFinder;
+
+	private player: Player;
+
+	public weapons: [MeleeWeapon, Weapon | null];
+	public reloads: Record<number, number>;
+
 	public items: number[];
 
 	public heldItem: Weapon | Item;
 	public weaponSelected: Weapon;
 
-	constructor() {
-		this.weapons = [0, null];
+	constructor(player: Player) {
+		this.player = player;
+		this.weapons = [Weapons.TOOL_HAMMER, null];
+		this.reloads = Object.fromEntries(new Array(weaponList.length).fill(undefined).map((_x, i) => [i, 0]));
 		this.items = [0, 3, 6, 10];
-		this.heldItem = weaponList[0];
-		this.weaponSelected = weaponList[0];
+		this.heldItem = Weapons.TOOL_HAMMER;
+		this.weaponSelected = Weapons.TOOL_HAMMER;
 	}
 	
 	reset() {
-		this.weapons = [0, null];
+		this.weapons = [Weapons.TOOL_HAMMER, null];
+		this.reloads = Object.fromEntries(new Array(weaponList.length).fill(undefined).map((_x, i) => [i, 0]));;
 		this.items = [0, 3, 6, 10];
-		this.heldItem = weaponList[0];
-		this.weaponSelected = weaponList[0];
+		this.heldItem = Weapons.TOOL_HAMMER;
+		this.weaponSelected = Weapons.TOOL_HAMMER;
+	}
+
+	setWeapons(weapons: number[]) {
+		this.weapons = [<MeleeWeapon> weaponList[weapons[0]], weaponList[weapons[1]]];
+	}
+
+	setItems(items: number[]) {
+		this.items = items;
+	}
+
+	resetReload(item: Weapon) {
+		this.reloads[item.id] = item.stats.reloadTime;
+	}
+
+	updateReloads(delta: number) {
+		if (!(this.heldItem instanceof Weapon)) return;
+		const id = this.heldItem.id;
+
+		if (this.reloads[id] > 0) {
+			this.reloads[id] -= delta;
+			if (this.reloads[id] <= 0) this.reloads[id] = 0;
+		}
+	}
+
+	findBestWeapon(finder: WeaponFinder) {
+		switch (finder) {
+			case WeaponFinder.BUILDING_BREAK:
+				return (<MeleeWeapon[]> this.weapons.flat(1).filter(x => x !== null && x instanceof MeleeWeapon)).sort((a: MeleeWeapon, b: MeleeWeapon) => b.stats.dmg * b.stats.buildingDmgMultiplier - a.stats.dmg * a.stats.buildingDmgMultiplier)[0];
+			case WeaponFinder.MOVEMENT_SPEED:
+				return this.weapons.flat(1).filter(x => x !== null).sort((a, b) => b!.stats.speedMultiplier - a!.stats.speedMultiplier)[0];
+		}
+	}
+
+	getWeapon(slot: WeaponSlot) {
+		return this.weapons[slot];
+	}
+
+	hasWeapon(weapon: number | Weapon) {
+		const wep = typeof weapon === "number" ? weaponList[weapon] : weapon;
+		return this.weapons[0].id === wep.id || (this.weapons[1] && this.weapons[1].id === wep.id);
 	}
 }
 
 interface State {
 	isTrapped: boolean;
 	buildIndex: number;
+
+	data: {
+		trap: PlayerBuilding | undefined
+	}
 }
 
 class Player {
@@ -113,17 +171,21 @@ class Player {
 		this.lastTickPosX = 0;
 		this.lastTickPosY = 0;
 
-		this.inventory = new Inventory();
+		this.inventory = new Inventory(this);
 
 		this.movementProcessor = new MovementProcessor(this);
 
 		this.state = {
 			isTrapped: false,
-			buildIndex: -1
+			buildIndex: -1,
+
+			data: {
+				trap: undefined
+			}
 		}
     }
 
-	updatePlayer(objectManager: ObjectManager, x: number, y: number, dir: number, buildIndex: number, weaponIndex: number, weaponVariant: number, team: string, isLeader: boolean, skinIndex: number, tailIndex: number, iconIndex: boolean, zIndex: number) {
+	updatePlayer(objectManager: ObjectManager, x: number, y: number, dir: number, buildIndex: number, weaponIndex: number, _weaponVariant: number, _team: string, _isLeader: boolean, _skinIndex: number, _tailIndex: number, _iconIndex: boolean, _zIndex: number) {
 		this.lerpPos = this.renderPos.clone();
 		this.lastTickServerPos = this.serverPos.clone();
 		this.serverPos = new Vector(x, y);
@@ -150,6 +212,7 @@ class Player {
 		this.dt = 0;
 
 		this.state.isTrapped = false;
+		this.state.data.trap = undefined;
 
 		// objects
 		const grids = objectManager.getGridArrays(this.serverPos.x, this.serverPos.y, this.scale + this.velocity.length() * 2).flat(1);
@@ -159,7 +222,7 @@ class Player {
 
 			const isCollision = MathUtil.getDistance(this.serverPos, object.position) < this.scale + object.getScale();
 
-			if (object.type === 15 && isCollision) this.state.isTrapped = true;
+			if (object.type === 15 && isCollision && (<PlayerBuilding> object).owner.sid !== this.sid) this.state.isTrapped = true, this.state.data.trap = <PlayerBuilding> object;
 		}
 	}
 
@@ -177,7 +240,20 @@ class Player {
 }
 
 class ClientPlayer extends Player {
+	public alive: boolean;
 
+	public isAttacking: boolean;
+
+	public ownedHats: number[];
+	public ownedTails: number[];
+
+	constructor(id: string, sid: number, name: string, position: Vector, dir: number, health: number, maxHealth: number, scale: number, skinColor: number) {
+		super(id, sid, name, position, dir, health, maxHealth, scale, skinColor);
+		this.alive = false;
+		this.isAttacking = false;
+		this.ownedHats = hats.filter(x => x.price === 0).map(x => x.id);
+		this.ownedTails = accessories.filter(x => x.price === 0).map(x => x.id);
+	}
 }
 
-export { Player, ClientPlayer };
+export { Player, ClientPlayer, Inventory };

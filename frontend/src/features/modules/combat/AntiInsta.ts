@@ -10,7 +10,7 @@ export default class AntiInsta extends Module {
     }
 
     onPacketReceive(event: EventPacket): void {
-        if (!core.playerManager.myPlayer.visible) return;
+        if (!core.playerManager.myPlayer.alive) return;
 
         const packet = event.getPacket();
         

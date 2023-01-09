@@ -7,7 +7,7 @@ import { PacketType } from "./packets/PacketType";
 import { core } from "../main";
 import Vector from "../util/type/Vector";
 import PlayerManager from "../manager/PlayerManager";
-import { MeleeWeapon } from "../data/type/Weapon";
+import { MeleeWeapon, Weapon, weaponList } from "../data/type/Weapon";
 import MathUtil from "../util/MathUtil";
 import { util } from "../data/type/MoomooUtil";
 
@@ -117,17 +117,33 @@ function processIn(packet: Packet) {
             core.objectManager.wiggleObject(packet.data[1], packet.data[0], core.tickEngine.tickIndex + 1);
             break;
         case PacketType.UPDATE_ITEMS:
-            if (packet.data[0]) core.playerManager.myPlayer.inventory[packet.data[1] ? 'weapons' : 'items'] = packet.data[0];
+            if (packet.data[1]) {
+                core.playerManager.myPlayer.inventory.setWeapons(packet.data[0]);
+            } else {
+                core.playerManager.myPlayer.inventory.setItems(packet.data[0]);
+            }
             break;
         case PacketType.DEATH:
+            core.playerManager.myPlayer.alive = false;
             core.playerManager.myPlayer.inventory.reset();
             break;
+        case PacketType.UPDATE_STORE: {
+            if (!packet.data[2]) {
+                if (!packet.data[0]) core.playerManager.myPlayer.ownedHats.push(packet.data[1]);
+            } else {
+                if (!packet.data[0]) core.playerManager.myPlayer.ownedTails.push(packet.data[1]);
+            }
+            break;
+        }
         case PacketType.GATHER_ANIM: {
             const player = core.playerManager.playerList.findBySid(packet.data[0]);
             if (!player) return;
 
-            // handle object damage
+            // set reload
+            player.inventory.resetReload(player.inventory.heldItem instanceof MeleeWeapon ? player.inventory.heldItem : player.inventory.weapons[0]);
+            player.inventory.updateReloads(core.tickEngine.ping);
 
+            // damage objects
             const weapon = <MeleeWeapon> player.inventory.weaponSelected;
             const grids = core.objectManager.getGridArrays(player.serverPos.x, player.serverPos.y, weapon.stats.range + player.velocity.length() * 2).flat(1);
 
@@ -159,14 +175,34 @@ function processIn(packet: Packet) {
         // case: ...
     }
 }
-/*
+
 function processOut(packet: Packet) {
     switch (packet.type) {
-
+        case PacketType.ATTACK: {
+            const myPlayer = core.playerManager.myPlayer;
+            myPlayer.isAttacking = packet.data[0];
+            if (myPlayer.isAttacking && myPlayer.inventory.heldItem instanceof Weapon && myPlayer.reloads[myPlayer.inventory.heldItem.id] === 0) {
+                myPlayer.inventory.resetReload(myPlayer.inventory.heldItem);
+            }
+            break;
+        }
+        case PacketType.SELECT_ITEM: {
+            const myPlayer = core.playerManager.myPlayer;
+            const lastHeld = myPlayer.inventory.heldItem.id;
+            if (packet.data[1]) {
+                myPlayer.inventory.heldItem = weaponList[packet.data[0]];
+            } else {
+                if (packet.data[0] === lastHeld) {
+                    myPlayer.inventory.heldItem = myPlayer.inventory.weaponSelected;
+                } else {
+                    myPlayer.inventory.heldItem = items.list[packet.data[0]];
+                }
+            }
+        }
     }
-}*/
+}
 
-const PacketHandler = { processIn/*, processOut*/ };
+const PacketHandler = { processIn, processOut };
 
 export { PacketHandler }
 /*

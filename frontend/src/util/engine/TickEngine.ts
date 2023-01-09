@@ -1,6 +1,7 @@
 import { EventEmitter } from "tsee";
 import { Core } from "../../core/Core";
 import config from "../../data/moomoo/config";
+import { items } from "../../data/moomoo/items";
 import EventPacket from "../../event/EventPacket";
 import { connection } from "../../socket/Connection";
 import { Packet } from "../../socket/packets/Packet";
@@ -119,6 +120,9 @@ class TickEngine extends EventEmitter<{
             let i = predictedPlacements.length;
             while (i--) {
                 if (now - predictedPlacements[i].placedTimestamp > safePing * 2 + safeDelta + (1000 / config.serverUpdateRate)) {
+                    const prediction = predictedPlacements[i];
+                    // failed = possibility of a trap therefore we add trap as a prediction for the next 2.5s
+                    core.objectManager.addPlacementAttempt([prediction.position, core.playerManager.myPlayer.scale, prediction.dir], items.list[15], Date.now() + 2500);
                     predictedPlacements.splice(i, 1);
                 }
             }

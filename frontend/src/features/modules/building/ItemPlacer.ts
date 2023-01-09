@@ -66,7 +66,7 @@ export default class ItemPlacer extends Module {
     }
 
     onUpdate(delta: number): void {
-        if (this.activePlacer && core.playerManager.myPlayer) this.activePlacer.run(0);
+        if (this.activePlacer && core.playerManager.myPlayer.alive) this.activePlacer.run(0);
     }
 
     onKeydown(keyCode: number): void {

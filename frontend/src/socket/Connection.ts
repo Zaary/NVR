@@ -26,9 +26,9 @@ class Connection extends EventEmitter {
         this.socket = socket;
     }
 
-    send(packet: Packet, allow?: boolean) {
+    send(packet: Packet) {
         if (this.socket && this.socket.readyState == 1) {
-            this.socket[allow ? "ss" : "send"](packetFactory.serializePacket(packet), true);
+            this.socket.send(packetFactory.serializePacket(packet));
         }
     }
 };
@@ -84,22 +84,18 @@ class Injection extends WebSocket {
             },
             set(func) {
                 connection.defaultReceiver = func;
-                console.log("default receiver");
             }
         });
     }
 
-    send(data: string | ArrayBufferLike | Blob | ArrayBufferView, isInj: boolean = false): void {
+    send(data: string | ArrayBufferLike | Blob | ArrayBufferView): void {
         const event = new EventPacket(packetFactory.deserializePacket(<ArrayBuffer> data, Side.Server, Date.now()));
         connection.emit("packetsend", event);
 
-        if (event.isCanceled()) return;
-
-        super.send(packetFactory.serializePacket(event.getPacket()));
-    }
-
-    ss(data: string | ArrayBufferLike | Blob | ArrayBufferView): void {
-        super.send(data);
+        if (!event.isCanceled()) {
+            connection.emit("packetsendp", event.getPacket());
+            super.send(packetFactory.serializePacket(event.getPacket()));
+        }
     }
 }
 

@@ -1,4 +1,5 @@
 import { items } from "../../../data/moomoo/items";
+import { NaturalObject, PlayerBuilding } from "../../../data/type/GameObject";
 import { util } from "../../../data/type/MoomooUtil";
 import { Player } from "../../../data/type/Player";
 import { core } from "../../../main";
@@ -8,7 +9,33 @@ import Module from "../Module";
 enum State {
     IDLE,
     WINDMILLS,
-    TRAP_ENEMY
+    TRAP_ENEMY,
+    SPIKE_TRAPPED
+}
+
+function combineAllowAngles(angles1: [number, number][], angles2: [number, number][]) {
+    const longer = angles1.length > angles2.length ? angles1 : angles2;
+    const shorter = longer === angles1 ? angles2 : angles1;
+    const result: [number, number][] = [];
+
+    if (shorter.length === 0) return longer;
+
+    let comparedAgainist: [number, number];
+    for (let i = 0; i < longer.length; i++) {
+        const currentItem = longer[i];
+        comparedAgainist = shorter.shift()!;
+
+        if (comparedAgainist) {
+            result.push([
+                comparedAgainist[0] > currentItem[0] ? comparedAgainist[0] : currentItem[0],
+                comparedAgainist[1] < currentItem[1] ? comparedAgainist[1] : currentItem[1]
+            ]);
+        } else {
+            result.push([currentItem[0], currentItem[1]]);
+        }
+    }
+
+    return result;
 }
 
 function translateAllowAngles(placeableAngles: [number, number][], stepDeg: number) {
@@ -28,6 +55,9 @@ function translateAllowAngles(placeableAngles: [number, number][], stepDeg: numb
 export default class AutoPlacer extends Module {
 
     private targetsTrappable: Player[];
+    private targetsTrapSpikable: Player[];
+
+    private debugAngles: number[] = [];
 
     private state: State;
     private toggled: boolean;
@@ -37,6 +67,7 @@ export default class AutoPlacer extends Module {
         this.state = State.WINDMILLS;
         this.toggled = false;
         this.targetsTrappable = [];
+        this.targetsTrapSpikable = [];
     }
 
     onUnsafeTick(tickIndex: number): void {
@@ -44,11 +75,13 @@ export default class AutoPlacer extends Module {
 
     calcState() {
         this.targetsTrappable = [];
+        this.targetsTrapSpikable = [];
 
         const myPlayer = core.playerManager.myPlayer;
         const enemies = core.playerManager.playerList.slice(1).filter(x => x.visible);
 
         const trapItem = items.list[15];
+        const spikeItem = items.list[myPlayer.inventory.items[2]];
         
         if (enemies.length === 0) this.state = State.IDLE;
 
@@ -59,15 +92,16 @@ export default class AutoPlacer extends Module {
             const nextDistance = MathUtil.getDistance(enemy.serverPos.clone().add(enemy.velocity), myPlayer.serverPos);
             const trappingDistance = myPlayer.scale + enemy.scale + trapItem.scale + trapItem.scale * trapItem.colDiv! + trapItem.placeOffset!;
 
-            if (distance <= trappingDistance) {
-                if (enemy.state.isTrapped) {
-                    // plac pikes ig
-                    this.state = State.IDLE;
-                } else if (nextDistance <= trappingDistance) {
-                    this.state = State.TRAP_ENEMY;
-                }
-
+            if (distance <= trappingDistance && nextDistance <= trappingDistance && !enemy.state.isTrapped) {
+                this.state = State.TRAP_ENEMY;
                 this.targetsTrappable.push(enemy);
+            }
+            
+            if (enemy.state.isTrapped) {
+                if (MathUtil.getDistance(enemy.state.data.trap!.position, myPlayer.serverPos) - myPlayer.scale - trapItem.scale - spikeItem.scale * 2 - (spikeItem.placeOffset ?? 0) <= 0) {
+                    this.state = State.SPIKE_TRAPPED;
+                    this.targetsTrapSpikable.push(enemy);
+                }
             }
         }
 
@@ -78,6 +112,8 @@ export default class AutoPlacer extends Module {
         if (!this.toggled) return;
 
         const myPlayer = core.playerManager.myPlayer;
+
+        if (!myPlayer.alive) return;
         
         this.calcState();
 
@@ -117,6 +153,26 @@ export default class AutoPlacer extends Module {
                 }
                 break;
             }
+            case State.SPIKE_TRAPPED: {
+                const trapItem = items.list[15];
+                const spikeItem = items.list[core.playerManager.myPlayer.inventory.items[2]];
+                for (let i = 0; i < this.targetsTrapSpikable.length; i++) {
+                    const target = this.targetsTrapSpikable[i];
+
+                    const trap = target.state.data.trap;
+
+                    if (trap) {
+                        const tangentAngle = core.objectManager.findPlacementTangent([myPlayer.serverPos, myPlayer.scale], trap, spikeItem, 5);
+                        const straightAngle = MathUtil.getDirection(myPlayer.serverPos, trap.position);
+                        const targetAngle = MathUtil.getDirection(myPlayer.serverPos, target.serverPos);
+                        const angle1 = straightAngle + tangentAngle;
+                        const angle2 = straightAngle - tangentAngle;
+                        const closestAngle = MathUtil.getAngleDist(angle1, targetAngle) > MathUtil.getAngleDist(angle2, targetAngle) ? angle2 : angle1;
+                        core.interactionEngine.safePlacement(spikeItem, closestAngle);
+                    }
+                }
+                break;
+            }
         }
     }
 
@@ -127,5 +183,19 @@ export default class AutoPlacer extends Module {
     }
 
     onKeyup(keyCode: number): void {
+    }
+
+    onRender(delta: number): void {
+        const ctx = core.renderManager?.context!;
+        const myPos = core.renderManager?.mapToContext(core.renderManager.cameraPosition, core.playerManager.myPlayer.renderPos)!;
+        
+        for (let i = 0; i < this.debugAngles.length; i++) {
+            const a = this.debugAngles[i];
+            ctx.strokeStyle = "black";
+            ctx.beginPath();
+            ctx.moveTo(myPos.x, myPos.y);
+            ctx.lineTo(myPos.x + Math.cos(a) * 30, myPos.y + Math.sin(a) * 30);
+            ctx.stroke();
+        }
     }
 }

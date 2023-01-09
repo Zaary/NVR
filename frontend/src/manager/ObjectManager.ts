@@ -54,14 +54,14 @@ export default class ObjectManager {
      * @param source[1] scale of placing entity
      * @param source[2] angle at which is the item being placed at
      */
-    addPlacementAttempt(source: [Vector, number, number], item: Item) {
+    addPlacementAttempt(source: [Vector, number, number], item: Item, timestamp = Date.now()) {
         const [position, scale, angle] = source;
 
         const placeOffset = scale + item.scale + (item.placeOffset ?? 0);
         const targetPosition = position.clone().directionMove(angle, placeOffset);
         
         if (this.isPositionFree(targetPosition, item.scale)) {
-            this.predictedPlacements.push(new PredictedPlacement(targetPosition, angle, item.scale, item.id, Date.now()));
+            this.predictedPlacements.push(new PredictedPlacement(targetPosition, angle, item.scale, item.id, timestamp));
         }
     }
 
@@ -93,6 +93,13 @@ export default class ObjectManager {
         allows.push([lastOpener, Math.PI * 2]);
 
         return allows;
+    }
+
+    findPlacementTangent(source: [Vector, number], target: GameObject, item: Item, additionalDistanceFromObject: number) {
+        const t = source[1] + item.scale + (item.placeOffset ?? 0)
+        const p = target.getScale(true) + item.scale + additionalDistanceFromObject;
+        const s = MathUtil.getDistance(source[0], target.position);
+        return Math.acos((p ** 2 - s ** 2 - t ** 2) / (-2 * s * t));
     }
 
     // SET OBJECT GRIDS

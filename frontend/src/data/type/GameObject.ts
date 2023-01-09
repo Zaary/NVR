@@ -31,8 +31,8 @@ class GameObject {
         }
     }
 
-    getScale() {
-        return this instanceof NaturalObject ? (this.type === 0 ? this.scale * 0.6 : this.scale) : this.scale * (items.list[this.type].colDiv ?? 1);
+    getScale(fullScale = false) {
+        return this instanceof NaturalObject ? (this.type === 0 ? this.scale * 0.6 : this.scale) : this.scale * (fullScale ? 1 : items.list[this.type].colDiv ?? 1);
     }
 }
 

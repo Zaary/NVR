@@ -27,11 +27,18 @@ export default class PlayerManager {
         }
 
         if (isMyPlayer) {
-            this.myPlayer = player;
-            player.visible = true;
+            this.myPlayer = <ClientPlayer> player;
+            this.myPlayer.alive = true;
+            this.myPlayer.visible = true;
         }
 
         return player;
+    }
+
+    update(delta: number) {
+        for (let i = 0; i < this.playerList.length; i++) {
+            this.playerList[i].inventory.updateReloads(delta);
+        }
     }
 
     findTarget() {
