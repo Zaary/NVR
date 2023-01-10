@@ -158,8 +158,10 @@ function processIn(packet: Packet) {
                         if (MathUtil.getAngleDist(wiggle[0], gatherAngle) <= safeSpan + Number.EPSILON) {
                             if (object instanceof PlayerBuilding) {
                                 // damage the building depending on the player's weapon damage
-                                object.health -= weapon.stats.dmg;
-                                console.log("damaged object! health:", object.health);
+                                const damage = weapon.stats.dmg * weapon.stats.buildingDmgMultiplier;
+                                object.health -= damage;
+
+                                core.moduleManager.onBuildingHit(player, object, damage);
                             }
 
                             // remove the wiggle as its confirmed by gather packet

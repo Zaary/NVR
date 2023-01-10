@@ -9,7 +9,7 @@ export default class AutoHat extends Module {
         super();
     }
 
-    onUnsafeTick(tickIndex: number): void {
+    onPreTick(tickIndex: number): void {
         const myPlayer = core.playerManager.myPlayer;
         let biomeHat = myPlayer.serverPos.y <= config.snowBiomeTop ? 15 : (myPlayer.serverPos.y >= config.mapScale / 2 - config.riverWidth / 2 && myPlayer.serverPos.y <= config.mapScale / 2 + config.riverWidth / 2 ? 31 : 12);
         

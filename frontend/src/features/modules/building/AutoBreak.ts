@@ -23,7 +23,7 @@ export default class AutoBreak extends Module {
         this.currentTrap = null;
     }
 
-    onUnsafeTick(tickIndex: number): void {
+    onPreTick(tickIndex: number): void {
         const myPlayer = core.playerManager.myPlayer;
         if (!myPlayer.alive) return;
         

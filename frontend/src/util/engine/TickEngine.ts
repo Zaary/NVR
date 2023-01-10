@@ -13,6 +13,7 @@ class TickEngine extends EventEmitter<{
     serverlag: (lag: number) => void;
     tick: (tickIndex: number) => void;
     pretick: (futureTickIndex: number) => void;
+    posttick: (tickIndex: number) => void;
 }> {
 
     public tickIndex: number;
@@ -25,7 +26,8 @@ class TickEngine extends EventEmitter<{
     private lastTick: number;
 
     private predictionTick: number;
-    private emittedPredictionTick: number;
+    private emittedPredictionPreTick: number;
+    private emittedPredictionPostTick: number;
 
     private pings: number[];
     private deltas: number[];
@@ -42,7 +44,8 @@ class TickEngine extends EventEmitter<{
         this.lastTick = 0;
 
         this.predictionTick = -1;
-        this.emittedPredictionTick = -1;
+        this.emittedPredictionPreTick = -1;
+        this.emittedPredictionPostTick = -1;
 
         this.pings = [];
         this.deltas = [];
@@ -106,12 +109,20 @@ class TickEngine extends EventEmitter<{
 
             const safe = safePing * 1.35 + safeDelta * 1.2;
 
-            this.predictionTick = this.tickIndex + Math.ceil(safe / (1000 / config.serverUpdateRate));
-            
+            this.predictionTick = this.tickIndex + safe / (1000 / config.serverUpdateRate);
 
-            if (this.predictionTick > this.emittedPredictionTick) {
-                this.emit("pretick", this.predictionTick);
-                this.emittedPredictionTick = this.predictionTick;
+            // emit pre-tick at 60% of the current tick passed
+            if (this.predictionTick >= this.emittedPredictionPreTick + 0.6) {
+                const value = Math.ceil(this.predictionTick);
+                this.emit("pretick", value);
+                this.emittedPredictionPreTick = value;
+            }
+
+            // emit post-tick at 4% of the current tick passed
+            if (this.predictionTick >= this.emittedPredictionPostTick + 0.04) {
+                const value = Math.floor(this.predictionTick);
+                this.emit("posttick", value);
+                this.emittedPredictionPostTick = value;
             }
 
             // clean all predicted buildings if we didnt receive confirming placement packet
@@ -121,8 +132,8 @@ class TickEngine extends EventEmitter<{
             while (i--) {
                 if (now - predictedPlacements[i].placedTimestamp > safePing * 2 + safeDelta + (1000 / config.serverUpdateRate)) {
                     const prediction = predictedPlacements[i];
-                    // failed = possibility of a trap therefore we add trap as a prediction for the next 2.5s
-                    core.objectManager.addPlacementAttempt([prediction.position, core.playerManager.myPlayer.scale, prediction.dir], items.list[15], Date.now() + 2500);
+                    // failed = possibility of a hidden trap therefore we add trap as a prediction for the next 0.6s
+                    core.objectManager.addPlacementAttempt([prediction.position, core.playerManager.myPlayer.scale, prediction.dir], items.list[15], Date.now() + 600);
                     predictedPlacements.splice(i, 1);
                 }
             }

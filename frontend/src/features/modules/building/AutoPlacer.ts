@@ -70,9 +70,6 @@ export default class AutoPlacer extends Module {
         this.targetsTrapSpikable = [];
     }
 
-    onUnsafeTick(tickIndex: number): void {
-    }
-
     calcState() {
         this.targetsTrappable = [];
         this.targetsTrapSpikable = [];

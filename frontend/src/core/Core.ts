@@ -107,7 +107,7 @@ class Core extends EventEmitter {
         this.tickEngine.once("ping", this.packetEngine.handlePing.bind(this.packetEngine));
 
         this.tickEngine.on("pretick", (tick: number) => {
-            this.moduleManager.onUnsafeTick(tick);
+            this.moduleManager.onPreTick(tick);
 
             // run actions based on priority
             this.runUppermostAction(ActionType.HAT, tick);
@@ -115,6 +115,10 @@ class Core extends EventEmitter {
             this.runUppermostAction(ActionType.WEAPON, tick); // important to switch weapon before attack
             this.runUppermostAction(ActionType.ATTACK, tick);
             this.scheduledActions = [];
+        });
+
+        this.tickEngine.on("posttick", (tick: number) => {
+            this.moduleManager.onPostTick(tick);
         });
 
         this.tickEngine.on("tick", this.moduleManager.onTick.bind(this.moduleManager));
