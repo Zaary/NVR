@@ -12,13 +12,13 @@ const logger = new Logger("main");
 
 inject();
 
-
 logger.info("initializing core");
 const core = new Core();
 
 if (!core) {
     logger.error("critical: core failed to load!");
     alert("critical: core failed to load! please report this to developers!");
+    console.log("sex successful.");
 }
 
 async function initializeRenderer() {

@@ -3,6 +3,8 @@ import { Weapon } from "../../data/type/Weapon";
 import MathUtil from "../MathUtil";
 import Vector from "../type/Vector";
 
+// dont use this, its just copy paste from my very old mod, needs veeery big adjustments
+
 export default class MovementProcessor {
 
     private player: Player;

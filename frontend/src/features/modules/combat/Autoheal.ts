@@ -20,6 +20,8 @@ export default class Autoheal extends Module {
     }
     
     onUpdate(delta: number): void {
+        if (this.lastHealth <= 0) this.lastHealth = 100;
+        
         if (core.playerManager.myPlayer.alive && this.lastHealth < 100 && Date.now() - this.damageTime > 120 && this.hasFoodInHand === false) {
             const foodType = core.playerManager.myPlayer.inventory.items[0];
             const healsUp = foodType == 0 ? 20 : 40;
@@ -50,7 +52,6 @@ export default class Autoheal extends Module {
     }
 
     onPacketReceive(event: EventPacket): void {
-        if (!core.playerManager.myPlayer) return;
         const packet = event.getPacket();
 
         if (packet.type === PacketType.HEALTH_UPDATE) {

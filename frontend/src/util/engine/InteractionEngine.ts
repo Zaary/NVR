@@ -29,6 +29,6 @@ export default class InteractionEngine extends EventEmitter {
         connection.send(new Packet(PacketType.ATTACK, [1, angle]));
         connection.send(new Packet(PacketType.ATTACK, [0, angle]));
         // TODO: switch to last item instead of primary weapon
-        connection.send(new Packet(PacketType.SELECT_ITEM, [this.core.playerManager.myPlayer.inventory.weapons[0].id, true]));
+        connection.send(new Packet(PacketType.SELECT_ITEM, [this.core.playerManager.myPlayer.inventory.weaponSelected.id, true]));
     }
 }

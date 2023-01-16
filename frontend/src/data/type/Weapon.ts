@@ -122,7 +122,7 @@ const Weapons = { // it does, i want to add more things, im just adjusting somet
     GREAT_AXE: new MeleeWeapon(2, WeaponSlot.PRIMARY, WeaponType.GREAT_AXE, { dmg: 35, buildingDmgMultiplier: 1, range: 75, reloadTime: 400, speedMultiplier: 1 }),
     SHORT_SWORD: new MeleeWeapon(3, WeaponSlot.PRIMARY, WeaponType.SHORT_SWORD, { dmg: 35, buildingDmgMultiplier: 1, range: 110, reloadTime: 300, speedMultiplier: 0.85 }),
     KATANA: new MeleeWeapon(4, WeaponSlot.PRIMARY, WeaponType.KATANA, { dmg: 40, buildingDmgMultiplier: 1, range: 118, reloadTime: 300, speedMultiplier: 0.8 }),
-    POLEARN: new MeleeWeapon(5, WeaponSlot.PRIMARY, WeaponType.POLEARM, { dmg: 45, buildingDmgMultiplier: 1, range: 142, reloadTime: 700, speedMultiplier: 0.82 }),
+    POLEARM: new MeleeWeapon(5, WeaponSlot.PRIMARY, WeaponType.POLEARM, { dmg: 45, buildingDmgMultiplier: 1, range: 142, reloadTime: 700, speedMultiplier: 0.82 }),
     BAT: new MeleeWeapon(6, WeaponSlot.PRIMARY, WeaponType.BAT, { dmg: 20, buildingDmgMultiplier: 1, range: 110, reloadTime: 300, speedMultiplier: 1 }),
     DAGGERS: new MeleeWeapon(7, WeaponSlot.PRIMARY, WeaponType.DAGGERS, { dmg: 20, buildingDmgMultiplier: 1, range: 65, reloadTime: 100, speedMultiplier: 1.13 }),
     STICK: new MeleeWeapon(8, WeaponSlot.PRIMARY, WeaponType.STICK, { dmg: 1, buildingDmgMultiplier: 1, range: 70, reloadTime: 400, speedMultiplier: 1 }),

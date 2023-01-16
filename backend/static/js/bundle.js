@@ -31,8 +31,9 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
 function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-var Action = /*#__PURE__*/_createClass(function Action(type, priority, executeTick, data) {
+var Action = /*#__PURE__*/_createClass(function Action(id, type, priority, executeTick, data) {
   _classCallCheck(this, Action);
+  this.id = id;
   this.type = type;
   this.priority = priority;
   this.executeTick = executeTick;
@@ -54,21 +55,23 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "ActionPriority": () => (/* binding */ ActionPriority),
 /* harmony export */   "ActionType": () => (/* binding */ ActionType)
 /* harmony export */ });
-// top = highest priority
-// bottom = lowest priority
+// top = lowest priority
+// bottom = highest priority
+// (because enums starts indexing from 0 and for us, higher index = higher priority)
 var ActionPriority;
 (function (ActionPriority) {
-  ActionPriority[ActionPriority["ANTIINSTA"] = 0] = "ANTIINSTA";
-  ActionPriority[ActionPriority["ANTIBULL"] = 1] = "ANTIBULL";
-  ActionPriority[ActionPriority["AUTOHEAL"] = 2] = "AUTOHEAL";
-  ActionPriority[ActionPriority["AUTOBREAK"] = 3] = "AUTOBREAK";
-  ActionPriority[ActionPriority["AUTOPLACE"] = 4] = "AUTOPLACE";
+  ActionPriority[ActionPriority["BIOMEHAT"] = 0] = "BIOMEHAT";
+  ActionPriority[ActionPriority["AUTOBREAK"] = 1] = "AUTOBREAK";
+  ActionPriority[ActionPriority["ANTIBULL"] = 2] = "ANTIBULL";
+  ActionPriority[ActionPriority["ANTIINSTA"] = 3] = "ANTIINSTA";
+  ActionPriority[ActionPriority["FORCED"] = 4] = "FORCED";
 })(ActionPriority || (ActionPriority = {}));
 var ActionType;
 (function (ActionType) {
   ActionType[ActionType["HAT"] = 0] = "HAT";
   ActionType[ActionType["TAIL"] = 1] = "TAIL";
   ActionType[ActionType["ATTACK"] = 2] = "ATTACK";
+  ActionType[ActionType["WEAPON"] = 3] = "WEAPON";
 })(ActionType || (ActionType = {}));
 
 
@@ -85,9 +88,6 @@ __webpack_require__.a(module, async (__webpack_handle_async_dependencies__, __we
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Core": () => (/* binding */ Core),
-/* harmony export */   "animals": () => (/* binding */ animals),
-/* harmony export */   "buildings": () => (/* binding */ buildings),
-/* harmony export */   "players": () => (/* binding */ players),
 /* harmony export */   "setTarget": () => (/* binding */ setTarget),
 /* harmony export */   "target": () => (/* binding */ target)
 /* harmony export */ });
@@ -98,25 +98,23 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../socket/packets/Packet */ "./frontend/src/socket/packets/Packet.ts");
 /* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
 /* harmony import */ var _util_Logger__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../util/Logger */ "./frontend/src/util/Logger.ts");
-/* harmony import */ var _util_type_SidArray__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../util/type/SidArray */ "./frontend/src/util/type/SidArray.ts");
-/* harmony import */ var _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../util/engine/TickEngine */ "./frontend/src/util/engine/TickEngine.ts");
-/* harmony import */ var _Action__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./Action */ "./frontend/src/core/Action.ts");
-/* harmony import */ var _ActionType__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./ActionType */ "./frontend/src/core/ActionType.ts");
-/* harmony import */ var _util_engine_PacketCountEngine__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../util/engine/PacketCountEngine */ "./frontend/src/util/engine/PacketCountEngine.ts");
-/* harmony import */ var _manager_ObjectManager__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../manager/ObjectManager */ "./frontend/src/manager/ObjectManager.ts");
-/* harmony import */ var _render_RenderManager__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../render/RenderManager */ "./frontend/src/render/RenderManager.ts");
-/* harmony import */ var _render_HoverInfoModule__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../render/HoverInfoModule */ "./frontend/src/render/HoverInfoModule.ts");
-/* harmony import */ var _render_interface_PacketCountModule__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../render/interface/PacketCountModule */ "./frontend/src/render/interface/PacketCountModule.ts");
-/* harmony import */ var _features_ModuleManager__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../features/ModuleManager */ "./frontend/src/features/ModuleManager.ts");
-/* harmony import */ var _util_engine_InteractionEngine__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../util/engine/InteractionEngine */ "./frontend/src/util/engine/InteractionEngine.ts");
-/* harmony import */ var _injector_BundleProxy__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ../injector/BundleProxy */ "./frontend/src/injector/BundleProxy.ts");
-/* harmony import */ var _injector_api_API__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ../injector/api/API */ "./frontend/src/injector/api/API.ts");
-/* harmony import */ var _render_interface_PacketGraphModule__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ../render/interface/PacketGraphModule */ "./frontend/src/render/interface/PacketGraphModule.ts");
-/* harmony import */ var _manager_PlayerManager__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ../manager/PlayerManager */ "./frontend/src/manager/PlayerManager.ts");
-/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
-/* harmony import */ var _util_type_Vector__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ../util/type/Vector */ "./frontend/src/util/type/Vector.ts");
-var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__, _features_ModuleManager__WEBPACK_IMPORTED_MODULE_15__]);
-([_socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__, _features_ModuleManager__WEBPACK_IMPORTED_MODULE_15__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+/* harmony import */ var _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../util/engine/TickEngine */ "./frontend/src/util/engine/TickEngine.ts");
+/* harmony import */ var _Action__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./Action */ "./frontend/src/core/Action.ts");
+/* harmony import */ var _ActionType__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./ActionType */ "./frontend/src/core/ActionType.ts");
+/* harmony import */ var _util_engine_PacketCountEngine__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../util/engine/PacketCountEngine */ "./frontend/src/util/engine/PacketCountEngine.ts");
+/* harmony import */ var _manager_ObjectManager__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../manager/ObjectManager */ "./frontend/src/manager/ObjectManager.ts");
+/* harmony import */ var _render_RenderManager__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../render/RenderManager */ "./frontend/src/render/RenderManager.ts");
+/* harmony import */ var _render_interface_PacketCountModule__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../render/interface/PacketCountModule */ "./frontend/src/render/interface/PacketCountModule.ts");
+/* harmony import */ var _features_ModuleManager__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../features/ModuleManager */ "./frontend/src/features/ModuleManager.ts");
+/* harmony import */ var _util_engine_InteractionEngine__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../util/engine/InteractionEngine */ "./frontend/src/util/engine/InteractionEngine.ts");
+/* harmony import */ var _injector_BundleProxy__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../injector/BundleProxy */ "./frontend/src/injector/BundleProxy.ts");
+/* harmony import */ var _injector_api_API__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../injector/api/API */ "./frontend/src/injector/api/API.ts");
+/* harmony import */ var _render_interface_PacketGraphModule__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ../render/interface/PacketGraphModule */ "./frontend/src/render/interface/PacketGraphModule.ts");
+/* harmony import */ var _manager_PlayerManager__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ../manager/PlayerManager */ "./frontend/src/manager/PlayerManager.ts");
+/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
+/* harmony import */ var _util_type_Vector__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ../util/type/Vector */ "./frontend/src/util/type/Vector.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__, _features_ModuleManager__WEBPACK_IMPORTED_MODULE_13__]);
+([_socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__, _features_ModuleManager__WEBPACK_IMPORTED_MODULE_13__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function _regeneratorRuntime() { "use strict"; /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/facebook/regenerator/blob/main/LICENSE */ _regeneratorRuntime = function _regeneratorRuntime() { return exports; }; var exports = {}, Op = Object.prototype, hasOwn = Op.hasOwnProperty, defineProperty = Object.defineProperty || function (obj, key, desc) { obj[key] = desc.value; }, $Symbol = "function" == typeof Symbol ? Symbol : {}, iteratorSymbol = $Symbol.iterator || "@@iterator", asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator", toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag"; function define(obj, key, value) { return Object.defineProperty(obj, key, { value: value, enumerable: !0, configurable: !0, writable: !0 }), obj[key]; } try { define({}, ""); } catch (err) { define = function define(obj, key, value) { return obj[key] = value; }; } function wrap(innerFn, outerFn, self, tryLocsList) { var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator, generator = Object.create(protoGenerator.prototype), context = new Context(tryLocsList || []); return defineProperty(generator, "_invoke", { value: makeInvokeMethod(innerFn, self, context) }), generator; } function tryCatch(fn, obj, arg) { try { return { type: "normal", arg: fn.call(obj, arg) }; } catch (err) { return { type: "throw", arg: err }; } } exports.wrap = wrap; var ContinueSentinel = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} var IteratorPrototype = {}; define(IteratorPrototype, iteratorSymbol, function () { return this; }); var getProto = Object.getPrototypeOf, NativeIteratorPrototype = getProto && getProto(getProto(values([]))); NativeIteratorPrototype && NativeIteratorPrototype !== Op && hasOwn.call(NativeIteratorPrototype, iteratorSymbol) && (IteratorPrototype = NativeIteratorPrototype); var Gp = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(IteratorPrototype); function defineIteratorMethods(prototype) { ["next", "throw", "return"].forEach(function (method) { define(prototype, method, function (arg) { return this._invoke(method, arg); }); }); } function AsyncIterator(generator, PromiseImpl) { function invoke(method, arg, resolve, reject) { var record = tryCatch(generator[method], generator, arg); if ("throw" !== record.type) { var result = record.arg, value = result.value; return value && "object" == _typeof(value) && hasOwn.call(value, "__await") ? PromiseImpl.resolve(value.__await).then(function (value) { invoke("next", value, resolve, reject); }, function (err) { invoke("throw", err, resolve, reject); }) : PromiseImpl.resolve(value).then(function (unwrapped) { result.value = unwrapped, resolve(result); }, function (error) { return invoke("throw", error, resolve, reject); }); } reject(record.arg); } var previousPromise; defineProperty(this, "_invoke", { value: function value(method, arg) { function callInvokeWithMethodAndArg() { return new PromiseImpl(function (resolve, reject) { invoke(method, arg, resolve, reject); }); } return previousPromise = previousPromise ? previousPromise.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg(); } }); } function makeInvokeMethod(innerFn, self, context) { var state = "suspendedStart"; return function (method, arg) { if ("executing" === state) throw new Error("Generator is already running"); if ("completed" === state) { if ("throw" === method) throw arg; return doneResult(); } for (context.method = method, context.arg = arg;;) { var delegate = context.delegate; if (delegate) { var delegateResult = maybeInvokeDelegate(delegate, context); if (delegateResult) { if (delegateResult === ContinueSentinel) continue; return delegateResult; } } if ("next" === context.method) context.sent = context._sent = context.arg;else if ("throw" === context.method) { if ("suspendedStart" === state) throw state = "completed", context.arg; context.dispatchException(context.arg); } else "return" === context.method && context.abrupt("return", context.arg); state = "executing"; var record = tryCatch(innerFn, self, context); if ("normal" === record.type) { if (state = context.done ? "completed" : "suspendedYield", record.arg === ContinueSentinel) continue; return { value: record.arg, done: context.done }; } "throw" === record.type && (state = "completed", context.method = "throw", context.arg = record.arg); } }; } function maybeInvokeDelegate(delegate, context) { var methodName = context.method, method = delegate.iterator[methodName]; if (undefined === method) return context.delegate = null, "throw" === methodName && delegate.iterator["return"] && (context.method = "return", context.arg = undefined, maybeInvokeDelegate(delegate, context), "throw" === context.method) || "return" !== methodName && (context.method = "throw", context.arg = new TypeError("The iterator does not provide a '" + methodName + "' method")), ContinueSentinel; var record = tryCatch(method, delegate.iterator, context.arg); if ("throw" === record.type) return context.method = "throw", context.arg = record.arg, context.delegate = null, ContinueSentinel; var info = record.arg; return info ? info.done ? (context[delegate.resultName] = info.value, context.next = delegate.nextLoc, "return" !== context.method && (context.method = "next", context.arg = undefined), context.delegate = null, ContinueSentinel) : info : (context.method = "throw", context.arg = new TypeError("iterator result is not an object"), context.delegate = null, ContinueSentinel); } function pushTryEntry(locs) { var entry = { tryLoc: locs[0] }; 1 in locs && (entry.catchLoc = locs[1]), 2 in locs && (entry.finallyLoc = locs[2], entry.afterLoc = locs[3]), this.tryEntries.push(entry); } function resetTryEntry(entry) { var record = entry.completion || {}; record.type = "normal", delete record.arg, entry.completion = record; } function Context(tryLocsList) { this.tryEntries = [{ tryLoc: "root" }], tryLocsList.forEach(pushTryEntry, this), this.reset(!0); } function values(iterable) { if (iterable) { var iteratorMethod = iterable[iteratorSymbol]; if (iteratorMethod) return iteratorMethod.call(iterable); if ("function" == typeof iterable.next) return iterable; if (!isNaN(iterable.length)) { var i = -1, next = function next() { for (; ++i < iterable.length;) if (hasOwn.call(iterable, i)) return next.value = iterable[i], next.done = !1, next; return next.value = undefined, next.done = !0, next; }; return next.next = next; } } return { next: doneResult }; } function doneResult() { return { value: undefined, done: !0 }; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, defineProperty(Gp, "constructor", { value: GeneratorFunctionPrototype, configurable: !0 }), defineProperty(GeneratorFunctionPrototype, "constructor", { value: GeneratorFunction, configurable: !0 }), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, toStringTagSymbol, "GeneratorFunction"), exports.isGeneratorFunction = function (genFun) { var ctor = "function" == typeof genFun && genFun.constructor; return !!ctor && (ctor === GeneratorFunction || "GeneratorFunction" === (ctor.displayName || ctor.name)); }, exports.mark = function (genFun) { return Object.setPrototypeOf ? Object.setPrototypeOf(genFun, GeneratorFunctionPrototype) : (genFun.__proto__ = GeneratorFunctionPrototype, define(genFun, toStringTagSymbol, "GeneratorFunction")), genFun.prototype = Object.create(Gp), genFun; }, exports.awrap = function (arg) { return { __await: arg }; }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, asyncIteratorSymbol, function () { return this; }), exports.AsyncIterator = AsyncIterator, exports.async = function (innerFn, outerFn, self, tryLocsList, PromiseImpl) { void 0 === PromiseImpl && (PromiseImpl = Promise); var iter = new AsyncIterator(wrap(innerFn, outerFn, self, tryLocsList), PromiseImpl); return exports.isGeneratorFunction(outerFn) ? iter : iter.next().then(function (result) { return result.done ? result.value : iter.next(); }); }, defineIteratorMethods(Gp), define(Gp, toStringTagSymbol, "Generator"), define(Gp, iteratorSymbol, function () { return this; }), define(Gp, "toString", function () { return "[object Generator]"; }), exports.keys = function (val) { var object = Object(val), keys = []; for (var key in object) keys.push(key); return keys.reverse(), function next() { for (; keys.length;) { var key = keys.pop(); if (key in object) return next.value = key, next.done = !1, next; } return next.done = !0, next; }; }, exports.values = values, Context.prototype = { constructor: Context, reset: function reset(skipTempReset) { if (this.prev = 0, this.next = 0, this.sent = this._sent = undefined, this.done = !1, this.delegate = null, this.method = "next", this.arg = undefined, this.tryEntries.forEach(resetTryEntry), !skipTempReset) for (var name in this) "t" === name.charAt(0) && hasOwn.call(this, name) && !isNaN(+name.slice(1)) && (this[name] = undefined); }, stop: function stop() { this.done = !0; var rootRecord = this.tryEntries[0].completion; if ("throw" === rootRecord.type) throw rootRecord.arg; return this.rval; }, dispatchException: function dispatchException(exception) { if (this.done) throw exception; var context = this; function handle(loc, caught) { return record.type = "throw", record.arg = exception, context.next = loc, caught && (context.method = "next", context.arg = undefined), !!caught; } for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i], record = entry.completion; if ("root" === entry.tryLoc) return handle("end"); if (entry.tryLoc <= this.prev) { var hasCatch = hasOwn.call(entry, "catchLoc"), hasFinally = hasOwn.call(entry, "finallyLoc"); if (hasCatch && hasFinally) { if (this.prev < entry.catchLoc) return handle(entry.catchLoc, !0); if (this.prev < entry.finallyLoc) return handle(entry.finallyLoc); } else if (hasCatch) { if (this.prev < entry.catchLoc) return handle(entry.catchLoc, !0); } else { if (!hasFinally) throw new Error("try statement without catch or finally"); if (this.prev < entry.finallyLoc) return handle(entry.finallyLoc); } } } }, abrupt: function abrupt(type, arg) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.tryLoc <= this.prev && hasOwn.call(entry, "finallyLoc") && this.prev < entry.finallyLoc) { var finallyEntry = entry; break; } } finallyEntry && ("break" === type || "continue" === type) && finallyEntry.tryLoc <= arg && arg <= finallyEntry.finallyLoc && (finallyEntry = null); var record = finallyEntry ? finallyEntry.completion : {}; return record.type = type, record.arg = arg, finallyEntry ? (this.method = "next", this.next = finallyEntry.finallyLoc, ContinueSentinel) : this.complete(record); }, complete: function complete(record, afterLoc) { if ("throw" === record.type) throw record.arg; return "break" === record.type || "continue" === record.type ? this.next = record.arg : "return" === record.type ? (this.rval = this.arg = record.arg, this.method = "return", this.next = "end") : "normal" === record.type && afterLoc && (this.next = afterLoc), ContinueSentinel; }, finish: function finish(finallyLoc) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.finallyLoc === finallyLoc) return this.complete(entry.completion, entry.afterLoc), resetTryEntry(entry), ContinueSentinel; } }, "catch": function _catch(tryLoc) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.tryLoc === tryLoc) { var record = entry.completion; if ("throw" === record.type) { var thrown = record.arg; resetTryEntry(entry); } return thrown; } } throw new Error("illegal catch attempt"); }, delegateYield: function delegateYield(iterable, resultName, nextLoc) { return this.delegate = { iterator: values(iterable), resultName: resultName, nextLoc: nextLoc }, "next" === this.method && (this.arg = undefined), ContinueSentinel; } }, exports; }
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
@@ -156,13 +154,8 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
 
 
 
-
-
 var logger = new _util_Logger__WEBPACK_IMPORTED_MODULE_5__["default"]("core");
 var target = null;
-var players = new _util_type_SidArray__WEBPACK_IMPORTED_MODULE_6__.SidArray();
-var animals = new _util_type_SidArray__WEBPACK_IMPORTED_MODULE_6__.SidArray();
-var buildings = new _util_type_SidArray__WEBPACK_IMPORTED_MODULE_6__.SidArray();
 
 /*
 const pathfinder = new Pathfinder();
@@ -183,28 +176,41 @@ var Core = /*#__PURE__*/function (_EventEmitter) {
     var _this;
     _classCallCheck(this, Core);
     _this = _super.call(this);
-    _this.bundleAPI = new _injector_api_API__WEBPACK_IMPORTED_MODULE_18__["default"]();
+    _defineProperty(_assertThisInitialized(_this), "actionIdCounter", 0);
+    _defineProperty(_assertThisInitialized(_this), "packetBlockIdCounter", 0);
+    _this.bundleAPI = new _injector_api_API__WEBPACK_IMPORTED_MODULE_16__["default"]();
     logger.info("launched StarLit core version ".concat(Core.VER, " by ").concat(Core.AUTHORS.join(", ")));
     _this.lastUpdate = Date.now();
     _this.scheduledActions = [];
-    _this.objectManager = new _manager_ObjectManager__WEBPACK_IMPORTED_MODULE_11__["default"]();
-    _this.playerManager = new _manager_PlayerManager__WEBPACK_IMPORTED_MODULE_20__["default"]();
+    _this.lastActionState = {
+      hat: 0,
+      tail: 0,
+      attack: 0,
+      aim: 0,
+      weapon: 0
+    };
+    _this.packetBlocks = {};
+    _this.objectManager = new _manager_ObjectManager__WEBPACK_IMPORTED_MODULE_10__["default"]();
+    _this.playerManager = new _manager_PlayerManager__WEBPACK_IMPORTED_MODULE_18__["default"]();
     _this.renderManager = null;
-    _this.moduleManager = new _features_ModuleManager__WEBPACK_IMPORTED_MODULE_15__["default"]();
-    _this.tickEngine = new _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_7__.TickEngine(_assertThisInitialized(_this));
-    _this.packetEngine = new _util_engine_PacketCountEngine__WEBPACK_IMPORTED_MODULE_10__.PacketCountEngine(_assertThisInitialized(_this));
-    _this.interactionEngine = new _util_engine_InteractionEngine__WEBPACK_IMPORTED_MODULE_16__["default"](_assertThisInitialized(_this));
+    _this.moduleManager = new _features_ModuleManager__WEBPACK_IMPORTED_MODULE_13__["default"]();
+    _this.tickEngine = new _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_6__.TickEngine(_assertThisInitialized(_this));
+    _this.packetEngine = new _util_engine_PacketCountEngine__WEBPACK_IMPORTED_MODULE_9__.PacketCountEngine(_assertThisInitialized(_this));
+    _this.interactionEngine = new _util_engine_InteractionEngine__WEBPACK_IMPORTED_MODULE_14__["default"](_assertThisInitialized(_this));
     _this.tickEngine.once("ping", _this.packetEngine.handlePing.bind(_this.packetEngine));
     _this.tickEngine.on("pretick", function (tick) {
-      _this.moduleManager.onUnsafeTick(tick);
+      _this.moduleManager.onPreTick(tick);
 
       // run actions based on priority
-      /*this.runUppermostAction(ActionType.HAT, tick);
-      this.runUppermostAction(ActionType.TAIL, tick);
-      this.runUppermostAction(ActionType.ATTACK, tick);
-      connection.send(new Packet(PacketType.CHAT, ["server lag: " + this.tickEngine.serverLag]));*/
+      _this.runUppermostAction(_ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.HAT, tick);
+      _this.runUppermostAction(_ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.TAIL, tick);
+      _this.runUppermostAction(_ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.WEAPON, tick); // important to switch weapon before attack
+      _this.runUppermostAction(_ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.ATTACK, tick);
+      _this.scheduledActions = [];
     });
-
+    _this.tickEngine.on("posttick", function (tick) {
+      _this.moduleManager.onPostTick(tick);
+    });
     _this.tickEngine.on("tick", _this.moduleManager.onTick.bind(_this.moduleManager));
     _this.mouseAngle = 0;
     document.addEventListener("keydown", function (event) {
@@ -214,6 +220,44 @@ var Core = /*#__PURE__*/function (_EventEmitter) {
     document.addEventListener("keyup", function (event) {
       _this.emit("keyup", event);
       _this.moduleManager.onKeyup(event.keyCode);
+    });
+
+    // listen for packet send (post) - after its impossible to cancel
+    _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.on("packetsendp", function (packet) {
+      if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.BUY_AND_EQUIP) {
+        if (packet.data[0] === 0) {
+          if (!packet.data[2]) {
+            _this.lastActionState.hat = packet.data[1];
+          } else {
+            _this.lastActionState.tail = packet.data[1];
+          }
+        }
+      } else if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.ATTACK) {
+        _this.lastActionState.attack = packet.data[0];
+        _this.lastActionState.aim = packet.data[1];
+      } else if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.SET_ANGLE) {
+        _this.lastActionState.aim = packet.data[0];
+      } else if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.SELECT_ITEM) {
+        if (packet.data[1]) {
+          _this.lastActionState.weapon = packet.data[0];
+        }
+      }
+    });
+
+    // cancels aim packets because it only spams packets
+    // and messes up autobreak aim (kinda lazy solution)
+    // should be fixed explicitly in the future and
+    // remove the packet cancelling
+    _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.on("packetsend", function (event) {
+      var packet = event.getPacket();
+      //console.log(packet);
+      if (_this.packetBlocks.hasOwnProperty(packet.type)) {
+        if (_this.packetBlocks[packet.type].length > 0) {
+          event.cancel();
+          return;
+        }
+      }
+      _socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__.PacketHandler.processOut(event.getPacket());
     });
 
     // listen for received packets (always process the packet before passing it to modules)
@@ -227,7 +271,7 @@ var Core = /*#__PURE__*/function (_EventEmitter) {
   _createClass(Core, [{
     key: "patchBundle",
     value: function patchBundle(src, promise) {
-      _injector_BundleProxy__WEBPACK_IMPORTED_MODULE_17__["default"].loadBundle(src, this.bundleAPI, promise);
+      _injector_BundleProxy__WEBPACK_IMPORTED_MODULE_15__["default"].loadBundle(src, this.bundleAPI, promise);
     }
   }, {
     key: "initializeRenderer",
@@ -237,21 +281,20 @@ var Core = /*#__PURE__*/function (_EventEmitter) {
         return _regeneratorRuntime().wrap(function _callee$(_context) {
           while (1) switch (_context.prev = _context.next) {
             case 0:
-              this.renderManager = new _render_RenderManager__WEBPACK_IMPORTED_MODULE_12__["default"](this, canvas, 1920, 1080);
+              this.renderManager = new _render_RenderManager__WEBPACK_IMPORTED_MODULE_11__["default"](this, canvas, 1920, 1080);
+
+              //await this.renderManager.createRenderer("background", HoverInfoModule, this);
               _context.next = 3;
-              return this.renderManager.createRenderer("background", _render_HoverInfoModule__WEBPACK_IMPORTED_MODULE_13__["default"], this);
+              return this.renderManager.createInterfaceRenderer("packetCount", _render_interface_PacketCountModule__WEBPACK_IMPORTED_MODULE_12__["default"], this);
             case 3:
               _context.next = 5;
-              return this.renderManager.createInterfaceRenderer("packetCount", _render_interface_PacketCountModule__WEBPACK_IMPORTED_MODULE_14__["default"], this);
+              return this.renderManager.createInterfaceRenderer("packetGraph", _render_interface_PacketGraphModule__WEBPACK_IMPORTED_MODULE_17__["default"], this);
             case 5:
-              _context.next = 7;
-              return this.renderManager.createInterfaceRenderer("packetGraph", _render_interface_PacketGraphModule__WEBPACK_IMPORTED_MODULE_19__["default"], this);
-            case 7:
               this.renderManager.createRenderHook();
               this.renderManager.on("mousemove", function (event) {
-                _this2.mouseAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_21__["default"].getDirection(new _util_type_Vector__WEBPACK_IMPORTED_MODULE_22__["default"](window.innerWidth / 2, window.innerHeight / 2), new _util_type_Vector__WEBPACK_IMPORTED_MODULE_22__["default"](event.clientX, event.clientY));
+                _this2.mouseAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_19__["default"].getDirection(new _util_type_Vector__WEBPACK_IMPORTED_MODULE_20__["default"](window.innerWidth / 2, window.innerHeight / 2), new _util_type_Vector__WEBPACK_IMPORTED_MODULE_20__["default"](event.clientX, event.clientY));
               });
-            case 9:
+            case 7:
             case "end":
               return _context.stop();
           }
@@ -271,15 +314,38 @@ var Core = /*#__PURE__*/function (_EventEmitter) {
 
       // emit event to be used in other modules
       this.emit("update", delta);
+      this.playerManager.update(delta);
       this.objectManager.update(delta);
       this.moduleManager.onUpdate(delta);
     }
   }, {
+    key: "createPacketBlock",
+    value: function createPacketBlock(type) {
+      var id = this.packetBlockIdCounter++;
+      if (!this.packetBlocks.hasOwnProperty(type)) {
+        this.packetBlocks[type] = [];
+      }
+      this.packetBlocks[type].push(id);
+      return id;
+    }
+  }, {
+    key: "removePacketBlock",
+    value: function removePacketBlock(type, id) {
+      var index = this.packetBlocks[type].indexOf(id);
+      if (index > -1) this.packetBlocks[type].splice(index, 1);
+    }
+  }, {
     key: "runUppermostAction",
     value: function runUppermostAction(action, tick) {
+      var _this3 = this;
       // filter and sort by highest priority
       var sorted = this.scheduledActions.filter(function (a) {
-        return a.type == action && a.executeTick == tick;
+        return a.type == action && a.executeTick == tick && function () {
+          if (a.type === _ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.HAT && !_this3.playerManager.myPlayer.ownedHats.includes(a.data[0])) return false;
+          if (a.type === _ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.TAIL && !_this3.playerManager.myPlayer.ownedTails.includes(a.data[0])) return false;
+          if (a.type === _ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.WEAPON && !_this3.playerManager.myPlayer.inventory.hasWeapon(a.data[0])) return false;
+          return true;
+        }();
       }).sort(function (a, b) {
         return b.priority - a.priority;
       });
@@ -299,32 +365,205 @@ var Core = /*#__PURE__*/function (_EventEmitter) {
     key: "runAction",
     value: function runAction(action) {
       switch (action.type) {
-        case _ActionType__WEBPACK_IMPORTED_MODULE_9__.ActionType.HAT:
+        case _ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.HAT:
+          if (action.data[0] === this.lastActionState.hat) return;
           _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.BUY_AND_EQUIP, [0, action.data[0], 0]));
           break;
-        case _ActionType__WEBPACK_IMPORTED_MODULE_9__.ActionType.TAIL:
+        case _ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.TAIL:
+          if (action.data[0] === this.lastActionState.tail) return;
           _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.BUY_AND_EQUIP, [0, action.data[0], 1]));
           break;
-        case _ActionType__WEBPACK_IMPORTED_MODULE_9__.ActionType.ATTACK:
+        case _ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.ATTACK:
+          if (action.data[0] === this.lastActionState.attack && action.data[1] === this.lastActionState.aim) return;
           _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.ATTACK, action.data));
           break;
+        case _ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.WEAPON:
+          if (action.data[0] === this.lastActionState.weapon) return;
+          _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.SELECT_ITEM, [action.data[0], true]));
+        default:
+          return;
       }
+      this.moduleManager.onActionRun(action);
     }
   }, {
     key: "scheduleAction",
     value: function scheduleAction(action, priority) {
       var tick = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : this.tickEngine.tickIndex + 1;
       var data = arguments.length > 3 ? arguments[3] : undefined;
-      this.scheduledActions.push(new _Action__WEBPACK_IMPORTED_MODULE_8__.Action(action, priority, tick, data));
+      var ac = new _Action__WEBPACK_IMPORTED_MODULE_7__.Action(this.actionIdCounter++, action, priority, tick, data);
+      this.scheduledActions.push(ac);
+      return ac.id;
     }
   }]);
   return Core;
 }((events__WEBPACK_IMPORTED_MODULE_0___default()));
 _defineProperty(Core, "VER", "1.0");
-_defineProperty(Core, "AUTHORS", ["Zaary"]);
+_defineProperty(Core, "AUTHORS", ["Zaary", "Splex"]);
 
 __webpack_async_result__();
 } catch(e) { __webpack_async_result__(e); } });
+
+/***/ }),
+
+/***/ "./frontend/src/data/moomoo/accessories.ts":
+/*!*************************************************!*\
+  !*** ./frontend/src/data/moomoo/accessories.ts ***!
+  \*************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+var accessories = [{
+  id: 12,
+  name: "Snowball",
+  price: 1000,
+  scale: 105,
+  xOff: 18,
+  desc: "no effect"
+}, {
+  id: 9,
+  name: "Tree Cape",
+  price: 1000,
+  scale: 90,
+  desc: "no effect"
+}, {
+  id: 10,
+  name: "Stone Cape",
+  price: 1000,
+  scale: 90,
+  desc: "no effect"
+}, {
+  id: 3,
+  name: "Cookie Cape",
+  price: 1500,
+  scale: 90,
+  desc: "no effect"
+}, {
+  id: 8,
+  name: "Cow Cape",
+  price: 2000,
+  scale: 90,
+  desc: "no effect"
+}, {
+  id: 11,
+  name: "Monkey Tail",
+  price: 2000,
+  scale: 97,
+  xOff: 25,
+  desc: "Super speed but reduced damage",
+  spdMult: 1.35,
+  dmgMultO: 0.2
+}, {
+  id: 17,
+  name: "Apple Basket",
+  price: 3000,
+  scale: 80,
+  xOff: 12,
+  desc: "slowly regenerates health over time",
+  healthRegen: 1
+}, {
+  id: 6,
+  name: "Winter Cape",
+  price: 3000,
+  scale: 90,
+  desc: "no effect"
+}, {
+  id: 4,
+  name: "Skull Cape",
+  price: 4000,
+  scale: 90,
+  desc: "no effect"
+}, {
+  id: 5,
+  name: "Dash Cape",
+  price: 5000,
+  scale: 90,
+  desc: "no effect"
+}, {
+  id: 2,
+  name: "Dragon Cape",
+  price: 6000,
+  scale: 90,
+  desc: "no effect"
+}, {
+  id: 1,
+  name: "Super Cape",
+  price: 8000,
+  scale: 90,
+  desc: "no effect"
+}, {
+  id: 7,
+  name: "Troll Cape",
+  price: 8000,
+  scale: 90,
+  desc: "no effect"
+}, {
+  id: 14,
+  name: "Thorns",
+  price: 10000,
+  scale: 115,
+  xOff: 20,
+  desc: "no effect"
+}, {
+  id: 15,
+  name: "Blockades",
+  price: 10000,
+  scale: 95,
+  xOff: 15,
+  desc: "no effect"
+}, {
+  id: 20,
+  name: "Devils Tail",
+  price: 10000,
+  scale: 95,
+  xOff: 20,
+  desc: "no effect"
+}, {
+  id: 16,
+  name: "Sawblade",
+  price: 12000,
+  scale: 90,
+  spin: true,
+  xOff: 0,
+  desc: "deal damage to players that damage you",
+  dmg: 0.15
+}, {
+  id: 13,
+  name: "Angel Wings",
+  price: 15000,
+  scale: 138,
+  xOff: 22,
+  desc: "slowly regenerates health over time",
+  healthRegen: 3
+}, {
+  id: 19,
+  name: "Shadow Wings",
+  price: 15000,
+  scale: 138,
+  xOff: 22,
+  desc: "increased movement speed",
+  spdMult: 1.1
+}, {
+  id: 18,
+  name: "Blood Wings",
+  price: 20000,
+  scale: 178,
+  xOff: 26,
+  desc: "restores health when you deal damage",
+  healD: 0.2
+}, {
+  id: 21,
+  name: "Corrupt X Wings",
+  price: 20000,
+  scale: 178,
+  xOff: 26,
+  desc: "deal damage to players that damage you",
+  dmg: 0.25
+}];
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (accessories);
 
 /***/ }),
 
@@ -423,6 +662,340 @@ var config = {
   mapPingTime: 2200
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (config);
+
+/***/ }),
+
+/***/ "./frontend/src/data/moomoo/hats.ts":
+/*!******************************************!*\
+  !*** ./frontend/src/data/moomoo/hats.ts ***!
+  \******************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+var hats = [{
+  id: 45,
+  name: "Shame!",
+  dontSell: true,
+  price: 0,
+  scale: 120,
+  desc: "hacks are for losers"
+}, {
+  id: 51,
+  name: "Moo Cap",
+  price: 0,
+  scale: 120,
+  desc: "coolest mooer around"
+}, {
+  id: 50,
+  name: "Apple Cap",
+  price: 0,
+  scale: 120,
+  desc: "apple farms remembers"
+}, {
+  id: 28,
+  name: "Moo Head",
+  price: 0,
+  scale: 120,
+  desc: "no effect"
+}, {
+  id: 29,
+  name: "Pig Head",
+  price: 0,
+  scale: 120,
+  desc: "no effect"
+}, {
+  id: 30,
+  name: "Fluff Head",
+  price: 0,
+  scale: 120,
+  desc: "no effect"
+}, {
+  id: 36,
+  name: "Pandou Head",
+  price: 0,
+  scale: 120,
+  desc: "no effect"
+}, {
+  id: 37,
+  name: "Bear Head",
+  price: 0,
+  scale: 120,
+  desc: "no effect"
+}, {
+  id: 38,
+  name: "Monkey Head",
+  price: 0,
+  scale: 120,
+  desc: "no effect"
+}, {
+  id: 44,
+  name: "Polar Head",
+  price: 0,
+  scale: 120,
+  desc: "no effect"
+}, {
+  id: 35,
+  name: "Fez Hat",
+  price: 0,
+  scale: 120,
+  desc: "no effect"
+}, {
+  id: 42,
+  name: "Enigma Hat",
+  price: 0,
+  scale: 120,
+  desc: "join the enigma army"
+}, {
+  id: 43,
+  name: "Blitz Hat",
+  price: 0,
+  scale: 120,
+  desc: "hey everybody i'm blitz"
+}, {
+  id: 49,
+  name: "Bob XIII Hat",
+  price: 0,
+  scale: 120,
+  desc: "like and subscribe"
+}, {
+  id: 57,
+  name: "Pumpkin",
+  price: 50,
+  scale: 120,
+  desc: "Spooooky"
+}, {
+  id: 8,
+  name: "Bummle Hat",
+  price: 100,
+  scale: 120,
+  desc: "no effect"
+}, {
+  id: 2,
+  name: "Straw Hat",
+  price: 500,
+  scale: 120,
+  desc: "no effect"
+}, {
+  id: 15,
+  name: "Winter Cap",
+  price: 600,
+  scale: 120,
+  desc: "allows you to move at normal speed in snow",
+  coldM: 1
+}, {
+  id: 5,
+  name: "Cowboy Hat",
+  price: 1000,
+  scale: 120,
+  desc: "no effect"
+}, {
+  id: 4,
+  name: "Ranger Hat",
+  price: 2000,
+  scale: 120,
+  desc: "no effect"
+}, {
+  id: 18,
+  name: "Explorer Hat",
+  price: 2000,
+  scale: 120,
+  desc: "no effect"
+}, {
+  id: 31,
+  name: "Flipper Hat",
+  price: 2500,
+  scale: 120,
+  desc: "have more control while in water",
+  watrImm: true
+}, {
+  id: 1,
+  name: "Marksman Cap",
+  price: 3000,
+  scale: 120,
+  desc: "increases arrow speed and range",
+  aMlt: 1.3
+}, {
+  id: 10,
+  name: "Bush Gear",
+  price: 3000,
+  scale: 160,
+  desc: "allows you to disguise yourself as a bush"
+}, {
+  id: 48,
+  name: "Halo",
+  price: 3000,
+  scale: 120,
+  desc: "no effect"
+}, {
+  id: 6,
+  name: "Soldier Helmet",
+  price: 4000,
+  scale: 120,
+  desc: "reduces damage taken but slows movement",
+  spdMult: 0.94,
+  dmgMult: 0.75
+}, {
+  id: 23,
+  name: "Anti Venom Gear",
+  price: 4000,
+  scale: 120,
+  desc: "makes you immune to poison",
+  poisonRes: 1
+}, {
+  id: 13,
+  name: "Medic Gear",
+  price: 5000,
+  scale: 110,
+  desc: "slowly regenerates health over time",
+  healthRegen: 3
+}, {
+  id: 9,
+  name: "Miners Helmet",
+  price: 5000,
+  scale: 120,
+  desc: "earn 1 extra gold per resource",
+  extraGold: 1
+}, {
+  id: 32,
+  name: "Musketeer Hat",
+  price: 5000,
+  scale: 120,
+  desc: "reduces cost of projectiles",
+  projCost: 0.5
+}, {
+  id: 7,
+  name: "Bull Helmet",
+  price: 6000,
+  scale: 120,
+  desc: "increases damage done but drains health",
+  healthRegen: -5,
+  dmgMultO: 1.5,
+  spdMult: 0.96
+}, {
+  id: 22,
+  name: "Emp Helmet",
+  price: 6000,
+  scale: 120,
+  desc: "turrets won't attack but you move slower",
+  antiTurret: 1,
+  spdMult: 0.7
+}, {
+  id: 12,
+  name: "Booster Hat",
+  price: 6000,
+  scale: 120,
+  desc: "increases your movement speed",
+  spdMult: 1.16
+}, {
+  id: 26,
+  name: "Barbarian Armor",
+  price: 8000,
+  scale: 120,
+  desc: "knocks back enemies that attack you",
+  dmgK: 0.6
+}, {
+  id: 21,
+  name: "Plague Mask",
+  price: 10000,
+  scale: 120,
+  desc: "melee attacks deal poison damage",
+  poisonDmg: 5,
+  poisonTime: 6
+}, {
+  id: 46,
+  name: "Bull Mask",
+  price: 10000,
+  scale: 120,
+  desc: "bulls won't target you unless you attack them",
+  bullRepel: 1
+}, {
+  id: 14,
+  name: "Windmill Hat",
+  topSprite: true,
+  price: 10000,
+  scale: 120,
+  desc: "generates points while worn",
+  pps: 1.5
+}, {
+  id: 11,
+  name: "Spike Gear",
+  topSprite: true,
+  price: 10000,
+  scale: 120,
+  desc: "deal damage to players that damage you",
+  dmg: 0.45
+}, {
+  id: 53,
+  name: "Turret Gear",
+  topSprite: true,
+  price: 10000,
+  scale: 120,
+  desc: "you become a walking turret",
+  turret: {
+    proj: 1,
+    range: 700,
+    rate: 2500
+  },
+  spdMult: 0.7
+}, {
+  id: 20,
+  name: "Samurai Armor",
+  price: 12000,
+  scale: 120,
+  desc: "increased attack speed and fire rate",
+  atkSpd: 0.78
+}, {
+  id: 58,
+  name: "Dark Knight",
+  price: 12000,
+  scale: 120,
+  desc: "restores health when you deal damage",
+  healD: 0.4
+}, {
+  id: 27,
+  name: "Scavenger Gear",
+  price: 15000,
+  scale: 120,
+  desc: "earn double points for each kill",
+  kScrM: 2
+}, {
+  id: 40,
+  name: "Tank Gear",
+  price: 15000,
+  scale: 120,
+  desc: "increased damage to buildings but slower movement",
+  spdMult: 0.3,
+  bDmg: 3.3
+}, {
+  id: 52,
+  name: "Thief Gear",
+  price: 15000,
+  scale: 120,
+  desc: "steal half of a players gold when you kill them",
+  goldSteal: 0.5
+}, {
+  id: 55,
+  name: "Bloodthirster",
+  price: 20000,
+  scale: 120,
+  desc: "Restore Health when dealing damage. And increased damage",
+  healD: 0.25,
+  dmgMultO: 1.2
+}, {
+  id: 56,
+  name: "Assassin Gear",
+  price: 20000,
+  scale: 120,
+  desc: "Go invisible when not moving. Can't eat. Increased speed",
+  noEat: true,
+  spdMult: 1.1,
+  invisTimer: 1000
+}];
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (hats);
 
 /***/ }),
 
@@ -564,280 +1137,6 @@ var projectiles = [{
   speed: 3.6,
   scale: 160,
   range: 1400
-}];
-var weapons = [{
-  id: 0,
-  type: 0,
-  name: "tool hammer",
-  desc: "tool for gathering all resources",
-  src: "hammer_1",
-  length: 140,
-  width: 140,
-  xOff: -3,
-  yOff: 18,
-  dmg: 25,
-  range: 65,
-  gather: 1,
-  speed: 300
-}, {
-  id: 1,
-  type: 0,
-  age: 2,
-  name: "hand axe",
-  desc: "gathers resources at a higher rate",
-  src: "axe_1",
-  length: 140,
-  width: 140,
-  xOff: 3,
-  yOff: 24,
-  dmg: 30,
-  spdMult: 1,
-  range: 70,
-  gather: 2,
-  speed: 400
-}, {
-  id: 2,
-  type: 0,
-  age: 8,
-  pre: 1,
-  name: "great axe",
-  desc: "deal more damage and gather more resources",
-  src: "great_axe_1",
-  length: 140,
-  width: 140,
-  xOff: -8,
-  yOff: 25,
-  dmg: 35,
-  spdMult: 1,
-  range: 75,
-  gather: 4,
-  speed: 400
-}, {
-  id: 3,
-  type: 0,
-  age: 2,
-  name: "short sword",
-  desc: "increased attack power but slower move speed",
-  src: "sword_1",
-  iPad: 1.3,
-  length: 130,
-  width: 210,
-  xOff: -8,
-  yOff: 46,
-  dmg: 35,
-  spdMult: 0.85,
-  range: 110,
-  gather: 1,
-  speed: 300
-}, {
-  id: 4,
-  type: 0,
-  age: 8,
-  pre: 3,
-  name: "katana",
-  desc: "greater range and damage",
-  src: "samurai_1",
-  iPad: 1.3,
-  length: 130,
-  width: 210,
-  xOff: -8,
-  yOff: 59,
-  dmg: 40,
-  spdMult: 0.8,
-  range: 118,
-  gather: 1,
-  speed: 300
-}, {
-  id: 5,
-  type: 0,
-  age: 2,
-  name: "polearm",
-  desc: "long range melee weapon",
-  src: "spear_1",
-  iPad: 1.3,
-  length: 130,
-  width: 210,
-  xOff: -8,
-  yOff: 53,
-  dmg: 45,
-  knock: 0.2,
-  spdMult: 0.82,
-  range: 142,
-  gather: 1,
-  speed: 700
-}, {
-  id: 6,
-  type: 0,
-  age: 2,
-  name: "bat",
-  desc: "fast long range melee weapon",
-  src: "bat_1",
-  iPad: 1.3,
-  length: 110,
-  width: 180,
-  xOff: -8,
-  yOff: 53,
-  dmg: 20,
-  knock: 0.7,
-  range: 110,
-  gather: 1,
-  speed: 300
-}, {
-  id: 7,
-  type: 0,
-  age: 2,
-  name: "daggers",
-  desc: "really fast short range weapon",
-  src: "dagger_1",
-  iPad: 0.8,
-  length: 110,
-  width: 110,
-  xOff: 18,
-  yOff: 0,
-  dmg: 20,
-  knock: 0.1,
-  range: 65,
-  gather: 1,
-  hitSlow: 0.1,
-  spdMult: 1.13,
-  speed: 100
-}, {
-  id: 8,
-  type: 0,
-  age: 2,
-  name: "stick",
-  desc: "great for gathering but very weak",
-  src: "stick_1",
-  length: 140,
-  width: 140,
-  xOff: 3,
-  yOff: 24,
-  dmg: 1,
-  spdMult: 1,
-  range: 70,
-  gather: 7,
-  speed: 400
-}, {
-  id: 9,
-  type: 1,
-  age: 6,
-  name: "hunting bow",
-  desc: "bow used for ranged combat and hunting",
-  src: "bow_1",
-  req: ["wood", 4],
-  length: 120,
-  width: 120,
-  xOff: -6,
-  yOff: 0,
-  projectile: 0,
-  spdMult: 0.75,
-  speed: 600
-}, {
-  id: 10,
-  type: 1,
-  age: 6,
-  name: "great hammer",
-  desc: "hammer used for destroying structures",
-  src: "great_hammer_1",
-  length: 140,
-  width: 140,
-  xOff: -9,
-  yOff: 25,
-  dmg: 10,
-  spdMult: 0.88,
-  range: 75,
-  sDmg: 7.5,
-  gather: 1,
-  speed: 400
-}, {
-  id: 11,
-  type: 1,
-  age: 6,
-  name: "wooden shield",
-  desc: "blocks projectiles and reduces melee damage",
-  src: "shield_1",
-  length: 120,
-  width: 120,
-  shield: 0.2,
-  xOff: 6,
-  yOff: 0,
-  spdMult: 0.7
-}, {
-  id: 12,
-  type: 1,
-  age: 8,
-  pre: 9,
-  name: "crossbow",
-  desc: "deals more damage and has greater range",
-  src: "crossbow_1",
-  req: ["wood", 5],
-  aboveHand: true,
-  armS: 0.75,
-  length: 120,
-  width: 120,
-  xOff: -4,
-  yOff: 0,
-  projectile: 2,
-  spdMult: 0.7,
-  speed: 700
-}, {
-  id: 13,
-  type: 1,
-  age: 9,
-  pre: 12,
-  name: "repeater crossbow",
-  desc: "high firerate crossbow with reduced damage",
-  src: "crossbow_2",
-  req: ["wood", 10],
-  aboveHand: true,
-  armS: 0.75,
-  length: 120,
-  width: 120,
-  xOff: -4,
-  yOff: 0,
-  projectile: 3,
-  spdMult: 0.7,
-  speed: 230
-}, {
-  id: 14,
-  type: 1,
-  age: 6,
-  name: "mc grabby",
-  desc: "steals resources from enemies",
-  src: "grab_1",
-  length: 130,
-  width: 210,
-  xOff: -8,
-  yOff: 53,
-  dmg: 0,
-  steal: 250,
-  knock: 0.2,
-  spdMult: 1.05,
-  range: 125,
-  gather: 0,
-  speed: 700
-}, {
-  id: 15,
-  type: 1,
-  age: 9,
-  pre: 12,
-  name: "musket",
-  desc: "slow firerate but high damage and range",
-  src: "musket_1",
-  req: ["stone", 10],
-  aboveHand: true,
-  rec: 0.35,
-  armS: 0.6,
-  hndS: 0.3,
-  hndD: 1.6,
-  length: 205,
-  width: 205,
-  xOff: 25,
-  yOff: 0,
-  projectile: 5,
-  hideProjectile: true,
-  spdMult: 0.6,
-  speed: 1500
 }];
 var list = [{
   id: -1,
@@ -1163,7 +1462,6 @@ for (var i = 0; i < list.length; ++i) {
 var items = {
   groups: groups,
   projectiles: projectiles,
-  weapons: weapons,
   list: list
 };
 
@@ -1208,12 +1506,14 @@ var GameObject = /*#__PURE__*/function () {
 
   // for object manager
 
-  function GameObject(sid, position, dir, scale) {
+  function GameObject(sid, type, position, dir, scale) {
     _classCallCheck(this, GameObject);
     _defineProperty(this, "dir", 0);
     _defineProperty(this, "scale", 0);
+    _defineProperty(this, "wiggles", []);
     _defineProperty(this, "gridLocations", []);
     this.sid = sid;
+    this.type = type;
     this.position = position;
     this.dir = dir;
     this.scale = scale;
@@ -1229,7 +1529,9 @@ var GameObject = /*#__PURE__*/function () {
   }, {
     key: "getScale",
     value: function getScale() {
-      return this instanceof NaturalObject && this.type === 0 ? this.scale * 0.6 : this.scale;
+      var _items$list$this$type;
+      var fullScale = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+      return this instanceof NaturalObject ? this.type === 0 ? this.scale * 0.6 : this.scale : this.scale * (fullScale ? 1 : (_items$list$this$type = _moomoo_items__WEBPACK_IMPORTED_MODULE_1__.items.list[this.type].colDiv) !== null && _items$list$this$type !== void 0 ? _items$list$this$type : 1);
     }
   }]);
   return GameObject;
@@ -1240,7 +1542,7 @@ var NaturalObject = /*#__PURE__*/function (_GameObject) {
   function NaturalObject(sid, position, dir, scale, type) {
     var _this;
     _classCallCheck(this, NaturalObject);
-    _this = _super.call(this, sid, position, dir, scale);
+    _this = _super.call(this, sid, type, position, dir, scale);
     _this.type = type;
     return _this;
   }
@@ -1253,7 +1555,7 @@ var PlayerBuilding = /*#__PURE__*/function (_GameObject2) {
     var _this2$stats$health;
     var _this2;
     _classCallCheck(this, PlayerBuilding);
-    _this2 = _super2.call(this, sid, position, dir, scale);
+    _this2 = _super2.call(this, sid, type, position, dir, scale);
     _this2.stats = _moomoo_items__WEBPACK_IMPORTED_MODULE_1__.items.list[type];
     _this2.owner = {
       sid: owner
@@ -1498,10 +1800,19 @@ var util = {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "ClientPlayer": () => (/* binding */ ClientPlayer),
+/* harmony export */   "Inventory": () => (/* binding */ Inventory),
 /* harmony export */   "Player": () => (/* binding */ Player)
 /* harmony export */ });
-/* harmony import */ var _moomoo_config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../moomoo/config */ "./frontend/src/data/moomoo/config.ts");
-/* harmony import */ var _util_type_Vector__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../util/type/Vector */ "./frontend/src/util/type/Vector.ts");
+/* harmony import */ var _moomoo_accessories__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../moomoo/accessories */ "./frontend/src/data/moomoo/accessories.ts");
+/* harmony import */ var _moomoo_config__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../moomoo/config */ "./frontend/src/data/moomoo/config.ts");
+/* harmony import */ var _moomoo_hats__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../moomoo/hats */ "./frontend/src/data/moomoo/hats.ts");
+/* harmony import */ var _moomoo_items__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../moomoo/items */ "./frontend/src/data/moomoo/items.ts");
+/* harmony import */ var _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../util/type/Vector */ "./frontend/src/util/type/Vector.ts");
+/* harmony import */ var _Weapon__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./Weapon */ "./frontend/src/data/type/Weapon.ts");
+/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
+/* harmony import */ var _util_processor_MovementProcessor__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../util/processor/MovementProcessor */ "./frontend/src/util/processor/MovementProcessor.ts");
+/* harmony import */ var _GameObject__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./GameObject */ "./frontend/src/data/type/GameObject.ts");
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
 function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
@@ -1509,30 +1820,114 @@ function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) ===
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
 function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 
 
+
+
+
+
+
+
+
+var WeaponFinder;
+(function (WeaponFinder) {
+  WeaponFinder[WeaponFinder["BUILDING_BREAK"] = 0] = "BUILDING_BREAK";
+  WeaponFinder[WeaponFinder["MOVEMENT_SPEED"] = 1] = "MOVEMENT_SPEED";
+})(WeaponFinder || (WeaponFinder = {}));
 var Inventory = /*#__PURE__*/function () {
-  function Inventory() {
+  function Inventory(player) {
     _classCallCheck(this, Inventory);
-    this.weapons = [0, null];
+    this.player = player;
+    this.weapons = [_Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapons.TOOL_HAMMER, null];
+    this.reloads = Object.fromEntries(new Array(_Weapon__WEBPACK_IMPORTED_MODULE_5__.weaponList.length).fill(undefined).map(function (_x, i) {
+      return [i, 0];
+    }));
     this.items = [0, 3, 6, 10];
+    this.heldItem = _Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapons.TOOL_HAMMER;
+    this.weaponSelected = _Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapons.TOOL_HAMMER;
   }
   _createClass(Inventory, [{
     key: "reset",
     value: function reset() {
-      this.weapons = [0, null];
+      this.weapons = [_Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapons.TOOL_HAMMER, null];
+      this.reloads = Object.fromEntries(new Array(_Weapon__WEBPACK_IMPORTED_MODULE_5__.weaponList.length).fill(undefined).map(function (_x, i) {
+        return [i, 0];
+      }));
+      ;
       this.items = [0, 3, 6, 10];
+      this.heldItem = _Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapons.TOOL_HAMMER;
+      this.weaponSelected = _Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapons.TOOL_HAMMER;
+    }
+  }, {
+    key: "setWeapons",
+    value: function setWeapons(weapons) {
+      this.weapons = [_Weapon__WEBPACK_IMPORTED_MODULE_5__.weaponList[weapons[0]], _Weapon__WEBPACK_IMPORTED_MODULE_5__.weaponList[weapons[1]]];
+    }
+  }, {
+    key: "setItems",
+    value: function setItems(items) {
+      this.items = items;
+    }
+  }, {
+    key: "resetReload",
+    value: function resetReload(item) {
+      this.reloads[item.id] = item.stats.reloadTime;
+    }
+  }, {
+    key: "updateReloads",
+    value: function updateReloads(delta) {
+      if (!(this.heldItem instanceof _Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapon)) return;
+      var id = this.heldItem.id;
+      if (this.reloads[id] > 0) {
+        this.reloads[id] -= delta;
+        if (this.reloads[id] <= 0) this.reloads[id] = 0;
+      }
+    }
+  }, {
+    key: "remainingReloadTime",
+    value: function remainingReloadTime(slot) {
+      var _this$weapons$slot;
+      return this.reloads[(_this$weapons$slot = this.weapons[slot]) === null || _this$weapons$slot === void 0 ? void 0 : _this$weapons$slot.id];
+    }
+  }, {
+    key: "findBestWeapon",
+    value: function findBestWeapon(finder) {
+      switch (finder) {
+        case WeaponFinder.BUILDING_BREAK:
+          return this.weapons.flat(1).filter(function (x) {
+            return x !== null && x instanceof _Weapon__WEBPACK_IMPORTED_MODULE_5__.MeleeWeapon;
+          }).sort(function (a, b) {
+            return b.stats.dmg * b.stats.buildingDmgMultiplier - a.stats.dmg * a.stats.buildingDmgMultiplier;
+          })[0];
+        case WeaponFinder.MOVEMENT_SPEED:
+          return this.weapons.flat(1).filter(function (x) {
+            return x !== null;
+          }).sort(function (a, b) {
+            return b.stats.speedMultiplier - a.stats.speedMultiplier;
+          })[0];
+      }
+    }
+  }, {
+    key: "getWeapon",
+    value: function getWeapon(slot) {
+      return this.weapons[slot];
+    }
+  }, {
+    key: "hasWeapon",
+    value: function hasWeapon(weapon) {
+      var wep = typeof weapon === "number" ? _Weapon__WEBPACK_IMPORTED_MODULE_5__.weaponList[weapon] : weapon;
+      return this.weapons[0].id === wep.id || this.weapons[1] && this.weapons[1].id === wep.id;
     }
   }]);
   return Inventory;
 }();
+_defineProperty(Inventory, "WeaponFinders", WeaponFinder);
 var Player = /*#__PURE__*/function () {
   /*public hat: Hat;
   public tail: Accessory;*/
@@ -1552,16 +1947,18 @@ var Player = /*#__PURE__*/function () {
     _defineProperty(this, "dir", 0);
     _defineProperty(this, "maxHealth", 100);
     _defineProperty(this, "health", this.maxHealth);
-    _defineProperty(this, "scale", _moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].playerScale);
-    _defineProperty(this, "speed", _moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].playerSpeed);
+    _defineProperty(this, "scale", _moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].playerScale);
+    _defineProperty(this, "speed", _moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].playerSpeed);
     _defineProperty(this, "reloads", {});
     _defineProperty(this, "visible", false);
     this.id = id;
     this.sid = sid;
     this.name = name;
-    this.serverPos = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_1__["default"]();
+    this.serverPos = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__["default"]();
+    this.lastTickServerPos = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__["default"]();
     this.renderPos = position;
-    this.lerpPos = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_1__["default"]();
+    this.lerpPos = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__["default"]();
+    this.velocity = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__["default"]();
     this.dir = dir;
     this.health = health;
     this.maxHealth = maxHealth;
@@ -1570,9 +1967,55 @@ var Player = /*#__PURE__*/function () {
     this.team = null;
     this.lastTickPosX = 0;
     this.lastTickPosY = 0;
-    this.inventory = new Inventory();
+    this.inventory = new Inventory(this);
+    this.movementProcessor = new _util_processor_MovementProcessor__WEBPACK_IMPORTED_MODULE_7__["default"](this);
+    this.state = {
+      isTrapped: false,
+      buildIndex: -1,
+      data: {
+        trap: undefined
+      }
+    };
   }
   _createClass(Player, [{
+    key: "updatePlayer",
+    value: function updatePlayer(objectManager, x, y, dir, buildIndex, weaponIndex, _weaponVariant, _team, _isLeader, _skinIndex, _tailIndex, _iconIndex, _zIndex) {
+      this.lerpPos = this.renderPos.clone();
+      this.lastTickServerPos = this.serverPos.clone();
+      this.serverPos = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__["default"](x, y);
+      this.velocity = this.serverPos.clone().subtract(this.lastTickServerPos);
+      this.dir = dir;
+      this.state.buildIndex = buildIndex;
+      var holdsWeapon = buildIndex === -1;
+      this.inventory.heldItem = holdsWeapon ? _Weapon__WEBPACK_IMPORTED_MODULE_5__.weaponList[weaponIndex] : _moomoo_items__WEBPACK_IMPORTED_MODULE_3__.items.list[buildIndex];
+      this.inventory.weaponSelected = _Weapon__WEBPACK_IMPORTED_MODULE_5__.weaponList[weaponIndex];
+
+      /*player.buildIndex = playerData[4];
+      player.weaponIndex = playerData[5];
+      player.weaponVariant = playerData[6];
+      player.team = playerData[7];
+      player.isLeader = playerData[8];
+      player.skinIndex = playerData[9];
+      player.tailIndex = playerData[10];
+      player.iconIndex = playerData[11];
+      player.zIndex = playerData[12];*/
+      //player.visible = true;
+
+      //this.movementProcessor.update(this.dt);
+      this.dt = 0;
+      this.state.isTrapped = false;
+      this.state.data.trap = undefined;
+
+      // objects
+      var grids = objectManager.getGridArrays(this.serverPos.x, this.serverPos.y, this.scale + this.velocity.length() * 2).flat(1);
+      for (var i = 0; i < grids.length; i++) {
+        var object = grids[i];
+        if (object instanceof _GameObject__WEBPACK_IMPORTED_MODULE_8__.NaturalObject) continue;
+        var isCollision = _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getDistance(this.serverPos, object.position) < this.scale + object.getScale();
+        if (object.type === 15 && isCollision && object.owner.sid !== this.sid) this.state.isTrapped = true, this.state.data.trap = object;
+      }
+    }
+  }, {
     key: "updateData",
     value: function updateData(id, sid, name, position, dir, health, maxHealth, scale, skinColor) {
       this.id = id;
@@ -1591,12 +2034,539 @@ var Player = /*#__PURE__*/function () {
 var ClientPlayer = /*#__PURE__*/function (_Player) {
   _inherits(ClientPlayer, _Player);
   var _super = _createSuper(ClientPlayer);
-  function ClientPlayer() {
+  function ClientPlayer(id, sid, name, position, dir, health, maxHealth, scale, skinColor) {
+    var _this;
     _classCallCheck(this, ClientPlayer);
-    return _super.apply(this, arguments);
+    _this = _super.call(this, id, sid, name, position, dir, health, maxHealth, scale, skinColor);
+    _this.alive = false;
+    _this.isAttacking = false;
+    _this.ownedHats = _moomoo_hats__WEBPACK_IMPORTED_MODULE_2__["default"].filter(function (x) {
+      return x.price === 0;
+    }).map(function (x) {
+      return x.id;
+    });
+    _this.ownedTails = _moomoo_accessories__WEBPACK_IMPORTED_MODULE_0__["default"].filter(function (x) {
+      return x.price === 0;
+    }).map(function (x) {
+      return x.id;
+    });
+    return _this;
   }
   return _createClass(ClientPlayer);
 }(Player);
+
+
+/***/ }),
+
+/***/ "./frontend/src/data/type/Weapon.ts":
+/*!******************************************!*\
+  !*** ./frontend/src/data/type/Weapon.ts ***!
+  \******************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "MeleeWeapon": () => (/* binding */ MeleeWeapon),
+/* harmony export */   "RangedWeapon": () => (/* binding */ RangedWeapon),
+/* harmony export */   "Weapon": () => (/* binding */ Weapon),
+/* harmony export */   "WeaponSlot": () => (/* binding */ WeaponSlot),
+/* harmony export */   "Weapons": () => (/* binding */ Weapons),
+/* harmony export */   "weaponList": () => (/* binding */ weaponList)
+/* harmony export */ });
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+var WeaponType;
+(function (WeaponType) {
+  WeaponType[WeaponType["TOOL_HAMMER"] = 0] = "TOOL_HAMMER";
+  WeaponType[WeaponType["HAND_AXE"] = 1] = "HAND_AXE";
+  WeaponType[WeaponType["GREAT_AXE"] = 2] = "GREAT_AXE";
+  WeaponType[WeaponType["SHORT_SWORD"] = 3] = "SHORT_SWORD";
+  WeaponType[WeaponType["KATANA"] = 4] = "KATANA";
+  WeaponType[WeaponType["POLEARM"] = 5] = "POLEARM";
+  WeaponType[WeaponType["BAT"] = 6] = "BAT";
+  WeaponType[WeaponType["DAGGERS"] = 7] = "DAGGERS";
+  WeaponType[WeaponType["STICK"] = 8] = "STICK";
+  WeaponType[WeaponType["HUNTING_BOW"] = 9] = "HUNTING_BOW";
+  WeaponType[WeaponType["GREAT_HAMMER"] = 10] = "GREAT_HAMMER";
+  WeaponType[WeaponType["SHIELD"] = 11] = "SHIELD";
+  WeaponType[WeaponType["CROSSBOW"] = 12] = "CROSSBOW";
+  WeaponType[WeaponType["REPEATER_CROSSBOW"] = 13] = "REPEATER_CROSSBOW";
+  WeaponType[WeaponType["MC_GRABBY"] = 14] = "MC_GRABBY";
+  WeaponType[WeaponType["MUSKET"] = 15] = "MUSKET";
+})(WeaponType || (WeaponType = {}));
+var WeaponSlot;
+(function (WeaponSlot) {
+  WeaponSlot[WeaponSlot["PRIMARY"] = 0] = "PRIMARY";
+  WeaponSlot[WeaponSlot["SECONDARY"] = 1] = "SECONDARY";
+})(WeaponSlot || (WeaponSlot = {}));
+var Weapon = /*#__PURE__*/_createClass(function Weapon(id, slot, type, stats) {
+  _classCallCheck(this, Weapon);
+  this.id = id;
+  this.slot = slot;
+  this.type = type;
+  this.stats = stats;
+});
+var MeleeWeapon = /*#__PURE__*/function (_Weapon) {
+  _inherits(MeleeWeapon, _Weapon);
+  var _super = _createSuper(MeleeWeapon);
+  function MeleeWeapon(id, slot, type, stats) {
+    var _this;
+    _classCallCheck(this, MeleeWeapon);
+    _this = _super.call(this, id, slot, type, stats);
+    _this.stats = stats;
+    return _this;
+  }
+  return _createClass(MeleeWeapon);
+}(Weapon);
+var RangedWeapon = /*#__PURE__*/function (_Weapon2) {
+  _inherits(RangedWeapon, _Weapon2);
+  var _super2 = _createSuper(RangedWeapon);
+  function RangedWeapon(id, slot, type, stats) {
+    var _this2;
+    _classCallCheck(this, RangedWeapon);
+    _this2 = _super2.call(this, id, slot, type, stats);
+    _this2.stats = stats;
+    return _this2;
+  }
+  return _createClass(RangedWeapon);
+}(Weapon);
+var projectiles = [{
+  indx: 0,
+  layer: 0,
+  src: "arrow_1",
+  dmg: 25,
+  speed: 1.6,
+  scale: 103,
+  range: 1000
+}, {
+  indx: 1,
+  layer: 1,
+  dmg: 25,
+  scale: 20
+}, {
+  indx: 0,
+  layer: 0,
+  src: "arrow_1",
+  dmg: 35,
+  speed: 2.5,
+  scale: 103,
+  range: 1200
+}, {
+  indx: 0,
+  layer: 0,
+  src: "arrow_1",
+  dmg: 30,
+  speed: 2,
+  scale: 103,
+  range: 1200
+}, {
+  indx: 1,
+  layer: 1,
+  dmg: 16,
+  scale: 20
+}, {
+  indx: 0,
+  layer: 0,
+  src: "bullet_1",
+  dmg: 50,
+  speed: 3.6,
+  scale: 160,
+  range: 1400
+}];
+var Weapons = {
+  // it does, i want to add more things, im just adjusting something here
+  TOOL_HAMMER: new MeleeWeapon(0, WeaponSlot.PRIMARY, WeaponType.TOOL_HAMMER, {
+    dmg: 25,
+    buildingDmgMultiplier: 1,
+    range: 65,
+    reloadTime: 300,
+    speedMultiplier: 1
+  }),
+  HAND_AXE: new MeleeWeapon(1, WeaponSlot.PRIMARY, WeaponType.HAND_AXE, {
+    dmg: 30,
+    buildingDmgMultiplier: 1,
+    range: 70,
+    reloadTime: 400,
+    speedMultiplier: 1
+  }),
+  GREAT_AXE: new MeleeWeapon(2, WeaponSlot.PRIMARY, WeaponType.GREAT_AXE, {
+    dmg: 35,
+    buildingDmgMultiplier: 1,
+    range: 75,
+    reloadTime: 400,
+    speedMultiplier: 1
+  }),
+  SHORT_SWORD: new MeleeWeapon(3, WeaponSlot.PRIMARY, WeaponType.SHORT_SWORD, {
+    dmg: 35,
+    buildingDmgMultiplier: 1,
+    range: 110,
+    reloadTime: 300,
+    speedMultiplier: 0.85
+  }),
+  KATANA: new MeleeWeapon(4, WeaponSlot.PRIMARY, WeaponType.KATANA, {
+    dmg: 40,
+    buildingDmgMultiplier: 1,
+    range: 118,
+    reloadTime: 300,
+    speedMultiplier: 0.8
+  }),
+  POLEARM: new MeleeWeapon(5, WeaponSlot.PRIMARY, WeaponType.POLEARM, {
+    dmg: 45,
+    buildingDmgMultiplier: 1,
+    range: 142,
+    reloadTime: 700,
+    speedMultiplier: 0.82
+  }),
+  BAT: new MeleeWeapon(6, WeaponSlot.PRIMARY, WeaponType.BAT, {
+    dmg: 20,
+    buildingDmgMultiplier: 1,
+    range: 110,
+    reloadTime: 300,
+    speedMultiplier: 1
+  }),
+  DAGGERS: new MeleeWeapon(7, WeaponSlot.PRIMARY, WeaponType.DAGGERS, {
+    dmg: 20,
+    buildingDmgMultiplier: 1,
+    range: 65,
+    reloadTime: 100,
+    speedMultiplier: 1.13
+  }),
+  STICK: new MeleeWeapon(8, WeaponSlot.PRIMARY, WeaponType.STICK, {
+    dmg: 1,
+    buildingDmgMultiplier: 1,
+    range: 70,
+    reloadTime: 400,
+    speedMultiplier: 1
+  }),
+  HUNTING_BOW: new RangedWeapon(9, WeaponSlot.SECONDARY, WeaponType.HUNTING_BOW, {
+    range: 1000,
+    speedMultiplier: 0.75,
+    reloadTime: 600
+  }),
+  GREAT_HAMMER: new MeleeWeapon(10, WeaponSlot.SECONDARY, WeaponType.GREAT_HAMMER, {
+    dmg: 10,
+    buildingDmgMultiplier: 7.5,
+    range: 75,
+    reloadTime: 400,
+    speedMultiplier: 1
+  }),
+  SHIELD: new MeleeWeapon(11, WeaponSlot.SECONDARY, WeaponType.SHIELD, {
+    dmg: 0,
+    buildingDmgMultiplier: 1,
+    range: 0,
+    reloadTime: 0,
+    speedMultiplier: 0.7
+  }),
+  CROSSBOW: new RangedWeapon(12, WeaponSlot.SECONDARY, WeaponType.CROSSBOW, {
+    range: 1200,
+    speedMultiplier: 0.7,
+    reloadTime: 700
+  }),
+  REPEATER_CROSSBOW: new RangedWeapon(13, WeaponSlot.SECONDARY, WeaponType.REPEATER_CROSSBOW, {
+    range: 1200,
+    speedMultiplier: 0.7,
+    reloadTime: 230
+  }),
+  MC_GRABBY: new MeleeWeapon(14, WeaponSlot.SECONDARY, WeaponType.MC_GRABBY, {
+    dmg: 0,
+    buildingDmgMultiplier: 1,
+    range: 125,
+    reloadTime: 700,
+    speedMultiplier: 1.05
+  }),
+  MUSKET: new RangedWeapon(15, WeaponSlot.SECONDARY, WeaponType.MUSKET, {
+    range: 1400,
+    speedMultiplier: 0.6,
+    reloadTime: 1500
+  })
+};
+var weaponList = Object.values(Weapons);
+var wpdata = [{
+  id: 0,
+  type: 0,
+  name: "tool hammer",
+  desc: "tool for gathering all resources",
+  src: "hammer_1",
+  length: 140,
+  width: 140,
+  xOff: -3,
+  yOff: 18,
+  dmg: 25,
+  range: 65,
+  gather: 1,
+  speed: 300
+}, {
+  id: 1,
+  type: 0,
+  age: 2,
+  name: "hand axe",
+  desc: "gathers resources at a higher rate",
+  src: "axe_1",
+  length: 140,
+  width: 140,
+  xOff: 3,
+  yOff: 24,
+  dmg: 30,
+  spdMult: 1,
+  range: 70,
+  gather: 2,
+  speed: 400
+}, {
+  id: 2,
+  type: 0,
+  age: 8,
+  pre: 1,
+  name: "great axe",
+  desc: "deal more damage and gather more resources",
+  src: "great_axe_1",
+  length: 140,
+  width: 140,
+  xOff: -8,
+  yOff: 25,
+  dmg: 35,
+  spdMult: 1,
+  range: 75,
+  gather: 4,
+  speed: 400
+}, {
+  id: 3,
+  type: 0,
+  age: 2,
+  name: "short sword",
+  desc: "increased attack power but slower move speed",
+  src: "sword_1",
+  iPad: 1.3,
+  length: 130,
+  width: 210,
+  xOff: -8,
+  yOff: 46,
+  dmg: 35,
+  spdMult: 0.85,
+  range: 110,
+  gather: 1,
+  speed: 300
+}, {
+  id: 4,
+  type: 0,
+  age: 8,
+  pre: 3,
+  name: "katana",
+  desc: "greater range and damage",
+  src: "samurai_1",
+  iPad: 1.3,
+  length: 130,
+  width: 210,
+  xOff: -8,
+  yOff: 59,
+  dmg: 40,
+  spdMult: 0.8,
+  range: 118,
+  gather: 1,
+  speed: 300
+}, {
+  id: 5,
+  type: 0,
+  age: 2,
+  name: "polearm",
+  desc: "long range melee weapon",
+  src: "spear_1",
+  iPad: 1.3,
+  length: 130,
+  width: 210,
+  xOff: -8,
+  yOff: 53,
+  dmg: 45,
+  knock: 0.2,
+  spdMult: 0.82,
+  range: 142,
+  gather: 1,
+  speed: 700
+}, {
+  id: 6,
+  type: 0,
+  age: 2,
+  name: "bat",
+  desc: "fast long range melee weapon",
+  src: "bat_1",
+  iPad: 1.3,
+  length: 110,
+  width: 180,
+  xOff: -8,
+  yOff: 53,
+  dmg: 20,
+  knock: 0.7,
+  range: 110,
+  gather: 1,
+  speed: 300
+}, {
+  id: 7,
+  type: 0,
+  age: 2,
+  name: "daggers",
+  desc: "really fast short range weapon",
+  src: "dagger_1",
+  iPad: 0.8,
+  length: 110,
+  width: 110,
+  xOff: 18,
+  yOff: 0,
+  dmg: 20,
+  knock: 0.1,
+  range: 65,
+  gather: 1,
+  hitSlow: 0.1,
+  spdMult: 1.13,
+  speed: 100
+}, {
+  id: 8,
+  type: 0,
+  age: 2,
+  name: "stick",
+  desc: "great for gathering but very weak",
+  src: "stick_1",
+  length: 140,
+  width: 140,
+  xOff: 3,
+  yOff: 24,
+  dmg: 1,
+  spdMult: 1,
+  range: 70,
+  gather: 7,
+  speed: 400
+}, {
+  id: 9,
+  type: 1,
+  age: 6,
+  name: "hunting bow",
+  desc: "bow used for ranged combat and hunting",
+  src: "bow_1",
+  req: ["wood", 4],
+  length: 120,
+  width: 120,
+  xOff: -6,
+  yOff: 0,
+  projectile: 0,
+  spdMult: 0.75,
+  speed: 600
+}, {
+  id: 10,
+  type: 1,
+  age: 6,
+  name: "great hammer",
+  desc: "hammer used for destroying structures",
+  src: "great_hammer_1",
+  length: 140,
+  width: 140,
+  xOff: -9,
+  yOff: 25,
+  dmg: 10,
+  spdMult: 0.88,
+  range: 75,
+  sDmg: 7.5,
+  gather: 1,
+  speed: 400
+}, {
+  id: 11,
+  type: 1,
+  age: 6,
+  name: "wooden shield",
+  desc: "blocks projectiles and reduces melee damage",
+  src: "shield_1",
+  length: 120,
+  width: 120,
+  shield: 0.2,
+  xOff: 6,
+  yOff: 0,
+  spdMult: 0.7
+}, {
+  id: 12,
+  type: 1,
+  age: 8,
+  pre: 9,
+  name: "crossbow",
+  desc: "deals more damage and has greater range",
+  src: "crossbow_1",
+  req: ["wood", 5],
+  aboveHand: true,
+  armS: 0.75,
+  length: 120,
+  width: 120,
+  xOff: -4,
+  yOff: 0,
+  projectile: 2,
+  spdMult: 0.7,
+  speed: 700
+}, {
+  id: 13,
+  type: 1,
+  age: 9,
+  pre: 12,
+  name: "repeater crossbow",
+  desc: "high firerate crossbow with reduced damage",
+  src: "crossbow_2",
+  req: ["wood", 10],
+  aboveHand: true,
+  armS: 0.75,
+  length: 120,
+  width: 120,
+  xOff: -4,
+  yOff: 0,
+  projectile: 3,
+  spdMult: 0.7,
+  speed: 230
+}, {
+  id: 14,
+  type: 1,
+  age: 6,
+  name: "mc grabby",
+  desc: "steals resources from enemies",
+  src: "grab_1",
+  length: 130,
+  width: 210,
+  xOff: -8,
+  yOff: 53,
+  dmg: 0,
+  steal: 250,
+  knock: 0.2,
+  spdMult: 1.05,
+  range: 125,
+  gather: 0,
+  speed: 700
+}, {
+  id: 15,
+  type: 1,
+  age: 9,
+  pre: 12,
+  name: "musket",
+  desc: "slow firerate but high damage and range",
+  src: "musket_1",
+  req: ["stone", 10],
+  aboveHand: true,
+  rec: 0.35,
+  armS: 0.6,
+  hndS: 0.3,
+  hndD: 1.6,
+  length: 205,
+  width: 205,
+  xOff: 25,
+  yOff: 0,
+  projectile: 5,
+  hideProjectile: true,
+  spdMult: 0.6,
+  speed: 1500
+}];
 
 
 /***/ }),
@@ -1711,11 +2681,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (/* binding */ ModuleManager)
 /* harmony export */ });
 /* harmony import */ var _util_Logger__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../util/Logger */ "./frontend/src/util/Logger.ts");
-/* harmony import */ var _modules_building_AutoPlacer__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./modules/building/AutoPlacer */ "./frontend/src/features/modules/building/AutoPlacer.ts");
-/* harmony import */ var _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./modules/building/ItemPlacer */ "./frontend/src/features/modules/building/ItemPlacer.ts");
-/* harmony import */ var _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./modules/combat/Autoheal */ "./frontend/src/features/modules/combat/Autoheal.ts");
-var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_modules_building_AutoPlacer__WEBPACK_IMPORTED_MODULE_1__, _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_2__, _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_3__]);
-([_modules_building_AutoPlacer__WEBPACK_IMPORTED_MODULE_1__, _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_2__, _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_3__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+/* harmony import */ var _modules_building_AutoBreak__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./modules/building/AutoBreak */ "./frontend/src/features/modules/building/AutoBreak.ts");
+/* harmony import */ var _modules_building_AutoPlacer__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./modules/building/AutoPlacer */ "./frontend/src/features/modules/building/AutoPlacer.ts");
+/* harmony import */ var _modules_building_AutoReplace__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./modules/building/AutoReplace */ "./frontend/src/features/modules/building/AutoReplace.ts");
+/* harmony import */ var _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./modules/building/ItemPlacer */ "./frontend/src/features/modules/building/ItemPlacer.ts");
+/* harmony import */ var _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./modules/combat/Autoheal */ "./frontend/src/features/modules/combat/Autoheal.ts");
+/* harmony import */ var _modules_player_AutoHat__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./modules/player/AutoHat */ "./frontend/src/features/modules/player/AutoHat.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_modules_building_AutoBreak__WEBPACK_IMPORTED_MODULE_1__, _modules_building_AutoPlacer__WEBPACK_IMPORTED_MODULE_2__, _modules_building_AutoReplace__WEBPACK_IMPORTED_MODULE_3__, _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_4__, _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_5__, _modules_player_AutoHat__WEBPACK_IMPORTED_MODULE_6__]);
+([_modules_building_AutoBreak__WEBPACK_IMPORTED_MODULE_1__, _modules_building_AutoPlacer__WEBPACK_IMPORTED_MODULE_2__, _modules_building_AutoReplace__WEBPACK_IMPORTED_MODULE_3__, _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_4__, _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_5__, _modules_player_AutoHat__WEBPACK_IMPORTED_MODULE_6__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
@@ -1726,6 +2699,9 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
 function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
+
+
+
 
 
 
@@ -1766,14 +2742,14 @@ var ModuleManager = /*#__PURE__*/function () {
       }
     }
   }, {
-    key: "onUnsafeTick",
-    value: function onUnsafeTick(tickIndex) {
+    key: "onPreTick",
+    value: function onPreTick(tickIndex) {
       var _iterator3 = _createForOfIteratorHelper(this.modules),
         _step3;
       try {
         for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
           var module = _step3.value;
-          module.onUnsafeTick(tickIndex);
+          module.onPreTick(tickIndex);
         }
       } catch (err) {
         _iterator3.e(err);
@@ -1798,14 +2774,14 @@ var ModuleManager = /*#__PURE__*/function () {
       }
     }
   }, {
-    key: "onKeydown",
-    value: function onKeydown(keyCode) {
+    key: "onPostTick",
+    value: function onPostTick(tickIndex) {
       var _iterator5 = _createForOfIteratorHelper(this.modules),
         _step5;
       try {
         for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
           var module = _step5.value;
-          module.onKeydown(keyCode);
+          module.onPostTick(tickIndex);
         }
       } catch (err) {
         _iterator5.e(err);
@@ -1814,14 +2790,14 @@ var ModuleManager = /*#__PURE__*/function () {
       }
     }
   }, {
-    key: "onKeyup",
-    value: function onKeyup(keyCode) {
+    key: "onKeydown",
+    value: function onKeydown(keyCode) {
       var _iterator6 = _createForOfIteratorHelper(this.modules),
         _step6;
       try {
         for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
           var module = _step6.value;
-          module.onKeyup(keyCode);
+          module.onKeydown(keyCode);
         }
       } catch (err) {
         _iterator6.e(err);
@@ -1830,14 +2806,14 @@ var ModuleManager = /*#__PURE__*/function () {
       }
     }
   }, {
-    key: "onPacketReceive",
-    value: function onPacketReceive(event) {
+    key: "onKeyup",
+    value: function onKeyup(keyCode) {
       var _iterator7 = _createForOfIteratorHelper(this.modules),
         _step7;
       try {
         for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
           var module = _step7.value;
-          module.onPacketReceive(event);
+          module.onKeyup(keyCode);
         }
       } catch (err) {
         _iterator7.e(err);
@@ -1846,14 +2822,14 @@ var ModuleManager = /*#__PURE__*/function () {
       }
     }
   }, {
-    key: "getModule",
-    value: function getModule(clazz) {
+    key: "onPacketReceive",
+    value: function onPacketReceive(event) {
       var _iterator8 = _createForOfIteratorHelper(this.modules),
         _step8;
       try {
         for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
           var module = _step8.value;
-          if (module instanceof clazz) return module;
+          module.onPacketReceive(event);
         }
       } catch (err) {
         _iterator8.e(err);
@@ -1861,10 +2837,74 @@ var ModuleManager = /*#__PURE__*/function () {
         _iterator8.f();
       }
     }
+  }, {
+    key: "onRender",
+    value: function onRender(delta) {
+      var _iterator9 = _createForOfIteratorHelper(this.modules),
+        _step9;
+      try {
+        for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
+          var module = _step9.value;
+          module.onRender(delta);
+        }
+      } catch (err) {
+        _iterator9.e(err);
+      } finally {
+        _iterator9.f();
+      }
+    }
+  }, {
+    key: "onActionRun",
+    value: function onActionRun(action) {
+      var _iterator10 = _createForOfIteratorHelper(this.modules),
+        _step10;
+      try {
+        for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
+          var module = _step10.value;
+          module.onActionRun(action);
+        }
+      } catch (err) {
+        _iterator10.e(err);
+      } finally {
+        _iterator10.f();
+      }
+    }
+  }, {
+    key: "onBuildingHit",
+    value: function onBuildingHit(player, building, damage) {
+      var _iterator11 = _createForOfIteratorHelper(this.modules),
+        _step11;
+      try {
+        for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
+          var module = _step11.value;
+          module.onBuildingHit(player, building, damage);
+        }
+      } catch (err) {
+        _iterator11.e(err);
+      } finally {
+        _iterator11.f();
+      }
+    }
+  }, {
+    key: "getModule",
+    value: function getModule(clazz) {
+      var _iterator12 = _createForOfIteratorHelper(this.modules),
+        _step12;
+      try {
+        for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
+          var module = _step12.value;
+          if (module instanceof clazz) return module;
+        }
+      } catch (err) {
+        _iterator12.e(err);
+      } finally {
+        _iterator12.f();
+      }
+    }
   }]);
   return ModuleManager;
 }();
-_defineProperty(ModuleManager, "classes", [_modules_building_AutoPlacer__WEBPACK_IMPORTED_MODULE_1__["default"], _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_2__["default"], _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_3__["default"]]);
+_defineProperty(ModuleManager, "classes", [_modules_building_AutoBreak__WEBPACK_IMPORTED_MODULE_1__["default"], _modules_building_AutoPlacer__WEBPACK_IMPORTED_MODULE_2__["default"], _modules_building_AutoReplace__WEBPACK_IMPORTED_MODULE_3__["default"], _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_4__["default"], _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_5__["default"], _modules_player_AutoHat__WEBPACK_IMPORTED_MODULE_6__["default"]]);
 
 __webpack_async_result__();
 } catch(e) { __webpack_async_result__(e); } });
@@ -1896,11 +2936,14 @@ var Module = /*#__PURE__*/function () {
     key: "onUpdate",
     value: function onUpdate(delta) {}
   }, {
-    key: "onUnsafeTick",
-    value: function onUnsafeTick(tickIndex) {}
+    key: "onPreTick",
+    value: function onPreTick(tickIndex) {}
   }, {
     key: "onTick",
     value: function onTick(tickIndex) {}
+  }, {
+    key: "onPostTick",
+    value: function onPostTick(tickIndex) {}
   }, {
     key: "onKeydown",
     value: function onKeydown(keyCode) {}
@@ -1910,10 +2953,122 @@ var Module = /*#__PURE__*/function () {
   }, {
     key: "onPacketReceive",
     value: function onPacketReceive(event) {}
+  }, {
+    key: "onRender",
+    value: function onRender(delta) {}
+  }, {
+    key: "onActionRun",
+    value: function onActionRun(action) {}
+  }, {
+    key: "onBuildingHit",
+    value: function onBuildingHit(player, building, damage) {}
   }]);
   return Module;
 }();
 
+
+/***/ }),
+
+/***/ "./frontend/src/features/modules/building/AutoBreak.ts":
+/*!*************************************************************!*\
+  !*** ./frontend/src/features/modules/building/AutoBreak.ts ***!
+  \*************************************************************/
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.a(module, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ AutoBreak)
+/* harmony export */ });
+/* harmony import */ var _core_ActionType__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../core/ActionType */ "./frontend/src/core/ActionType.ts");
+/* harmony import */ var _data_type_Player__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../data/type/Player */ "./frontend/src/data/type/Player.ts");
+/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../main */ "./frontend/src/main.ts");
+/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
+/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
+/* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_2__]);
+_main__WEBPACK_IMPORTED_MODULE_2__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+
+
+
+
+
+var AutoBreak = /*#__PURE__*/function (_Module) {
+  _inherits(AutoBreak, _Module);
+  var _super = _createSuper(AutoBreak);
+  function AutoBreak() {
+    var _this;
+    _classCallCheck(this, AutoBreak);
+    _this = _super.call(this);
+    _this.wasBreaking = false;
+    _this.stopAttackActionId = undefined;
+    _this.packetBlockerId = undefined;
+    _this.currentTrap = null;
+    return _this;
+  }
+  _createClass(AutoBreak, [{
+    key: "onPreTick",
+    value: function onPreTick(tickIndex) {
+      var myPlayer = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer;
+      if (!myPlayer.alive) return;
+      if (myPlayer.state.isTrapped) {
+        if (!this.currentTrap) {
+          this.currentTrap = myPlayer.state.data.trap;
+        }
+        if (this.currentTrap) {
+          if (this.packetBlockerId === undefined) this.packetBlockerId = _main__WEBPACK_IMPORTED_MODULE_2__.core.createPacketBlock(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.SET_ANGLE);
+          var weapon = myPlayer.inventory.findBestWeapon(_data_type_Player__WEBPACK_IMPORTED_MODULE_1__.Inventory.WeaponFinders.BUILDING_BREAK);
+          var reload = myPlayer.inventory.reloads[weapon.id];
+          if (reload === 0) {
+            var trapAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDirection(myPlayer.serverPos, this.currentTrap.position);
+            _main__WEBPACK_IMPORTED_MODULE_2__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.WEAPON, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOBREAK, tickIndex, [weapon === null || weapon === void 0 ? void 0 : weapon.id]);
+            _main__WEBPACK_IMPORTED_MODULE_2__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.ATTACK, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOBREAK, tickIndex, [1, trapAngle]);
+            _main__WEBPACK_IMPORTED_MODULE_2__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOBREAK, tickIndex, [40]);
+          } else {
+            // else reload the weapon
+            _main__WEBPACK_IMPORTED_MODULE_2__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.WEAPON, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOBREAK, tickIndex, [weapon === null || weapon === void 0 ? void 0 : weapon.id]);
+            _main__WEBPACK_IMPORTED_MODULE_2__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOBREAK, tickIndex, [20]);
+          }
+          this.wasBreaking = true;
+        }
+      } else if (this.wasBreaking) {
+        this.stopAttackActionId = _main__WEBPACK_IMPORTED_MODULE_2__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.ATTACK, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOBREAK, tickIndex, [0]);
+        this.currentTrap = null;
+        if (this.packetBlockerId !== undefined) {
+          _main__WEBPACK_IMPORTED_MODULE_2__.core.removePacketBlock(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.SET_ANGLE, this.packetBlockerId);
+          this.packetBlockerId = undefined;
+        }
+      }
+    }
+  }, {
+    key: "onActionRun",
+    value: function onActionRun(action) {
+      if (action.id === this.stopAttackActionId) {
+        this.stopAttackActionId = undefined;
+        this.wasBreaking = false;
+      }
+    }
+  }]);
+  return AutoBreak;
+}(_Module__WEBPACK_IMPORTED_MODULE_5__["default"]);
+
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ }),
 
@@ -1937,9 +3092,249 @@ __webpack_require__.r(__webpack_exports__);
 var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_2__]);
 _main__WEBPACK_IMPORTED_MODULE_2__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
+
+
+
+
+
+var State;
+(function (State) {
+  State[State["IDLE"] = 0] = "IDLE";
+  State[State["WINDMILLS"] = 1] = "WINDMILLS";
+  State[State["TRAP_ENEMY"] = 2] = "TRAP_ENEMY";
+  State[State["SPIKE_TRAPPED"] = 3] = "SPIKE_TRAPPED";
+})(State || (State = {}));
+function combineAllowAngles(angles1, angles2) {
+  var longer = angles1.length > angles2.length ? angles1 : angles2;
+  var shorter = longer === angles1 ? angles2 : angles1;
+  var result = [];
+  if (shorter.length === 0) return longer;
+  var comparedAgainist;
+  for (var i = 0; i < longer.length; i++) {
+    var currentItem = longer[i];
+    comparedAgainist = shorter.shift();
+    if (comparedAgainist) {
+      result.push([comparedAgainist[0] > currentItem[0] ? comparedAgainist[0] : currentItem[0], comparedAgainist[1] < currentItem[1] ? comparedAgainist[1] : currentItem[1]]);
+    } else {
+      result.push([currentItem[0], currentItem[1]]);
+    }
+  }
+  return result;
+}
+function translateAllowAngles(placeableAngles, stepDeg) {
+  var singleAngles = [];
+  for (var i = 0; i < 360; i += stepDeg) {
+    var rad = i * (Math.PI / 180);
+    var _iterator = _createForOfIteratorHelper(placeableAngles),
+      _step;
+    try {
+      for (_iterator.s(); !(_step = _iterator.n()).done;) {
+        var allow = _step.value;
+        if (rad > allow[0] && rad < allow[1]) {
+          singleAngles.push(rad);
+          continue;
+        }
+      }
+    } catch (err) {
+      _iterator.e(err);
+    } finally {
+      _iterator.f();
+    }
+  }
+  return singleAngles;
+}
+var AutoPlacer = /*#__PURE__*/function (_Module) {
+  _inherits(AutoPlacer, _Module);
+  var _super = _createSuper(AutoPlacer);
+  function AutoPlacer() {
+    var _this;
+    _classCallCheck(this, AutoPlacer);
+    _this = _super.call(this);
+    _defineProperty(_assertThisInitialized(_this), "debugAngles", []);
+    _this.state = State.WINDMILLS;
+    _this.toggled = false;
+    _this.targetsTrappable = [];
+    _this.targetsTrapSpikable = [];
+    return _this;
+  }
+  _createClass(AutoPlacer, [{
+    key: "calcState",
+    value: function calcState() {
+      this.targetsTrappable = [];
+      this.targetsTrapSpikable = [];
+      var myPlayer = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer;
+      var enemies = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.playerList.slice(1).filter(function (x) {
+        return x.visible;
+      });
+      var trapItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[15];
+      var spikeItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[myPlayer.inventory.items[2]];
+      if (enemies.length === 0) this.state = State.IDLE;
+      for (var i = 0; i < enemies.length; i++) {
+        var enemy = enemies[i];
+        var distance = _util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getDistance(enemy.serverPos, myPlayer.serverPos);
+        var nextDistance = _util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getDistance(enemy.serverPos.clone().add(enemy.velocity), myPlayer.serverPos);
+        var trappingDistance = myPlayer.scale + enemy.scale + trapItem.scale + trapItem.scale * trapItem.colDiv + trapItem.placeOffset;
+        if (distance <= trappingDistance && nextDistance <= trappingDistance && !enemy.state.isTrapped) {
+          this.state = State.TRAP_ENEMY;
+          this.targetsTrappable.push(enemy);
+        }
+        if (enemy.state.isTrapped) {
+          var _spikeItem$placeOffse;
+          if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getDistance(enemy.state.data.trap.position, myPlayer.serverPos) - myPlayer.scale - trapItem.scale - spikeItem.scale * 2 - ((_spikeItem$placeOffse = spikeItem.placeOffset) !== null && _spikeItem$placeOffse !== void 0 ? _spikeItem$placeOffse : 0) <= 0) {
+            this.state = State.SPIKE_TRAPPED;
+            this.targetsTrapSpikable.push(enemy);
+          }
+        }
+      }
+      if (this.state === State.IDLE) this.state = State.WINDMILLS;
+    }
+  }, {
+    key: "onUpdate",
+    value: function onUpdate(delta) {
+      var _this2 = this;
+      if (!this.toggled) return;
+      var myPlayer = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer;
+      if (!myPlayer.alive) return;
+      this.calcState();
+      switch (this.state) {
+        case State.WINDMILLS:
+          {
+            return;
+            var windmillItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.inventory.items[3]];
+            var placeableangles = _main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.findPlacementAngles([_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.serverPos, _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.scale], windmillItem);
+            var backdir = (_util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getDirection(_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.lerpPos, _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.serverPos) + Math.PI) % (Math.PI * 2);
+            var singleAngles = translateAllowAngles(placeableangles, 3);
+            var angles = singleAngles.filter(function (angle) {
+              return _data_type_MoomooUtil__WEBPACK_IMPORTED_MODULE_1__.util.getAngleDist(backdir, angle) <= Math.PI / 2.8;
+            });
+            for (var i = 0; i < angles.length; i++) {
+              _main__WEBPACK_IMPORTED_MODULE_2__.core.interactionEngine.safePlacement(windmillItem, angles[i]);
+              //InteractUtil.place(<number> inventory.get(InventoryItem.WINDMILL), angles[i], true);
+            }
+
+            break;
+          }
+        case State.TRAP_ENEMY:
+          {
+            // TODO: use ping & tick based predicted position instead of last received positions (sometimes causes it to place trap on old enemy position)
+            var trapItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[15];
+            var _loop = function _loop() {
+              var target = _this2.targetsTrappable[_i];
+              var targetDir = _util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getDirection(myPlayer.serverPos, target.serverPos);
+              var trappingDistance = myPlayer.scale + target.scale + trapItem.scale + trapItem.scale * trapItem.colDiv + trapItem.placeOffset;
+              var angles = translateAllowAngles(_main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.findPlacementAngles([_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.serverPos, _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.scale], trapItem), 3);
+              var placeAngles = angles.filter(function (angle) {
+                return _util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getAngleDist(angle, targetDir) <= Math.sin(trappingDistance / (target.scale + trapItem.scale * trapItem.colDiv));
+              });
+              _main__WEBPACK_IMPORTED_MODULE_2__.core.interactionEngine.safePlacement(trapItem, targetDir);
+              for (var _i2 = 0; _i2 < placeAngles.length; _i2++) {
+                _main__WEBPACK_IMPORTED_MODULE_2__.core.interactionEngine.safePlacement(trapItem, placeAngles[_i2]);
+              }
+            };
+            for (var _i = 0; _i < this.targetsTrappable.length; _i++) {
+              _loop();
+            }
+            break;
+          }
+        case State.SPIKE_TRAPPED:
+          {
+            var _trapItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[15];
+            var spikeItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.inventory.items[2]];
+            for (var _i3 = 0; _i3 < this.targetsTrapSpikable.length; _i3++) {
+              var target = this.targetsTrapSpikable[_i3];
+              var trap = target.state.data.trap;
+              if (trap) {
+                var tangentAngle = _main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.findPlacementTangent([myPlayer.serverPos, myPlayer.scale], trap, spikeItem, 5);
+                var straightAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getDirection(myPlayer.serverPos, trap.position);
+                var targetAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getDirection(myPlayer.serverPos, target.serverPos);
+                var angle1 = straightAngle + tangentAngle;
+                var angle2 = straightAngle - tangentAngle;
+                var closestAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getAngleDist(angle1, targetAngle) > _util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getAngleDist(angle2, targetAngle) ? angle2 : angle1;
+                _main__WEBPACK_IMPORTED_MODULE_2__.core.interactionEngine.safePlacement(spikeItem, closestAngle);
+              }
+            }
+            break;
+          }
+      }
+    }
+  }, {
+    key: "onKeydown",
+    value: function onKeydown(keyCode) {
+      if (keyCode == 82) {
+        this.toggled = !this.toggled;
+      }
+    }
+  }, {
+    key: "onKeyup",
+    value: function onKeyup(keyCode) {}
+  }, {
+    key: "onRender",
+    value: function onRender(delta) {
+      var _core$renderManager, _core$renderManager2;
+      var ctx = (_core$renderManager = _main__WEBPACK_IMPORTED_MODULE_2__.core.renderManager) === null || _core$renderManager === void 0 ? void 0 : _core$renderManager.context;
+      var myPos = (_core$renderManager2 = _main__WEBPACK_IMPORTED_MODULE_2__.core.renderManager) === null || _core$renderManager2 === void 0 ? void 0 : _core$renderManager2.mapToContext(_main__WEBPACK_IMPORTED_MODULE_2__.core.renderManager.cameraPosition, _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.renderPos);
+      for (var i = 0; i < this.debugAngles.length; i++) {
+        var a = this.debugAngles[i];
+        ctx.strokeStyle = "black";
+        ctx.beginPath();
+        ctx.moveTo(myPos.x, myPos.y);
+        ctx.lineTo(myPos.x + Math.cos(a) * 30, myPos.y + Math.sin(a) * 30);
+        ctx.stroke();
+      }
+    }
+  }]);
+  return AutoPlacer;
+}(_Module__WEBPACK_IMPORTED_MODULE_4__["default"]);
+
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
+
+/***/ }),
+
+/***/ "./frontend/src/features/modules/building/AutoReplace.ts":
+/*!***************************************************************!*\
+  !*** ./frontend/src/features/modules/building/AutoReplace.ts ***!
+  \***************************************************************/
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.a(module, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ AutoReplace)
+/* harmony export */ });
+/* harmony import */ var _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../data/moomoo/items */ "./frontend/src/data/moomoo/items.ts");
+/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../main */ "./frontend/src/main.ts");
+/* harmony import */ var _socket_Connection__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../socket/Connection */ "./frontend/src/socket/Connection.ts");
+/* harmony import */ var _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../socket/packets/Packet */ "./frontend/src/socket/packets/Packet.ts");
+/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
+/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
+/* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_1__]);
+_main__WEBPACK_IMPORTED_MODULE_1__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
+function _iterableToArrayLimit(arr, i) { var _i = null == arr ? null : "undefined" != typeof Symbol && arr[Symbol.iterator] || arr["@@iterator"]; if (null != _i) { var _s, _e, _x, _r, _arr = [], _n = !0, _d = !1; try { if (_x = (_i = _i.call(arr)).next, 0 === i) { if (Object(_i) !== _i) return; _n = !1; } else for (; !(_n = (_s = _x.call(_i)).done) && (_arr.push(_s.value), _arr.length !== i); _n = !0); } catch (err) { _d = !0, _e = err; } finally { try { if (!_n && null != _i["return"] && (_r = _i["return"](), Object(_r) !== _r)) return; } finally { if (_d) throw _e; } } return _arr; } }
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
@@ -1952,79 +3347,100 @@ function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) ===
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-/**/
 
 
 
 
 
 
-var State;
-(function (State) {
-  State[State["WINDMILLS"] = 0] = "WINDMILLS";
-  State[State["TRAPS_PASSIVE"] = 1] = "TRAPS_PASSIVE";
-})(State || (State = {}));
-var AutoPlacer = /*#__PURE__*/function (_Module) {
-  _inherits(AutoPlacer, _Module);
-  var _super = _createSuper(AutoPlacer);
-  function AutoPlacer() {
+
+var AutoReplace = /*#__PURE__*/function (_Module) {
+  _inherits(AutoReplace, _Module);
+  var _super = _createSuper(AutoReplace);
+  function AutoReplace() {
     var _this;
-    _classCallCheck(this, AutoPlacer);
+    _classCallCheck(this, AutoReplace);
     _this = _super.call(this);
-    _this.state = State.WINDMILLS;
-    _this.toggled = false;
+    _this.predictedBreaks = new Map();
+    _this.spamming = false;
+    _this.buildData = null;
+    _this.placeLimiter = 0;
     return _this;
   }
-  _createClass(AutoPlacer, [{
-    key: "onUnsafeTick",
-    value: function onUnsafeTick(tickIndex) {}
-  }, {
+  _createClass(AutoReplace, [{
     key: "onUpdate",
     value: function onUpdate(delta) {
-      if (!this.toggled) return;
-      switch (this.state) {
-        case State.WINDMILLS:
-          var windmillItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.inventory.items[3]];
-          var placeableangles = _main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.findPlacementAngles([_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.serverPos, _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.scale], windmillItem);
-          var backdir = (_util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getDirection(_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.lerpPos, _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.serverPos) + Math.PI) % (Math.PI * 2);
-          var singleAngles = [];
-          for (var i = 0; i < 360; i += 3) {
-            var rad = i * (Math.PI / 180);
-            var _iterator = _createForOfIteratorHelper(placeableangles),
-              _step;
-            try {
-              for (_iterator.s(); !(_step = _iterator.n()).done;) {
-                var allow = _step.value;
-                if (rad > allow[0] && rad < allow[1]) singleAngles.push(rad);
-              }
-            } catch (err) {
-              _iterator.e(err);
-            } finally {
-              _iterator.f();
-            }
-          }
-          var angles = singleAngles.filter(function (angle) {
-            return _data_type_MoomooUtil__WEBPACK_IMPORTED_MODULE_1__.util.getAngleDist(backdir, angle) <= Math.PI / 2.8;
-          });
-          for (var _i = 0; _i < angles.length; _i++) {
-            _main__WEBPACK_IMPORTED_MODULE_2__.core.interactionEngine.safePlacement(windmillItem, angles[_i]);
-            //InteractUtil.place(<number> inventory.get(InventoryItem.WINDMILL), angles[i], true);
-          }
-
-          break;
+      if (this.buildData !== null) {
+        if (this.placeLimiter++ % 4 == 0) _main__WEBPACK_IMPORTED_MODULE_1__.core.interactionEngine.vanillaPlaceItem(this.buildData.item, this.buildData.angle);
       }
     }
   }, {
-    key: "onKeydown",
-    value: function onKeydown(keyCode) {
-      if (keyCode == 82) this.toggled = !this.toggled;
+    key: "onPreTick",
+    value: function onPreTick(tickIndex) {
+      var _this2 = this;
+      var myPlayer = _main__WEBPACK_IMPORTED_MODULE_1__.core.playerManager.myPlayer;
+      var spikeItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[myPlayer.inventory.items[2]];
+      var trapItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[15];
+      var predictedBreaks = this.predictedBreaks.get(tickIndex);
+      if (!predictedBreaks || predictedBreaks.length === 0 || this.buildData !== null) return;
+      var _loop = function _loop() {
+        var _predictedBreaks$i = _slicedToArray(predictedBreaks[i], 2),
+          breaker = _predictedBreaks$i[0],
+          building = _predictedBreaks$i[1];
+        var buildingAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_5__["default"].getDirection(myPlayer.serverPos, building.position);
+        var nearbyPlayer = _main__WEBPACK_IMPORTED_MODULE_1__.core.playerManager.getNearby(building.position, 220, true)[0];
+        if (nearbyPlayer) {
+          var _spikeItem$placeOffse;
+          var playerToBuilding = _util_MathUtil__WEBPACK_IMPORTED_MODULE_5__["default"].getDistance(nearbyPlayer.serverPos.clone().add(breaker.velocity), building.position);
+          if (playerToBuilding < nearbyPlayer.scale + building.scale + spikeItem.scale * 2 + myPlayer.scale + ((_spikeItem$placeOffse = spikeItem.placeOffset) !== null && _spikeItem$placeOffse !== void 0 ? _spikeItem$placeOffse : 0)) {
+            var angles = _main__WEBPACK_IMPORTED_MODULE_1__.core.objectManager.findPlacementAngles([myPlayer.serverPos, myPlayer.scale], spikeItem, [building]);
+            var bestangle = angles.sort(function (a, b) {
+              return Math.min(_util_MathUtil__WEBPACK_IMPORTED_MODULE_5__["default"].getAngleDist(a[0], buildingAngle), _util_MathUtil__WEBPACK_IMPORTED_MODULE_5__["default"].getAngleDist(a[1], buildingAngle)) - Math.min(_util_MathUtil__WEBPACK_IMPORTED_MODULE_5__["default"].getAngleDist(b[0], buildingAngle), _util_MathUtil__WEBPACK_IMPORTED_MODULE_5__["default"].getAngleDist(b[1], buildingAngle));
+            })[0];
+            _this2.buildData = {
+              item: spikeItem,
+              angle: buildingAngle > bestangle[0] && buildingAngle < bestangle[1] ? buildingAngle : _util_MathUtil__WEBPACK_IMPORTED_MODULE_5__["default"].getAngleDist(bestangle[0], buildingAngle) > _util_MathUtil__WEBPACK_IMPORTED_MODULE_5__["default"].getAngleDist(bestangle[1], buildingAngle) ? bestangle[1] : bestangle[0],
+              tick: tickIndex
+            };
+          } else {
+            var _angles = _main__WEBPACK_IMPORTED_MODULE_1__.core.objectManager.findPlacementAngles([myPlayer.serverPos, myPlayer.scale], trapItem, [building]);
+            var _bestangle = _angles.sort(function (a, b) {
+              return Math.min(_util_MathUtil__WEBPACK_IMPORTED_MODULE_5__["default"].getAngleDist(a[0], buildingAngle), _util_MathUtil__WEBPACK_IMPORTED_MODULE_5__["default"].getAngleDist(a[1], buildingAngle)) - Math.min(_util_MathUtil__WEBPACK_IMPORTED_MODULE_5__["default"].getAngleDist(b[0], buildingAngle), _util_MathUtil__WEBPACK_IMPORTED_MODULE_5__["default"].getAngleDist(b[1], buildingAngle));
+            })[0];
+            _this2.buildData = {
+              item: trapItem,
+              angle: buildingAngle > _bestangle[0] && buildingAngle < _bestangle[1] ? buildingAngle : _util_MathUtil__WEBPACK_IMPORTED_MODULE_5__["default"].getAngleDist(_bestangle[0], buildingAngle) > _util_MathUtil__WEBPACK_IMPORTED_MODULE_5__["default"].getAngleDist(_bestangle[1], buildingAngle) ? _bestangle[1] : _bestangle[0],
+              tick: tickIndex
+            };
+          }
+          _socket_Connection__WEBPACK_IMPORTED_MODULE_2__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.CHAT, ["replacing [" + _this2.buildData.item.name + "]"]));
+        }
+      };
+      for (var i = 0; i < predictedBreaks.length; i++) {
+        _loop();
+      }
+      this.predictedBreaks["delete"](tickIndex);
     }
   }, {
-    key: "onKeyup",
-    value: function onKeyup(keyCode) {}
+    key: "onPostTick",
+    value: function onPostTick(tickIndex) {
+      if (this.buildData !== null && this.buildData.tick === tickIndex) {
+        this.buildData = null;
+      }
+    }
+  }, {
+    key: "onBuildingHit",
+    value: function onBuildingHit(player, building, damage) {
+      if (building.health <= damage) {
+        // +1 because after the weapon is reloaded in one tick, it only can gather in the tick after it
+        var tick = _main__WEBPACK_IMPORTED_MODULE_1__.core.tickEngine.tickIn(player.inventory.reloads[player.inventory.weaponSelected.id]) + 1;
+        if (!this.predictedBreaks.has(tick)) this.predictedBreaks.set(tick, []);
+        this.predictedBreaks.get(tick).push([player, building]);
+      }
+    }
   }]);
-  return AutoPlacer;
-}(_Module__WEBPACK_IMPORTED_MODULE_4__["default"]);
+  return AutoReplace;
+}(_Module__WEBPACK_IMPORTED_MODULE_6__["default"]);
 
 __webpack_async_result__();
 } catch(e) { __webpack_async_result__(e); } });
@@ -2125,12 +3541,9 @@ var ItemPlacer = /*#__PURE__*/function (_Module) {
     return _this;
   }
   _createClass(ItemPlacer, [{
-    key: "onUnsafeTick",
-    value: function onUnsafeTick(tickIndex) {}
-  }, {
     key: "onUpdate",
     value: function onUpdate(delta) {
-      if (this.activePlacer && _main__WEBPACK_IMPORTED_MODULE_1__.core.playerManager.myPlayer) this.activePlacer.run(0);
+      if (this.activePlacer && _main__WEBPACK_IMPORTED_MODULE_1__.core.playerManager.myPlayer.alive) this.activePlacer.run(0);
     }
   }, {
     key: "onKeydown",
@@ -2184,13 +3597,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (/* binding */ Autoheal)
 /* harmony export */ });
-/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../main */ "./frontend/src/main.ts");
-/* harmony import */ var _socket_Connection__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../socket/Connection */ "./frontend/src/socket/Connection.ts");
-/* harmony import */ var _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../socket/packets/Packet */ "./frontend/src/socket/packets/Packet.ts");
-/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
-/* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
-var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_0__]);
-_main__WEBPACK_IMPORTED_MODULE_0__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+/* harmony import */ var _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../data/moomoo/items */ "./frontend/src/data/moomoo/items.ts");
+/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../main */ "./frontend/src/main.ts");
+/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
+/* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_1__]);
+_main__WEBPACK_IMPORTED_MODULE_1__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -2214,7 +3626,6 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
 
 
 
-
 var Autoheal = /*#__PURE__*/function (_Module) {
   _inherits(Autoheal, _Module);
   var _super = _createSuper(Autoheal);
@@ -2230,14 +3641,12 @@ var Autoheal = /*#__PURE__*/function (_Module) {
   _createClass(Autoheal, [{
     key: "onUpdate",
     value: function onUpdate(delta) {
-      if (_main__WEBPACK_IMPORTED_MODULE_0__.core.playerManager.myPlayer && this.lastHealth < 100 && Date.now() - this.damageTime > 120 && this.hasFoodInHand === false) {
-        var foodType = _main__WEBPACK_IMPORTED_MODULE_0__.core.playerManager.myPlayer.inventory.items[0];
+      if (this.lastHealth <= 0) this.lastHealth = 100;
+      if (_main__WEBPACK_IMPORTED_MODULE_1__.core.playerManager.myPlayer.alive && this.lastHealth < 100 && Date.now() - this.damageTime > 120 && this.hasFoodInHand === false) {
+        var foodType = _main__WEBPACK_IMPORTED_MODULE_1__.core.playerManager.myPlayer.inventory.items[0];
         var healsUp = foodType == 0 ? 20 : 40;
         for (var i = 0; i < Math.ceil((100 - this.lastHealth) / healsUp); i++) {
-          _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_2__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.SELECT_ITEM, [foodType, false]));
-          _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_2__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.ATTACK, [1, null]));
-          _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_2__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.ATTACK, [0, null]));
-          _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_2__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.SELECT_ITEM, [_main__WEBPACK_IMPORTED_MODULE_0__.core.playerManager.myPlayer.inventory.weapons[0], true]));
+          _main__WEBPACK_IMPORTED_MODULE_1__.core.interactionEngine.vanillaPlaceItem(_data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[foodType], _main__WEBPACK_IMPORTED_MODULE_1__.core.mouseAngle);
         }
         this.damageTime = Date.now();
       } // ok
@@ -2245,15 +3654,15 @@ var Autoheal = /*#__PURE__*/function (_Module) {
   }, {
     key: "onPacketSend",
     value: function onPacketSend(event) {
-      if (!_main__WEBPACK_IMPORTED_MODULE_0__.core.playerManager.myPlayer) return;
+      if (!_main__WEBPACK_IMPORTED_MODULE_1__.core.playerManager.myPlayer) return;
       var packet = event.getPacket();
-      if (packet.type == _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.SELECT_ITEM) {
-        if (packet.data[0] === _main__WEBPACK_IMPORTED_MODULE_0__.core.playerManager.myPlayer.inventory.items[0] && packet.data[1] !== true) {
+      if (packet.type == _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.SELECT_ITEM) {
+        if (packet.data[0] === _main__WEBPACK_IMPORTED_MODULE_1__.core.playerManager.myPlayer.inventory.items[0] && packet.data[1] !== true) {
           this.hasFoodInHand = !this.hasFoodInHand;
         } else {
           this.hasFoodInHand = false;
         }
-      } else if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.ATTACK) {
+      } else if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.ATTACK) {
         if (this.hasFoodInHand && this.lastHealth < 100) {
           this.damageTime = 1 / 0;
           this.hasFoodInHand = false;
@@ -2263,14 +3672,13 @@ var Autoheal = /*#__PURE__*/function (_Module) {
   }, {
     key: "onPacketReceive",
     value: function onPacketReceive(event) {
-      if (!_main__WEBPACK_IMPORTED_MODULE_0__.core.playerManager.myPlayer) return;
       var packet = event.getPacket();
-      if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.HEALTH_UPDATE) {
+      if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.HEALTH_UPDATE) {
         var _packet$data = _slicedToArray(packet.data, 2),
           sid = _packet$data[0],
           health = _packet$data[1];
-        if (sid === _main__WEBPACK_IMPORTED_MODULE_0__.core.playerManager.myPlayer.sid) {
-          if (health < this.lastHealth) this.damageTime = Date.now() - _main__WEBPACK_IMPORTED_MODULE_0__.core.tickEngine.ping;
+        if (sid === _main__WEBPACK_IMPORTED_MODULE_1__.core.playerManager.myPlayer.sid) {
+          if (health < this.lastHealth) this.damageTime = Date.now() - _main__WEBPACK_IMPORTED_MODULE_1__.core.tickEngine.ping;
           this.lastHealth = health;
         }
       }
@@ -2279,7 +3687,73 @@ var Autoheal = /*#__PURE__*/function (_Module) {
     // ...
   }]);
   return Autoheal;
-}(_Module__WEBPACK_IMPORTED_MODULE_4__["default"]);
+}(_Module__WEBPACK_IMPORTED_MODULE_3__["default"]);
+
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
+
+/***/ }),
+
+/***/ "./frontend/src/features/modules/player/AutoHat.ts":
+/*!*********************************************************!*\
+  !*** ./frontend/src/features/modules/player/AutoHat.ts ***!
+  \*********************************************************/
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.a(module, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ AutoHat)
+/* harmony export */ });
+/* harmony import */ var _core_ActionType__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../core/ActionType */ "./frontend/src/core/ActionType.ts");
+/* harmony import */ var _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../data/moomoo/config */ "./frontend/src/data/moomoo/config.ts");
+/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../main */ "./frontend/src/main.ts");
+/* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_2__]);
+_main__WEBPACK_IMPORTED_MODULE_2__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+
+
+
+var AutoHat = /*#__PURE__*/function (_Module) {
+  _inherits(AutoHat, _Module);
+  var _super = _createSuper(AutoHat);
+  function AutoHat() {
+    _classCallCheck(this, AutoHat);
+    return _super.call(this);
+  }
+  _createClass(AutoHat, [{
+    key: "onPreTick",
+    value: function onPreTick(tickIndex) {
+      var myPlayer = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer;
+      var biomeHat = myPlayer.serverPos.y <= _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].snowBiomeTop ? 15 : myPlayer.serverPos.y >= _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].mapScale / 2 - _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].riverWidth / 2 && myPlayer.serverPos.y <= _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].mapScale / 2 + _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].riverWidth / 2 ? 31 : 12;
+      if (!myPlayer.ownedHats.includes(biomeHat)) {
+        if (biomeHat !== 12 && myPlayer.ownedHats.includes(12)) {
+          biomeHat = 12;
+        } else {
+          biomeHat = 51;
+        }
+      }
+      _main__WEBPACK_IMPORTED_MODULE_2__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.BIOMEHAT, tickIndex, [biomeHat]);
+      //core.scheduleAction(ActionType.WEAPON, ActionPriority.BIOMEHAT, tickIndex, [myPlayer.inventory.findBestWeapon(Inventory.WeaponFinders.MOVEMENT_SPEED)?.id]);
+    }
+  }]);
+  return AutoHat;
+}(_Module__WEBPACK_IMPORTED_MODULE_3__["default"]);
 
 __webpack_async_result__();
 } catch(e) { __webpack_async_result__(e); } });
@@ -2358,7 +3832,7 @@ function evalBundle(code, injectedApi) {
       return _regeneratorRuntime().wrap(function _callee$(_context) {
         while (1) switch (_context.prev = _context.next) {
           case 0:
-            vm.call( /*window*/vm, injectedApi, logger);
+            vm.call( /*window*/vm.bind(window), injectedApi, logger);
             old = [window.onload, window.captchaCallback];
             window.onload = window.captchaCallback = function () {};
             if (!_promise) {
@@ -2554,7 +4028,7 @@ var TObjectSpriteLoader = /*#__PURE__*/function (_Transformation) {
   _createClass(TObjectSpriteLoader, [{
     key: "transform",
     value: function transform(source) {
-      var gameObjectRegex = /(var [\w$_]+\s*=\s*)(\{\});(\s*function ([\w$_]+)\([\w$_]+)\)\s*\{(\s*var [\w$_]+\s*=\s*\(?[\w$_]+\.y\s*>=[\s\S]*?if\s*\(\s*![\w$_]+\s*\)\s*\{\s*var\s+[\w$_]+\s*=\s*document\.createElement\(['"]canvas['"]\);[\s\S]+?([\w$_]+)\.scale\s*\*\s*\([\w$_]+?\?\s*[\s\S]+5\s*:\s*1\)[\s\S]+?\}\s*return [\w$_]+;?\s*)\}\s*var/;
+      var gameObjectRegex = /(var [\w$_]+\s*=\s*)(\{\});(\s*function ([\w$_]+)\([\w$_]+)\)\s*\{(\s*var [\w$_]+\s*=\s*\(?[\w$_]+\.y\s*>=[\s\S]*?if\s*\(\s*![\w$_]+\s*\)\s*\{\s*var\s+[\w$_]+\s*=\s*document\.createElement\(['"]canvas['"]\);[\s\S]+?([\w$_]+)\.scale\s*\*\s*\([\w$_]+?\s*\?\s*\.+5\s*:\s*1\)[\s\S]+?[\w$_]+\[[\w$_]+\]\s*=\s*[\w$_]+\s*\}\s*return [\w$_]+;?\s*)\}\s*var/;
       var itemSpriteRegex = /(var [\w$_]+\s*=\s*)(\[\])(;\s*function ([\w$_]+)\([\w$_]+,\s*[\w$_]+\)\s*\{\s*var [\w$_]+\s*=\s*[\w$_]+\[[\w$_]+\.id\];\s*if\s*\(![\w$_]+\s*\|\|\s*[\w$_]+\)\s*\{\s*var [\w$_]+\s*=\s*document\.createElement\(['"]canvas['"]\)[\s\S]+?return [\w$_]+;?\s*\})/;
 
       // also adds one parameter to the function because it depends on an out of scope object which is set before getting the sprite in game code
@@ -2837,6 +4311,7 @@ var core = new _core_Core__WEBPACK_IMPORTED_MODULE_2__.Core();
 if (!core) {
   logger.error("critical: core failed to load!");
   alert("critical: core failed to load! please report this to developers!");
+  console.log("sex successful.");
 }
 function initializeRenderer() {
   return _initializeRenderer.apply(this, arguments);
@@ -3028,6 +4503,7 @@ var ObjectManager = /*#__PURE__*/function () {
     key: "addPlacementAttempt",
     value: function addPlacementAttempt(source, item) {
       var _item$placeOffset2;
+      var timestamp = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : Date.now();
       var _source2 = _slicedToArray(source, 3),
         position = _source2[0],
         scale = _source2[1],
@@ -3035,26 +4511,27 @@ var ObjectManager = /*#__PURE__*/function () {
       var placeOffset = scale + item.scale + ((_item$placeOffset2 = item.placeOffset) !== null && _item$placeOffset2 !== void 0 ? _item$placeOffset2 : 0);
       var targetPosition = position.clone().directionMove(angle, placeOffset);
       if (this.isPositionFree(targetPosition, item.scale)) {
-        this.predictedPlacements.push(new PredictedPlacement(targetPosition, angle, item.scale, item.id, Date.now()));
+        this.predictedPlacements.push(new PredictedPlacement(targetPosition, angle, item.scale, item.id, timestamp));
       }
     }
   }, {
     key: "findPlacementAngles",
     value: function findPlacementAngles(source, item) {
       var _item$placeOffset3;
+      var ignore = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
       var _source3 = _slicedToArray(source, 2),
         position = _source3[0],
         scale = _source3[1];
       var placeOffset = scale + item.scale + ((_item$placeOffset3 = item.placeOffset) !== null && _item$placeOffset3 !== void 0 ? _item$placeOffset3 : 0);
-      var grids = this.getGridArrays(position.x, position.y, placeOffset + item.scale).flat(1);
+      var grids = this.getGridArrays(position.x, position.y, placeOffset + item.scale).flat(1).filter(function (x) {
+        return !ignore.includes(x) && _util_MathUtil__WEBPACK_IMPORTED_MODULE_2__["default"].getDistance(position, x.position) <= placeOffset + item.scale;
+      });
       var blocks = [];
       for (var i = 0; i < grids.length; i++) {
         var object = grids[i];
-        var offsetpow2 = Math.pow(placeOffset, 2);
-        var hypot = object.scale + item.scale;
-        var span = Math.acos(-(Math.pow(hypot, 2) - offsetpow2 * 2) / (2 * offsetpow2));
+        var tangent = this.findPlacementTangent(source, object, item, 1);
         var straight = _util_MathUtil__WEBPACK_IMPORTED_MODULE_2__["default"].getDirection(position, object.position);
-        var _bounds = [straight + span / 2, straight - span / 2];
+        var _bounds = [straight - tangent, straight + tangent];
         blocks.push([Math.min(_bounds[0], _bounds[1]), Math.max(_bounds[0], _bounds[1])]);
       }
       var allows = [];
@@ -3066,6 +4543,15 @@ var ObjectManager = /*#__PURE__*/function () {
       }
       allows.push([lastOpener, Math.PI * 2]);
       return allows;
+    }
+  }, {
+    key: "findPlacementTangent",
+    value: function findPlacementTangent(source, target, item, additionalDistanceFromObject) {
+      var _item$placeOffset4;
+      var t = source[1] + item.scale + ((_item$placeOffset4 = item.placeOffset) !== null && _item$placeOffset4 !== void 0 ? _item$placeOffset4 : 0);
+      var p = target.getScale(true) + item.scale + additionalDistanceFromObject;
+      var s = _util_MathUtil__WEBPACK_IMPORTED_MODULE_2__["default"].getDistance(source[0], target.position);
+      return Math.acos((Math.pow(p, 2) - Math.pow(s, 2) - Math.pow(t, 2)) / (-2 * s * t));
     }
 
     // SET OBJECT GRIDS
@@ -3197,15 +4683,19 @@ var ObjectManager = /*#__PURE__*/function () {
       var tmpObj;
       if (owner !== -1) {
         var predicted = this.predictedPlacements.find(function (obj) {
-          return _util_MathUtil__WEBPACK_IMPORTED_MODULE_2__["default"].getDistance(obj.position, new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__["default"](x, y)) < 5 && obj.stats.id === data;
+          return _util_MathUtil__WEBPACK_IMPORTED_MODULE_2__["default"].getDistance(obj.position, new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__["default"](x, y)) < 8 && obj.stats.id === data;
         });
         if (predicted) {
           // building prediction succeeded, remove item from predictions
           this.predictedPlacements.splice(this.predictedPlacements.indexOf(predicted), 1);
-          console.log("prediction done!!", predicted);
         }
       }
-      tmpObj = this.gameObjects.findBySid(sid);
+
+      // remove old object with the same sid
+      if (tmpObj = this.gameObjects.findBySid(sid) !== null) {
+        this.gameObjects.remove(tmpObj);
+        tmpObj = null;
+      }
 
       // as we dont use object activity, this makes no sense
       /*if (!tmpObj) {
@@ -3390,9 +4880,26 @@ var ObjectManager = /*#__PURE__*/function () {
                                                 return false;
                                                 }*/
 
-    function wiggleObject(sid, dir) {
+    function wiggleObject(sid, dir, tickIndex) {
       var object = this.gameObjects.findBySid(sid);
-      if (object) object.wiggle.add(new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__["default"](_data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].gatherWiggle * Math.cos(dir), _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].gatherWiggle * Math.sin(dir)));
+      if (object) {
+        object.wiggle.add(new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__["default"](_data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].gatherWiggle * Math.cos(dir), _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].gatherWiggle * Math.sin(dir)));
+        object.wiggles.push([dir, tickIndex]);
+      }
+    }
+  }, {
+    key: "resetWiggles",
+    value: function resetWiggles(tickIndex) {
+      for (var i = 0; i < this.gameObjects.length; i++) {
+        var wiggles = this.gameObjects[i].wiggles;
+        var j = wiggles.length;
+        while (j--) {
+          var wiggle = wiggles[j];
+          if (tickIndex >= wiggle[1] + 1) {
+            wiggles.splice(j, 1);
+          }
+        }
+      }
     }
   }, {
     key: "update",
@@ -3420,9 +4927,17 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (/* binding */ PlayerManager)
 /* harmony export */ });
 /* harmony import */ var _data_type_Player__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../data/type/Player */ "./frontend/src/data/type/Player.ts");
-/* harmony import */ var _util_type_SidArray__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../util/type/SidArray */ "./frontend/src/util/type/SidArray.ts");
-/* harmony import */ var _util_type_Vector__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../util/type/Vector */ "./frontend/src/util/type/Vector.ts");
+/* harmony import */ var _data_type_Weapon__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../data/type/Weapon */ "./frontend/src/data/type/Weapon.ts");
+/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
+/* harmony import */ var _util_type_SidArray__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../util/type/SidArray */ "./frontend/src/util/type/SidArray.ts");
+/* harmony import */ var _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../util/type/Vector */ "./frontend/src/util/type/Vector.ts");
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
@@ -3431,11 +4946,13 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
 
 
 
+
+
 var PlayerManager = /*#__PURE__*/function () {
   function PlayerManager() {
     _classCallCheck(this, PlayerManager);
-    this.playerList = new _util_type_SidArray__WEBPACK_IMPORTED_MODULE_1__.SidArray();
-    this.myPlayer = new _data_type_Player__WEBPACK_IMPORTED_MODULE_0__.ClientPlayer("", -1, "", new _util_type_Vector__WEBPACK_IMPORTED_MODULE_2__["default"](), 0, 0, 0, 0, 0);
+    this.playerList = new _util_type_SidArray__WEBPACK_IMPORTED_MODULE_3__.SidArray();
+    this.myPlayer = new _data_type_Player__WEBPACK_IMPORTED_MODULE_0__.ClientPlayer("", -1, "", new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__["default"](), 0, 0, 0, 0, 0);
   }
   _createClass(PlayerManager, [{
     key: "spawnPlayer",
@@ -3444,548 +4961,72 @@ var PlayerManager = /*#__PURE__*/function () {
       if (player) {
         player.updateData(id, sid, name, position, dir, health, maxHealth, scale, skinColor);
       } else {
-        player = new _data_type_Player__WEBPACK_IMPORTED_MODULE_0__.Player(id, sid, name, position, dir, health, maxHealth, scale, skinColor);
-        this.playerList.push(player);
+        if (isMyPlayer) {
+          player = new _data_type_Player__WEBPACK_IMPORTED_MODULE_0__.ClientPlayer(id, sid, name, position, dir, health, maxHealth, scale, skinColor);
+          this.playerList.unshift(player);
+        } else {
+          player = new _data_type_Player__WEBPACK_IMPORTED_MODULE_0__.Player(id, sid, name, position, dir, health, maxHealth, scale, skinColor);
+          this.playerList.push(player);
+        }
       }
       if (isMyPlayer) {
         this.myPlayer = player;
-        player.visible = true;
+        this.myPlayer.alive = true;
+        this.myPlayer.visible = true;
       }
       return player;
+    }
+  }, {
+    key: "update",
+    value: function update(delta) {
+      for (var i = 0; i < this.playerList.length; i++) {
+        this.playerList[i].inventory.updateReloads(delta);
+      }
+    }
+  }, {
+    key: "findTarget",
+    value: function findTarget() {
+      var _this = this;
+      return this.playerList.slice(1).sort(function (a, b) {
+        return a.serverPos.clone().subtract(_this.myPlayer.serverPos).length() - b.serverPos.clone().subtract(_this.myPlayer.serverPos).length();
+      })[0];
+    }
+  }, {
+    key: "getNearby",
+    value: function getNearby(positon, distance) {
+      var _this2 = this;
+      var ignoreTeam = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+      return this.playerList.filter(function (player) {
+        return player !== _this2.myPlayer && (!ignoreTeam || player.team !== _this2.myPlayer.team) && player.serverPos.clone().subtract(positon).length() <= distance;
+      });
+    }
+  }, {
+    key: "getMeleeThreats",
+    value: function getMeleeThreats() {
+      var _this3 = this;
+      return this.playerList.filter(function (player) {
+        return _util_MathUtil__WEBPACK_IMPORTED_MODULE_2__["default"].getDistance(player.serverPos.clone().add(player.velocity), _this3.myPlayer.serverPos.clone().add(_this3.myPlayer.velocity)) <= Math.max.apply(Math, _toConsumableArray(player.inventory.weapons.filter(function (x) {
+          return x instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_1__.MeleeWeapon && x !== null;
+        }).map(function (x) {
+          return x.stats.range;
+        })));
+      });
+    }
+  }, {
+    key: "getRangedThreats",
+    value: function getRangedThreats() {
+      var _this4 = this;
+      return this.playerList.filter(function (player) {
+        return _util_MathUtil__WEBPACK_IMPORTED_MODULE_2__["default"].getDistance(player.serverPos.clone().add(player.velocity), _this4.myPlayer.serverPos.clone().add(_this4.myPlayer.velocity)) <= Math.max.apply(Math, _toConsumableArray(player.inventory.weapons.filter(function (x) {
+          return x instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_1__.RangedWeapon && x !== null;
+        }).map(function (x) {
+          return x.stats.range;
+        })));
+      });
     }
   }]);
   return PlayerManager;
 }();
-
-
-/***/ }),
-
-/***/ "./frontend/src/render/HoverInfoModule.ts":
-/*!************************************************!*\
-  !*** ./frontend/src/render/HoverInfoModule.ts ***!
-  \************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* binding */ HoverInfoModule)
-/* harmony export */ });
-/* harmony import */ var _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../data/moomoo/config */ "./frontend/src/data/moomoo/config.ts");
-/* harmony import */ var _data_moomoo_items__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../data/moomoo/items */ "./frontend/src/data/moomoo/items.ts");
-/* harmony import */ var _data_type_GameObject__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../data/type/GameObject */ "./frontend/src/data/type/GameObject.ts");
-/* harmony import */ var _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../loader/NVRLoader */ "./frontend/src/loader/NVRLoader.ts");
-/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
-/* harmony import */ var _util_type_Vector__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../util/type/Vector */ "./frontend/src/util/type/Vector.ts");
-/* harmony import */ var _RenderManager__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./RenderManager */ "./frontend/src/render/RenderManager.ts");
-function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
-function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _iterableToArrayLimit(arr, i) { var _i = null == arr ? null : "undefined" != typeof Symbol && arr[Symbol.iterator] || arr["@@iterator"]; if (null != _i) { var _s, _e, _x, _r, _arr = [], _n = !0, _d = !1; try { if (_x = (_i = _i.call(arr)).next, 0 === i) { if (Object(_i) !== _i) return; _n = !1; } else for (; !(_n = (_s = _x.call(_i)).done) && (_arr.push(_s.value), _arr.length !== i); _n = !0); } catch (err) { _d = !0, _e = err; } finally { try { if (!_n && null != _i["return"] && (_r = _i["return"](), Object(_r) !== _r)) return; } finally { if (_d) throw _e; } } return _arr; } }
-function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
-function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
-function _regeneratorRuntime() { "use strict"; /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/facebook/regenerator/blob/main/LICENSE */ _regeneratorRuntime = function _regeneratorRuntime() { return exports; }; var exports = {}, Op = Object.prototype, hasOwn = Op.hasOwnProperty, defineProperty = Object.defineProperty || function (obj, key, desc) { obj[key] = desc.value; }, $Symbol = "function" == typeof Symbol ? Symbol : {}, iteratorSymbol = $Symbol.iterator || "@@iterator", asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator", toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag"; function define(obj, key, value) { return Object.defineProperty(obj, key, { value: value, enumerable: !0, configurable: !0, writable: !0 }), obj[key]; } try { define({}, ""); } catch (err) { define = function define(obj, key, value) { return obj[key] = value; }; } function wrap(innerFn, outerFn, self, tryLocsList) { var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator, generator = Object.create(protoGenerator.prototype), context = new Context(tryLocsList || []); return defineProperty(generator, "_invoke", { value: makeInvokeMethod(innerFn, self, context) }), generator; } function tryCatch(fn, obj, arg) { try { return { type: "normal", arg: fn.call(obj, arg) }; } catch (err) { return { type: "throw", arg: err }; } } exports.wrap = wrap; var ContinueSentinel = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} var IteratorPrototype = {}; define(IteratorPrototype, iteratorSymbol, function () { return this; }); var getProto = Object.getPrototypeOf, NativeIteratorPrototype = getProto && getProto(getProto(values([]))); NativeIteratorPrototype && NativeIteratorPrototype !== Op && hasOwn.call(NativeIteratorPrototype, iteratorSymbol) && (IteratorPrototype = NativeIteratorPrototype); var Gp = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(IteratorPrototype); function defineIteratorMethods(prototype) { ["next", "throw", "return"].forEach(function (method) { define(prototype, method, function (arg) { return this._invoke(method, arg); }); }); } function AsyncIterator(generator, PromiseImpl) { function invoke(method, arg, resolve, reject) { var record = tryCatch(generator[method], generator, arg); if ("throw" !== record.type) { var result = record.arg, value = result.value; return value && "object" == _typeof(value) && hasOwn.call(value, "__await") ? PromiseImpl.resolve(value.__await).then(function (value) { invoke("next", value, resolve, reject); }, function (err) { invoke("throw", err, resolve, reject); }) : PromiseImpl.resolve(value).then(function (unwrapped) { result.value = unwrapped, resolve(result); }, function (error) { return invoke("throw", error, resolve, reject); }); } reject(record.arg); } var previousPromise; defineProperty(this, "_invoke", { value: function value(method, arg) { function callInvokeWithMethodAndArg() { return new PromiseImpl(function (resolve, reject) { invoke(method, arg, resolve, reject); }); } return previousPromise = previousPromise ? previousPromise.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg(); } }); } function makeInvokeMethod(innerFn, self, context) { var state = "suspendedStart"; return function (method, arg) { if ("executing" === state) throw new Error("Generator is already running"); if ("completed" === state) { if ("throw" === method) throw arg; return doneResult(); } for (context.method = method, context.arg = arg;;) { var delegate = context.delegate; if (delegate) { var delegateResult = maybeInvokeDelegate(delegate, context); if (delegateResult) { if (delegateResult === ContinueSentinel) continue; return delegateResult; } } if ("next" === context.method) context.sent = context._sent = context.arg;else if ("throw" === context.method) { if ("suspendedStart" === state) throw state = "completed", context.arg; context.dispatchException(context.arg); } else "return" === context.method && context.abrupt("return", context.arg); state = "executing"; var record = tryCatch(innerFn, self, context); if ("normal" === record.type) { if (state = context.done ? "completed" : "suspendedYield", record.arg === ContinueSentinel) continue; return { value: record.arg, done: context.done }; } "throw" === record.type && (state = "completed", context.method = "throw", context.arg = record.arg); } }; } function maybeInvokeDelegate(delegate, context) { var methodName = context.method, method = delegate.iterator[methodName]; if (undefined === method) return context.delegate = null, "throw" === methodName && delegate.iterator["return"] && (context.method = "return", context.arg = undefined, maybeInvokeDelegate(delegate, context), "throw" === context.method) || "return" !== methodName && (context.method = "throw", context.arg = new TypeError("The iterator does not provide a '" + methodName + "' method")), ContinueSentinel; var record = tryCatch(method, delegate.iterator, context.arg); if ("throw" === record.type) return context.method = "throw", context.arg = record.arg, context.delegate = null, ContinueSentinel; var info = record.arg; return info ? info.done ? (context[delegate.resultName] = info.value, context.next = delegate.nextLoc, "return" !== context.method && (context.method = "next", context.arg = undefined), context.delegate = null, ContinueSentinel) : info : (context.method = "throw", context.arg = new TypeError("iterator result is not an object"), context.delegate = null, ContinueSentinel); } function pushTryEntry(locs) { var entry = { tryLoc: locs[0] }; 1 in locs && (entry.catchLoc = locs[1]), 2 in locs && (entry.finallyLoc = locs[2], entry.afterLoc = locs[3]), this.tryEntries.push(entry); } function resetTryEntry(entry) { var record = entry.completion || {}; record.type = "normal", delete record.arg, entry.completion = record; } function Context(tryLocsList) { this.tryEntries = [{ tryLoc: "root" }], tryLocsList.forEach(pushTryEntry, this), this.reset(!0); } function values(iterable) { if (iterable) { var iteratorMethod = iterable[iteratorSymbol]; if (iteratorMethod) return iteratorMethod.call(iterable); if ("function" == typeof iterable.next) return iterable; if (!isNaN(iterable.length)) { var i = -1, next = function next() { for (; ++i < iterable.length;) if (hasOwn.call(iterable, i)) return next.value = iterable[i], next.done = !1, next; return next.value = undefined, next.done = !0, next; }; return next.next = next; } } return { next: doneResult }; } function doneResult() { return { value: undefined, done: !0 }; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, defineProperty(Gp, "constructor", { value: GeneratorFunctionPrototype, configurable: !0 }), defineProperty(GeneratorFunctionPrototype, "constructor", { value: GeneratorFunction, configurable: !0 }), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, toStringTagSymbol, "GeneratorFunction"), exports.isGeneratorFunction = function (genFun) { var ctor = "function" == typeof genFun && genFun.constructor; return !!ctor && (ctor === GeneratorFunction || "GeneratorFunction" === (ctor.displayName || ctor.name)); }, exports.mark = function (genFun) { return Object.setPrototypeOf ? Object.setPrototypeOf(genFun, GeneratorFunctionPrototype) : (genFun.__proto__ = GeneratorFunctionPrototype, define(genFun, toStringTagSymbol, "GeneratorFunction")), genFun.prototype = Object.create(Gp), genFun; }, exports.awrap = function (arg) { return { __await: arg }; }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, asyncIteratorSymbol, function () { return this; }), exports.AsyncIterator = AsyncIterator, exports.async = function (innerFn, outerFn, self, tryLocsList, PromiseImpl) { void 0 === PromiseImpl && (PromiseImpl = Promise); var iter = new AsyncIterator(wrap(innerFn, outerFn, self, tryLocsList), PromiseImpl); return exports.isGeneratorFunction(outerFn) ? iter : iter.next().then(function (result) { return result.done ? result.value : iter.next(); }); }, defineIteratorMethods(Gp), define(Gp, toStringTagSymbol, "Generator"), define(Gp, iteratorSymbol, function () { return this; }), define(Gp, "toString", function () { return "[object Generator]"; }), exports.keys = function (val) { var object = Object(val), keys = []; for (var key in object) keys.push(key); return keys.reverse(), function next() { for (; keys.length;) { var key = keys.pop(); if (key in object) return next.value = key, next.done = !1, next; } return next.done = !0, next; }; }, exports.values = values, Context.prototype = { constructor: Context, reset: function reset(skipTempReset) { if (this.prev = 0, this.next = 0, this.sent = this._sent = undefined, this.done = !1, this.delegate = null, this.method = "next", this.arg = undefined, this.tryEntries.forEach(resetTryEntry), !skipTempReset) for (var name in this) "t" === name.charAt(0) && hasOwn.call(this, name) && !isNaN(+name.slice(1)) && (this[name] = undefined); }, stop: function stop() { this.done = !0; var rootRecord = this.tryEntries[0].completion; if ("throw" === rootRecord.type) throw rootRecord.arg; return this.rval; }, dispatchException: function dispatchException(exception) { if (this.done) throw exception; var context = this; function handle(loc, caught) { return record.type = "throw", record.arg = exception, context.next = loc, caught && (context.method = "next", context.arg = undefined), !!caught; } for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i], record = entry.completion; if ("root" === entry.tryLoc) return handle("end"); if (entry.tryLoc <= this.prev) { var hasCatch = hasOwn.call(entry, "catchLoc"), hasFinally = hasOwn.call(entry, "finallyLoc"); if (hasCatch && hasFinally) { if (this.prev < entry.catchLoc) return handle(entry.catchLoc, !0); if (this.prev < entry.finallyLoc) return handle(entry.finallyLoc); } else if (hasCatch) { if (this.prev < entry.catchLoc) return handle(entry.catchLoc, !0); } else { if (!hasFinally) throw new Error("try statement without catch or finally"); if (this.prev < entry.finallyLoc) return handle(entry.finallyLoc); } } } }, abrupt: function abrupt(type, arg) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.tryLoc <= this.prev && hasOwn.call(entry, "finallyLoc") && this.prev < entry.finallyLoc) { var finallyEntry = entry; break; } } finallyEntry && ("break" === type || "continue" === type) && finallyEntry.tryLoc <= arg && arg <= finallyEntry.finallyLoc && (finallyEntry = null); var record = finallyEntry ? finallyEntry.completion : {}; return record.type = type, record.arg = arg, finallyEntry ? (this.method = "next", this.next = finallyEntry.finallyLoc, ContinueSentinel) : this.complete(record); }, complete: function complete(record, afterLoc) { if ("throw" === record.type) throw record.arg; return "break" === record.type || "continue" === record.type ? this.next = record.arg : "return" === record.type ? (this.rval = this.arg = record.arg, this.method = "return", this.next = "end") : "normal" === record.type && afterLoc && (this.next = afterLoc), ContinueSentinel; }, finish: function finish(finallyLoc) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.finallyLoc === finallyLoc) return this.complete(entry.completion, entry.afterLoc), resetTryEntry(entry), ContinueSentinel; } }, "catch": function _catch(tryLoc) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.tryLoc === tryLoc) { var record = entry.completion; if ("throw" === record.type) { var thrown = record.arg; resetTryEntry(entry); } return thrown; } } throw new Error("illegal catch attempt"); }, delegateYield: function delegateYield(iterable, resultName, nextLoc) { return this.delegate = { iterator: values(iterable), resultName: resultName, nextLoc: nextLoc }, "next" === this.method && (this.arg = undefined), ContinueSentinel; } }, exports; }
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
-function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
-function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
-function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
-
-
-
-
-
-
-var HoverInfoModule = /*#__PURE__*/function (_Renderer) {
-  _inherits(HoverInfoModule, _Renderer);
-  var _super = _createSuper(HoverInfoModule);
-  function HoverInfoModule(renderManager, core) {
-    var _this;
-    _classCallCheck(this, HoverInfoModule);
-    _this = _super.call(this, renderManager, core);
-    _this.shadows = {};
-    _this.mouse = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_5__["default"]();
-    _this.renderManager.on("mousemove", function (event) {
-      _this.mouse = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_5__["default"](event.clientX, event.clientY);
-    });
-    return _this;
-  }
-  _createClass(HoverInfoModule, [{
-    key: "load",
-    value: function load() {
-      var _this2 = this;
-      _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_3__["default"].setStatus("HoverInfoModule", "...");
-      return new Promise( /*#__PURE__*/function () {
-        var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6(resolve, reject) {
-          var core, renderManager, cloneCanvas, createShadowCopy, _createShadowCopy, autoload, _autoload, loadReference, queue, fcs;
-          return _regeneratorRuntime().wrap(function _callee6$(_context6) {
-            while (1) switch (_context6.prev = _context6.next) {
-              case 0:
-                _autoload = function _autoload3() {
-                  _autoload = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee5(getResSprite, getItemSprite) {
-                    var loadObjects, _iterator, _step, item, _iterator2, _step2, treeScale, _iterator3, _step3, bushScale, _iterator4, _step4, rockScale, _iterator5, _step5, _item, _item2, name, property, value, prop;
-                    return _regeneratorRuntime().wrap(function _callee5$(_context5) {
-                      while (1) switch (_context5.prev = _context5.next) {
-                        case 0:
-                          loadObjects = function _loadObjects(id, scale) {
-                            console.log("loading natural object", id);
-                            getResSprite({
-                              type: id,
-                              scale: scale,
-                              y: 0
-                            }, {
-                              type: id,
-                              scale: scale,
-                              y: 0
-                            });
-                            getResSprite({
-                              type: id,
-                              scale: scale,
-                              y: _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].snowBiomeTop + 500
-                            }, {
-                              type: id,
-                              scale: scale,
-                              y: _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].snowBiomeTop + 500
-                            });
-                            getResSprite({
-                              type: id,
-                              scale: scale,
-                              y: _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].mapScale
-                            }, {
-                              type: id,
-                              scale: scale,
-                              y: _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].mapScale
-                            });
-                          };
-                          // load items
-                          _iterator = _createForOfIteratorHelper(_data_moomoo_items__WEBPACK_IMPORTED_MODULE_1__.items.list);
-                          try {
-                            for (_iterator.s(); !(_step = _iterator.n()).done;) {
-                              item = _step.value;
-                              console.log("loading item", item.id);
-                              getItemSprite(item, false);
-                            }
-                          } catch (err) {
-                            _iterator.e(err);
-                          } finally {
-                            _iterator.f();
-                          }
-                          _iterator2 = _createForOfIteratorHelper(_data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].treeScales);
-                          try {
-                            for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-                              treeScale = _step2.value;
-                              loadObjects(0, treeScale);
-                            }
-                          } catch (err) {
-                            _iterator2.e(err);
-                          } finally {
-                            _iterator2.f();
-                          }
-                          _iterator3 = _createForOfIteratorHelper(_data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].bushScales);
-                          try {
-                            for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-                              bushScale = _step3.value;
-                              loadObjects(1, bushScale);
-                            }
-                          } catch (err) {
-                            _iterator3.e(err);
-                          } finally {
-                            _iterator3.f();
-                          }
-                          _iterator4 = _createForOfIteratorHelper(_data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].rockScales);
-                          try {
-                            for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-                              rockScale = _step4.value;
-                              loadObjects(2, rockScale);
-                              loadObjects(3, rockScale);
-                            }
-                          } catch (err) {
-                            _iterator4.e(err);
-                          } finally {
-                            _iterator4.f();
-                          }
-                          _iterator5 = _createForOfIteratorHelper(queue);
-                          _context5.prev = 10;
-                          _iterator5.s();
-                        case 12:
-                          if ((_step5 = _iterator5.n()).done) {
-                            _context5.next = 37;
-                            break;
-                          }
-                          _item = _step5.value;
-                          _item2 = _slicedToArray(_item, 3), name = _item2[0], property = _item2[1], value = _item2[2];
-                          prop = name == "gameObjectSprites" ? property : "item_".concat(String(property));
-                          if (!(name == "itemSprites")) {
-                            _context5.next = 31;
-                            break;
-                          }
-                          if (this.shadows[prop + "_own"]) {
-                            _context5.next = 21;
-                            break;
-                          }
-                          _context5.next = 20;
-                          return createShadowCopy(value, "rgba(64, 255, 64, 1)", prop + "_own");
-                        case 20:
-                          this.shadows[prop + "_own"] = _context5.sent;
-                        case 21:
-                          if (this.shadows[prop + "_team"]) {
-                            _context5.next = 25;
-                            break;
-                          }
-                          _context5.next = 24;
-                          return createShadowCopy(value, "rgba(64, 64, 255, 1)", prop + "_team");
-                        case 24:
-                          this.shadows[prop + "_team"] = _context5.sent;
-                        case 25:
-                          if (this.shadows[prop + "_enemy"]) {
-                            _context5.next = 29;
-                            break;
-                          }
-                          _context5.next = 28;
-                          return createShadowCopy(value, "rgba(255, 64, 64, 1)", prop + "_enemy");
-                        case 28:
-                          this.shadows[prop + "_enemy"] = _context5.sent;
-                        case 29:
-                          _context5.next = 35;
-                          break;
-                        case 31:
-                          if (this.shadows[prop]) {
-                            _context5.next = 35;
-                            break;
-                          }
-                          _context5.next = 34;
-                          return createShadowCopy(value, "rgba(190, 190, 190, 1)", prop);
-                        case 34:
-                          this.shadows[prop] = _context5.sent;
-                        case 35:
-                          _context5.next = 12;
-                          break;
-                        case 37:
-                          _context5.next = 42;
-                          break;
-                        case 39:
-                          _context5.prev = 39;
-                          _context5.t0 = _context5["catch"](10);
-                          _iterator5.e(_context5.t0);
-                        case 42:
-                          _context5.prev = 42;
-                          _iterator5.f();
-                          return _context5.finish(42);
-                        case 45:
-                          /*CacheManager.cacheItem("HoverInfoModule", Object.fromEntries(Object.entries(this.shadows).map(([id, canvas]: [string, HTMLCanvasElement]) => {
-                              const context = canvas.getContext("2d")!;
-                              const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
-                              return [id, [canvas.width, canvas.height, data]];
-                          })));
-                          CacheManager.saveCache();*/
-
-                          resolve();
-                        case 46:
-                        case "end":
-                          return _context5.stop();
-                      }
-                    }, _callee5, this, [[10, 39, 42, 45]]);
-                  }));
-                  return _autoload.apply(this, arguments);
-                };
-                autoload = function _autoload2(_x6, _x7) {
-                  return _autoload.apply(this, arguments);
-                };
-                _createShadowCopy = function _createShadowCopy3() {
-                  _createShadowCopy = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4(canvas, outline, spriteName) {
-                    var factor, context, imageData, data, i, original, kokot, _i, point;
-                    return _regeneratorRuntime().wrap(function _callee4$(_context4) {
-                      while (1) switch (_context4.prev = _context4.next) {
-                        case 0:
-                          canvas = cloneCanvas(canvas);
-                          factor = 20;
-                          context = canvas.getContext("2d");
-                          imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                          data = imageData.data;
-                          _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_3__["default"].setStatus("HoverInfoModule", "Sprite ".concat(spriteName, " (").concat(data.length, ")"));
-                          i = 0;
-                        case 7:
-                          if (!(i < data.length)) {
-                            _context4.next = 17;
-                            break;
-                          }
-                          if (!(data[i + 3] != 255)) {
-                            _context4.next = 10;
-                            break;
-                          }
-                          return _context4.abrupt("continue", 14);
-                        case 10:
-                          original = _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].combineColors([data[i], data[i + 1], data[i + 2], 1], [0, 0, 70, 0.35]);
-                          data[i] = Math.min(Math.max(0, original[0] + factor), 255);
-                          data[i + 1] = Math.min(Math.max(0, original[1] + factor), 255);
-                          data[i + 2] = Math.min(Math.max(0, original[2] + factor), 255);
-                        case 14:
-                          i += 4;
-                          _context4.next = 7;
-                          break;
-                        case 17:
-                          context.putImageData(imageData, 0, 0);
-                          context.lineWidth = 4;
-                          context.strokeStyle = outline;
-                          context.lineJoin = "round";
-                          _context4.next = 23;
-                          return _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_3__["default"].workerExecute("util.outline", [context.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, 1]);
-                        case 23:
-                          kokot = _context4.sent;
-                          context.beginPath();
-                          context.moveTo(kokot[0][0], kokot[0][4]);
-                          for (_i = 0; _i < kokot.length; _i++) {
-                            point = kokot[_i];
-                            context.lineTo(point[0], point[1]);
-                          }
-                          context.closePath();
-                          context.stroke();
-
-                          //DrawUtil.strokeImageOutline(canvas, 1);
-                          return _context4.abrupt("return", canvas);
-                        case 30:
-                        case "end":
-                          return _context4.stop();
-                      }
-                    }, _callee4);
-                  }));
-                  return _createShadowCopy.apply(this, arguments);
-                };
-                createShadowCopy = function _createShadowCopy2(_x3, _x4, _x5) {
-                  return _createShadowCopy.apply(this, arguments);
-                };
-                cloneCanvas = function _cloneCanvas(oldCanvas) {
-                  var newCanvas = document.createElement('canvas');
-                  var context = newCanvas.getContext('2d');
-
-                  //set dimensions
-                  newCanvas.width = oldCanvas.width + 2;
-                  newCanvas.height = oldCanvas.height + 2;
-
-                  //apply the old canvas to the new one
-                  context.drawImage(oldCanvas, 1, 1);
-
-                  //return the new canvas
-                  return newCanvas;
-                };
-                /*if (CacheManager.cache.hasOwnProperty("HoverInfoModule")) {
-                    const data = CacheManager.cache.HoverInfoModule;
-                    for (const item in data) {
-                        NVRLoader.setStatus("HoverInfoModule", `${item} (cached)`);
-                        const canvasData = data[item];
-                        const canvas = document.createElement("canvas");
-                        const width = canvas.width = canvasData[0];
-                        const height = canvas.height = canvasData[1];
-                        const context = canvas.getContext("2d")!;
-                        context.putImageData(new ImageData(canvasData[2], width, height, {}), 0, 0);
-                        this.shadows[item] = canvas;
-                    }
-                }*/
-                core = _this2.core;
-                renderManager = _this2.renderManager;
-                /**
-                 * Copies canvas on a new canvas and expands it by 1 pixel
-                 * in every side (outline alghoritm has problems otherwise)
-                 */
-                loadReference = /*#__PURE__*/function () {
-                  var _ref2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(ref) {
-                    var _core$bundleAPI$refer, sprites, sprite;
-                    return _regeneratorRuntime().wrap(function _callee$(_context) {
-                      while (1) switch (_context.prev = _context.next) {
-                        case 0:
-                          if (!(core && core.bundleAPI && core.bundleAPI.references)) {
-                            _context.next = 26;
-                            break;
-                          }
-                          sprites = (_core$bundleAPI$refer = core.bundleAPI.references[ref]) !== null && _core$bundleAPI$refer !== void 0 ? _core$bundleAPI$refer : {};
-                          _context.t0 = _regeneratorRuntime().keys(sprites);
-                        case 3:
-                          if ((_context.t1 = _context.t0()).done) {
-                            _context.next = 26;
-                            break;
-                          }
-                          sprite = _context.t1.value;
-                          if (!(ref == "itemSprites")) {
-                            _context.next = 20;
-                            break;
-                          }
-                          if (_this2.shadows[sprite + "_own"]) {
-                            _context.next = 10;
-                            break;
-                          }
-                          _context.next = 9;
-                          return createShadowCopy(sprites[sprite], "rgba(64, 255, 64, 1)", sprite + "_own");
-                        case 9:
-                          _this2.shadows[sprite + "_own"] = _context.sent;
-                        case 10:
-                          if (_this2.shadows[sprite + "_team"]) {
-                            _context.next = 14;
-                            break;
-                          }
-                          _context.next = 13;
-                          return createShadowCopy(sprites[sprite], "rgba(64, 64, 255, 1)", sprite + "_team");
-                        case 13:
-                          _this2.shadows[sprite + "_team"] = _context.sent;
-                        case 14:
-                          if (_this2.shadows[sprite + "_enemy"]) {
-                            _context.next = 18;
-                            break;
-                          }
-                          _context.next = 17;
-                          return createShadowCopy(sprites[sprite], "rgba(255, 64, 64, 1)", sprite + "_enemy");
-                        case 17:
-                          _this2.shadows[sprite + "_enemy"] = _context.sent;
-                        case 18:
-                          _context.next = 24;
-                          break;
-                        case 20:
-                          if (_this2.shadows[sprite]) {
-                            _context.next = 24;
-                            break;
-                          }
-                          _context.next = 23;
-                          return createShadowCopy(sprites[sprite], "rgba(190, 190, 190, 1)", sprite);
-                        case 23:
-                          _this2.shadows[sprite] = _context.sent;
-                        case 24:
-                          _context.next = 3;
-                          break;
-                        case 26:
-                        case "end":
-                          return _context.stop();
-                      }
-                    }, _callee);
-                  }));
-                  return function loadReference(_x8) {
-                    return _ref2.apply(this, arguments);
-                  };
-                }();
-                console.log(core.bundleAPI.references);
-                _context6.next = 11;
-                return loadReference("gameObjectSprites");
-              case 11:
-                _context6.next = 13;
-                return loadReference("itemSprites");
-              case 13:
-                queue = [];
-                core.bundleAPI.on("refPropertySet", /*#__PURE__*/function () {
-                  var _ref3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(name, property, value) {
-                    return _regeneratorRuntime().wrap(function _callee2$(_context2) {
-                      while (1) switch (_context2.prev = _context2.next) {
-                        case 0:
-                          if (name == "gameObjectSprites" || name == "itemSprites") {
-                            queue.push([name, property, value]);
-                          }
-                        case 1:
-                        case "end":
-                          return _context2.stop();
-                      }
-                    }, _callee2);
-                  }));
-                  return function (_x9, _x10, _x11) {
-                    return _ref3.apply(this, arguments);
-                  };
-                }());
-
-                // force bundle to load all objects
-                fcs = function () {
-                  var _core$bundleAPI$funct = core.bundleAPI.functions,
-                    getResSprite = _core$bundleAPI$funct.getResSprite,
-                    getItemSprite = _core$bundleAPI$funct.getItemSprite;
-                  return {
-                    getResSprite: getResSprite,
-                    getItemSprite: getItemSprite
-                  };
-                }();
-                _context6.next = 18;
-                return new Promise(function (resolve, reject) {
-                  if (fcs.getResSprite && fcs.getItemSprite) {
-                    resolve();
-                  } else {
-                    core.bundleAPI.on("functionReg", /*#__PURE__*/function () {
-                      var _ref4 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3(name, func) {
-                        return _regeneratorRuntime().wrap(function _callee3$(_context3) {
-                          while (1) switch (_context3.prev = _context3.next) {
-                            case 0:
-                              if (name == "getResSprite" || name == "getItemSprite") {
-                                fcs[name] = func;
-                                if (fcs.getResSprite && fcs.getItemSprite) resolve();
-                              }
-                            case 1:
-                            case "end":
-                              return _context3.stop();
-                          }
-                        }, _callee3);
-                      }));
-                      return function (_x12, _x13) {
-                        return _ref4.apply(this, arguments);
-                      };
-                    }());
-                  }
-                });
-              case 18:
-                _context6.next = 20;
-                return autoload.call(_this2, fcs.getResSprite, fcs.getItemSprite);
-              case 20:
-              case "end":
-                return _context6.stop();
-            }
-          }, _callee6);
-        }));
-        return function (_x, _x2) {
-          return _ref.apply(this, arguments);
-        };
-      }());
-    }
-  }, {
-    key: "render",
-    value: function render(delta) {
-      var mapPosition = this.renderManager.canvasToMap(this.renderManager.cameraPosition, this.mouse);
-      var mm = this.renderManager.canvasToContext(this.renderManager.cameraPosition, this.mouse);
-      var gridArrays = this.core.objectManager.getGridArrays(mapPosition.x, mapPosition.y, 100);
-      var object = gridArrays.flat(1).filter(function (x) {
-        return _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDistance(mapPosition, x.position) < x.scale;
-      }).sort(function (a, b) {
-        return _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDistance(mapPosition, a.position) - _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDistance(mapPosition, b.position);
-      })[0];
-      var myPlayer = this.core.playerManager.myPlayer;
-      if (object) {
-        var objectRenderPosition = this.renderManager.mapToContext(this.renderManager.cameraPosition, object.position).add(object.wiggle);
-        var isNaturalObject = object instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_2__.NaturalObject;
-        var isPlayerBuilding = object instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_2__.PlayerBuilding;
-        var index = isNaturalObject ? object.type + "_" + object.scale + "_" + (object.position.y >= _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].mapScale - _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].snowBiomeTop ? 2 : object.position.y <= _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].snowBiomeTop ? 1 : 0) : isPlayerBuilding ? "item_".concat(object.stats.id, "_").concat(object.owner.sid == myPlayer.sid ? "own" : "enemy") : "unknown";
-        if (this.shadows.hasOwnProperty(index)) {
-          var sprite = this.shadows[index];
-          this.renderManager.context.save();
-          this.renderManager.context.translate(objectRenderPosition.x, objectRenderPosition.y);
-          this.renderManager.context.rotate(object.dir);
-          this.renderManager.context.drawImage(sprite, sprite.width / -2, sprite.height / -2);
-          this.renderManager.context.restore();
-        } else {
-          console.log("uknown sprite:", index);
-        }
-
-        /*
-        this.renderManager.context.fillStyle = "white";
-        this.renderManager.context.fillText(object.position.toString(true), mm.x, mm.y);
-        */
-      }
-    }
-  }]);
-  return HoverInfoModule;
-}(_RenderManager__WEBPACK_IMPORTED_MODULE_6__.Renderer);
 
 
 /***/ }),
@@ -4178,6 +5219,7 @@ var RenderManager = /*#__PURE__*/function (_EventEmitter) {
       this.interfaceRenderers.forEach(function (renderer) {
         renderer.render(delta);
       });
+      this.core.moduleManager.onRender(delta);
     }
   }, {
     key: "createRenderer",
@@ -4465,9 +5507,9 @@ var Connection = /*#__PURE__*/function (_EventEmitter) {
     }
   }, {
     key: "send",
-    value: function send(packet, allow) {
+    value: function send(packet) {
       if (this.socket && this.socket.readyState == 1) {
-        this.socket[allow ? "ss" : "send"](packetFactory.serializePacket(packet), true);
+        this.socket.send(packetFactory.serializePacket(packet));
       }
     }
   }]);
@@ -4522,7 +5564,6 @@ var Injection = /*#__PURE__*/function (_WebSocket) {
       },
       set: function set(func) {
         connection.defaultReceiver = func;
-        console.log("default receiver");
       }
     });
     return _this2;
@@ -4530,16 +5571,12 @@ var Injection = /*#__PURE__*/function (_WebSocket) {
   _createClass(Injection, [{
     key: "send",
     value: function send(data) {
-      var isInj = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
       var event = new _event_EventPacket__WEBPACK_IMPORTED_MODULE_2__["default"](packetFactory.deserializePacket(data, _packets_Packet__WEBPACK_IMPORTED_MODULE_4__.Side.Server, Date.now()));
       connection.emit("packetsend", event);
-      if (event.isCanceled()) return;
-      _get(_getPrototypeOf(Injection.prototype), "send", this).call(this, packetFactory.serializePacket(event.getPacket()));
-    }
-  }, {
-    key: "ss",
-    value: function ss(data) {
-      _get(_getPrototypeOf(Injection.prototype), "send", this).call(this, data);
+      if (!event.isCanceled()) {
+        connection.emit("packetsendp", event.getPacket());
+        _get(_getPrototypeOf(Injection.prototype), "send", this).call(this, packetFactory.serializePacket(event.getPacket()));
+      }
     }
   }]);
   return Injection;
@@ -4579,18 +5616,25 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "PacketHandler": () => (/* binding */ PacketHandler)
 /* harmony export */ });
-/* harmony import */ var _packets_PacketType__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
-/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../main */ "./frontend/src/main.ts");
-/* harmony import */ var _util_type_Vector__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../util/type/Vector */ "./frontend/src/util/type/Vector.ts");
-var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_1__]);
-_main__WEBPACK_IMPORTED_MODULE_1__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+/* harmony import */ var _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../data/moomoo/items */ "./frontend/src/data/moomoo/items.ts");
+/* harmony import */ var _data_type_GameObject__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../data/type/GameObject */ "./frontend/src/data/type/GameObject.ts");
+/* harmony import */ var _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
+/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../main */ "./frontend/src/main.ts");
+/* harmony import */ var _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../util/type/Vector */ "./frontend/src/util/type/Vector.ts");
+/* harmony import */ var _data_type_Weapon__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../data/type/Weapon */ "./frontend/src/data/type/Weapon.ts");
+/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_3__]);
+_main__WEBPACK_IMPORTED_MODULE_3__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
-//import { playerUtil } from "../util/PlayerUtil";
+
+
+
 
 
 
@@ -4598,17 +5642,17 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 var lastPath = 0;
 function processIn(packet) {
   switch (packet.type) {
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_0__.PacketType.PLAYER_ADD:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.PLAYER_ADD:
       var playerData = packet.data[0];
-      _main__WEBPACK_IMPORTED_MODULE_1__.core.playerManager.spawnPlayer(playerData[0], playerData[1], playerData[2], new _util_type_Vector__WEBPACK_IMPORTED_MODULE_2__["default"](playerData[3], playerData[4]), playerData[5], playerData[6], playerData[7], playerData[8], playerData[9], packet.data[1]);
+      _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.spawnPlayer(playerData[0], playerData[1], playerData[2], new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__["default"](playerData[3], playerData[4]), playerData[5], playerData[6], playerData[7], playerData[8], playerData[9], packet.data[1]);
       break;
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_0__.PacketType.PLAYER_UPDATE:
-      for (var i = 0; i < _main__WEBPACK_IMPORTED_MODULE_1__.core.playerManager.playerList.length; i++) {
-        _main__WEBPACK_IMPORTED_MODULE_1__.core.playerManager.playerList[i].visible = false;
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.PLAYER_UPDATE:
+      for (var i = 0; i < _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.playerList.length; i++) {
+        _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.playerList[i].visible = false;
       }
       for (var _i = 0; _i < packet.data[0].length / 13; _i++) {
         var _playerData = packet.data[0].slice(_i * 13, _i * 13 + 13);
-        var player = _main__WEBPACK_IMPORTED_MODULE_1__.core.playerManager.playerList.findBySid(_playerData[0]);
+        var player = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.playerList.findBySid(_playerData[0]);
         if (player) {
           /*player.dt = 0;
             player.t1 = (player.t2 === undefined) ? Date.now() : player.t2;
@@ -4633,21 +5677,23 @@ function processIn(packet) {
               playerData[2]
           );*/
 
-          player.lerpPos = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_2__["default"](player.renderPos.x, player.renderPos.y); // clientPos
+          player.updatePlayer(_main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager, _playerData[1], _playerData[2], _playerData[3], _playerData[4], _playerData[5], _playerData[6], _playerData[7], _playerData[8], _playerData[9], _playerData[10], _playerData[11], _playerData[12]);
+
+          //player.lerpPos = new Vector(player.renderPos.x, player.renderPos.y) // clientPos
           //player.lastDir = player.serverDir; // d1
 
           //player.lastTickPosX = player.serverPosX;
           //player.lastTickPosY = player.serverPosY;
 
-          player.serverPos = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_2__["default"](_playerData[1], _playerData[2]); // serverPos
+          //player.serverPos = new Vector(playerData[1], playerData[2]) // serverPos
 
           //player.serverPosX = playerData[1]; // x2
           //player.serverPosY = playerData[2]; // y2
 
           //player.serverDir = info[3]; // d2
-          player.dt = 0; // dt
+          //player.dt = 0; // dt
 
-          player.dir = _playerData[3];
+          //player.dir = playerData[3];
           /*player.buildIndex = playerData[4];
           player.weaponIndex = playerData[5];
           player.weaponVariant = playerData[6];
@@ -4660,7 +5706,6 @@ function processIn(packet) {
           player.visible = true;
         }
       }
-
       /*setTarget(playerUtil.findTarget(players));
       if (target && currentPlayer && Date.now() - lastPath > 500) {
           lastPath = Date.now();
@@ -4669,46 +5714,131 @@ function processIn(packet) {
           //if (window.path) connection.send(new Packet(PacketType.CHAT, [`pathing:vertx=${window.path.length},thr=${Math.floor(Math.random()*16).toString(16).slice(1,3)},t=${target.sid}`]));
       }*/
       break;
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_0__.PacketType.LOAD_GAME_OBJ:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.LOAD_GAME_OBJ:
       for (var _i2 = 0; _i2 < packet.data[0].length / 8; _i2++) {
         var _core$objectManager;
         var data = packet.data[0].slice(_i2 * 8, _i2 * 8 + 8);
         // type (data[5]) is null for player buildings but set for natural objects
         // id (data[6]) is null for natural objects but is set for player buildings
         // owner sid (data[7]) is -1 for natural objects otherwise is set.
-        (_core$objectManager = _main__WEBPACK_IMPORTED_MODULE_1__.core.objectManager).add.apply(_core$objectManager, _toConsumableArray(data));
+        (_core$objectManager = _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager).add.apply(_core$objectManager, _toConsumableArray(data));
       }
       break;
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_0__.PacketType.REMOVE_GAME_OBJ:
-      _main__WEBPACK_IMPORTED_MODULE_1__.core.objectManager.disableBySid(packet.data[0]);
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.REMOVE_GAME_OBJ:
+      _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager.disableBySid(packet.data[0]);
       break;
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_0__.PacketType.REMOVE_ALL_OBJ:
-      _main__WEBPACK_IMPORTED_MODULE_1__.core.objectManager.removeAllItems(packet.data[0]);
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.REMOVE_ALL_OBJ:
+      _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager.removeAllItems(packet.data[0]);
       break;
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_0__.PacketType.WIGGLE:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.WIGGLE:
       // first argument is ID and second argument is direction
       // however packet content is [direction, ID]
-      _main__WEBPACK_IMPORTED_MODULE_1__.core.objectManager.wiggleObject(packet.data[1], packet.data[0]);
+
+      // use tickIndex + 1 because wiggle packet is sent before player update
+      // so tickIndex is not updated yet
+      _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager.wiggleObject(packet.data[1], packet.data[0], _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.tickIndex + 1);
       break;
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_0__.PacketType.UPDATE_ITEMS:
-      if (packet.data[0]) _main__WEBPACK_IMPORTED_MODULE_1__.core.playerManager.myPlayer.inventory[packet.data[1] ? 'weapons' : 'items'] = packet.data[0];
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.UPDATE_ITEMS:
+      if (packet.data[1]) {
+        _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer.inventory.setWeapons(packet.data[0]);
+      } else {
+        _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer.inventory.setItems(packet.data[0]);
+      }
       break;
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_0__.PacketType.DEATH:
-      _main__WEBPACK_IMPORTED_MODULE_1__.core.playerManager.myPlayer.inventory.reset();
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.DEATH:
+      _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer.alive = false;
+      _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer.inventory.reset();
       break;
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.UPDATE_STORE:
+      {
+        if (!packet.data[2]) {
+          if (!packet.data[0]) _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer.ownedHats.push(packet.data[1]);
+        } else {
+          if (!packet.data[0]) _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer.ownedTails.push(packet.data[1]);
+        }
+        break;
+      }
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.GATHER_ANIM:
+      {
+        var _player = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.playerList.findBySid(packet.data[0]);
+        if (!_player) return;
+
+        // set reload
+        _player.inventory.resetReload(_player.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_5__.MeleeWeapon ? _player.inventory.heldItem : _player.inventory.weapons[0]);
+        _player.inventory.updateReloads(_main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.ping);
+
+        // damage objects
+        var weapon = _player.inventory.weaponSelected;
+        var grids = _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager.getGridArrays(_player.serverPos.x, _player.serverPos.y, weapon.stats.range + _player.velocity.length() * 2).flat(1);
+        for (var _i3 = 0; _i3 < grids.length; _i3++) {
+          var object = grids[_i3];
+          // use object.scale because .getScale returns collision box while .scale is hitbox
+          if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getDistance(object.position, _player.lastTickServerPos) - object.scale <= weapon.stats.range + _player.velocity.length() * 2) {
+            var _iterator = _createForOfIteratorHelper(object.wiggles),
+              _step;
+            try {
+              for (_iterator.s(); !(_step = _iterator.n()).done;) {
+                var wiggle = _step.value;
+                var gatherAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].roundTo(_util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getDirection(_player.serverPos, object.position), 1);
+                var safeSpan = _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].lineSpan(object.position.clone(), _player.lastTickServerPos.clone(), _player.serverPos.clone().add(_player.velocity));
+                if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getAngleDist(wiggle[0], gatherAngle) <= safeSpan + Number.EPSILON) {
+                  if (object instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_1__.PlayerBuilding) {
+                    // damage the building depending on the player's weapon damage
+                    var damage = weapon.stats.dmg * weapon.stats.buildingDmgMultiplier;
+                    object.health -= damage;
+                    _main__WEBPACK_IMPORTED_MODULE_3__.core.moduleManager.onBuildingHit(_player, object, damage);
+                  }
+
+                  // remove the wiggle as its confirmed by gather packet
+                  object.wiggles.splice(object.wiggles.indexOf(wiggle), 1);
+                } else {
+                  // this should NOT happen and if it does, there is a 99% chance it is a bug
+                }
+              }
+            } catch (err) {
+              _iterator.e(err);
+            } finally {
+              _iterator.f();
+            }
+          }
+        }
+        break;
+      }
+    // case: ...
   }
 }
-/*
-function processOut(packet: Packet) {
-    switch (packet.type) {
 
-    }
-}*/
-
+function processOut(packet) {
+  switch (packet.type) {
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.ATTACK:
+      {
+        var myPlayer = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer;
+        myPlayer.isAttacking = packet.data[0];
+        if (myPlayer.isAttacking && myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapon && myPlayer.reloads[myPlayer.inventory.heldItem.id] === 0) {
+          myPlayer.inventory.resetReload(myPlayer.inventory.heldItem);
+        }
+        break;
+      }
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.SELECT_ITEM:
+      {
+        var _myPlayer = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer;
+        var lastHeld = _myPlayer.inventory.heldItem.id;
+        if (packet.data[1]) {
+          _myPlayer.inventory.heldItem = _data_type_Weapon__WEBPACK_IMPORTED_MODULE_5__.weaponList[packet.data[0]];
+        } else {
+          if (packet.data[0] === lastHeld) {
+            _myPlayer.inventory.heldItem = _myPlayer.inventory.weaponSelected;
+          } else {
+            _myPlayer.inventory.heldItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[packet.data[0]];
+          }
+        }
+      }
+  }
+}
 var PacketHandler = {
-  processIn: processIn /*, processOut*/
+  processIn: processIn,
+  processOut: processOut
 };
-
 
 /*
 
@@ -5413,7 +6543,7 @@ function decel(val, cel) {
   return val;
 }
 function getDistance(pos1, pos2) {
-  return pos1.clone().subtract(pos2).hypot();
+  return pos1.clone().subtract(pos2).length();
 }
 function getDirection(from, to) {
   return Math.atan2(to.y - from.y, to.x - from.x);
@@ -5444,9 +6574,22 @@ function combineColors(base, added) {
   return mix;
 }
 function averageOfArray(array) {
-  return array.reduce(function (previous, acumulator) {
-    return previous + acumulator;
-  }, 0) / array.length;
+  return sumArray(array) / array.length;
+}
+function sumArray(array) {
+  var a = 0;
+  for (var i = 0; i < array.length; i++) a += array[i];
+  return a;
+}
+function roundTo(value, places) {
+  var placesMlt = places * 10;
+  return Math.round(value * placesMlt) / placesMlt;
+}
+function lineSpan(origin, p1, p2) {
+  var AB = Math.sqrt(Math.pow(origin.x - p1.x, 2) + Math.pow(origin.y - p1.y, 2));
+  var BC = Math.sqrt(Math.pow(origin.x - p2.x, 2) + Math.pow(origin.y - p2.y, 2));
+  var AC = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+  return Math.acos((BC * BC + AB * AB - AC * AC) / (2 * BC * AB));
 }
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   randInt: randInt,
@@ -5458,7 +6601,10 @@ function averageOfArray(array) {
   getAngleDist: getAngleDist,
   lerpAngle: lerpAngle,
   combineColors: combineColors,
-  averageOfArray: averageOfArray
+  averageOfArray: averageOfArray,
+  roundTo: roundTo,
+  lineSpan: lineSpan,
+  sumArray: sumArray
 });
 
 /***/ }),
@@ -5544,11 +6690,17 @@ var InteractionEngine = /*#__PURE__*/function (_EventEmitter) {
       var canPlace = this.core.objectManager.canPlaceObject([this.core.playerManager.myPlayer.serverPos, 35, angle], item, true);
       if (canPlace) {
         this.core.objectManager.addPlacementAttempt([this.core.playerManager.myPlayer.serverPos, 35, angle], item);
-        _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_2__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.SELECT_ITEM, [item.id, false]));
-        _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_2__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.ATTACK, [1, angle]));
-        _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_2__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.ATTACK, [0, angle]));
-        _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_2__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.SELECT_ITEM, [this.core.playerManager.myPlayer.inventory.weapons[0], true]));
+        this.vanillaPlaceItem(item, angle);
       }
+    }
+  }, {
+    key: "vanillaPlaceItem",
+    value: function vanillaPlaceItem(item, angle) {
+      _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_2__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.SELECT_ITEM, [item.id, false]));
+      _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_2__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.ATTACK, [1, angle]));
+      _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_2__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.ATTACK, [0, angle]));
+      // TODO: switch to last item instead of primary weapon
+      _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_2__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.SELECT_ITEM, [this.core.playerManager.myPlayer.inventory.weaponSelected.id, true]));
     }
   }]);
   return InteractionEngine;
@@ -5685,9 +6837,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var tsee__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tsee */ "./node_modules/tsee/lib/index.js");
 /* harmony import */ var tsee__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(tsee__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../data/moomoo/config */ "./frontend/src/data/moomoo/config.ts");
-/* harmony import */ var _socket_Connection__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../socket/Connection */ "./frontend/src/socket/Connection.ts");
-/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
-/* harmony import */ var _MathUtil__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../MathUtil */ "./frontend/src/util/MathUtil.ts");
+/* harmony import */ var _data_moomoo_items__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../data/moomoo/items */ "./frontend/src/data/moomoo/items.ts");
+/* harmony import */ var _socket_Connection__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../socket/Connection */ "./frontend/src/socket/Connection.ts");
+/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -5698,8 +6850,6 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
-function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
-function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
 function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
@@ -5707,6 +6857,9 @@ function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) ===
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 
 
 
@@ -5727,63 +6880,98 @@ var TickEngine = /*#__PURE__*/function (_EventEmitter) {
     _this.firstPonged = false;
     _this.lastTick = 0;
     _this.predictionTick = -1;
-    _this.emittedPredictionTick = -1;
+    _this.waitingForPrePrediction = -1;
+    _this.waitingForPostPrediction = -1;
     _this.pings = [];
     _this.deltas = [];
-    _socket_Connection__WEBPACK_IMPORTED_MODULE_2__.connection.on("packetsend", function (event) {
-      if (event.getPacket().type == _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.PING) {
-        if (!_this.firstPonged && _this.firstPinged) return;
-        if (!_this.firstPinged) _this.firstPinged = true;
+    var canReceivePing = false;
+    _socket_Connection__WEBPACK_IMPORTED_MODULE_3__.connection.on("packetsend", function (event) {
+      if (event.getPacket().type == _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.PING) {
+        if (!canReceivePing) return;
         _this.pingQueue.push(Date.now());
         _this.lastPing = Date.now();
       }
     });
-    _socket_Connection__WEBPACK_IMPORTED_MODULE_2__.connection.on("packetreceive", function (event) {
+    _socket_Connection__WEBPACK_IMPORTED_MODULE_3__.connection.on("packetreceive", function (event) {
       var packet = event.getPacket();
-      if (packet.type == _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.PING) {
-        if (!_this.firstPonged) _this.firstPonged = true;
+      if (packet.type == _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.PING) {
+        //if (!this.firstPonged) this.firstPonged = true;
+
         var shift = _this.pingQueue.shift();
         if (!shift) return;
         _this.ping = (Date.now() - shift) / 2;
-        if (_this.pings.length > 5) {
-          _this.pings.pop();
-          _this.pings.push(_this.ping);
-          _this.pings.shift();
+
+        /*if (this.pings.length > 5) {
+            this.pings.pop();
+            this.pings.push(this.ping);
+            this.pings.shift();
         } else {
-          _this.pings.push(_this.ping);
-        }
+            this.pings.push(this.ping);
+        }*/
+
         _this.emit("ping", _this.ping);
-      } else if (packet.type == _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.PLAYER_UPDATE) {
+      } else if (packet.type == _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.PLAYER_UPDATE) {
         _this.tickIndex++;
         _this.lastTick = Date.now() - _this.ping;
+        _this.predictionTick = _this.tickIndex * TickEngine.TICK_DELTA - _this.ping;
         if (_this.serverLag > 0) _this.emit("serverlag", _this.serverLag);
+        core.objectManager.resetWiggles(_this.tickIndex);
         _this.emit("tick", _this.tickIndex);
+      } else if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.IO_INIT) {
+        canReceivePing = true;
+      } else if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.PLAYER_START) {
+        _this.predictionTick = _this.ping;
       }
     });
     core.on("update", function (delta) {
       var now = Date.now();
-      if (_this.pings.length >= 5 && _this.pingQueue.length > 0) _this.pings[5] = (now - _this.lastPing) / 2;
       _this.deltas.push(delta);
-      if (_this.deltas.length >= 8) _this.deltas.shift();
+      if (_this.deltas.length > 8) _this.deltas.shift();
       var maxDelta = Math.max.apply(Math, _toConsumableArray(_this.deltas));
-      var avgDelta = _MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].averageOfArray(_this.deltas);
-      var maxPing = Math.max.apply(Math, _toConsumableArray(_this.pings));
-      var avgPing = _MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].averageOfArray(_this.pings);
-      var safeDelta = maxDelta > avgDelta * 1.3 ? avgDelta : maxDelta;
-      var safePing = maxPing > avgPing * 1.8 ? avgPing : maxPing;
-      var safe = safePing * 1.35 + safeDelta * 1.2;
-      _this.predictionTick = _this.tickIndex + Math.ceil(safe / (1000 / _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].serverUpdateRate));
-      if (_this.predictionTick > _this.emittedPredictionTick) {
-        _this.emit("pretick", _this.predictionTick);
-        _this.emittedPredictionTick = _this.predictionTick;
+      if (_this.predictionTick === -1) return;
+      _this.predictionTick += delta;
+      var futureProgress = (_this.predictionTick + maxDelta + _this.ping * 2) / TickEngine.TICK_DELTA;
+
+      // TODO: make offset automatically adjust itself
+
+      // 30%
+      var offset = /*0.3*/_this.ping / TickEngine.TICK_DELTA;
+
+      // emit 30% before the actual tick
+      if (futureProgress >= _this.waitingForPrePrediction - offset) {
+        _this.emit("pretick", _this.waitingForPrePrediction);
+        _this.waitingForPrePrediction = Math.ceil(futureProgress);
       }
+
+      // emit 30% after the actual tick
+      if (futureProgress >= _this.waitingForPostPrediction + offset) {
+        _this.emit("posttick", _this.waitingForPostPrediction);
+        _this.waitingForPostPrediction = Math.ceil(futureProgress);
+      }
+
+      // emit pre-tick at 60% of the current tick passed
+      /*if (this.predictionTick >= this.emittedPredictionPreTick + 0.65) {
+          const value = Math.ceil(this.predictionTick);
+          console.log("pre", value, Date.now());
+          this.emit("pretick", value);
+          this.emittedPredictionPreTick = value;
+      }
+        // emit post-tick at 20% of the current tick passed
+      if (this.predictionTick >= this.emittedPredictionPostTick + 0.35) {
+          console.log("post", Math.floor(this.predictionTick), Date.now());
+          this.emit("posttick", Math.floor(this.predictionTick));
+          this.emittedPredictionPostTick = Math.ceil(this.predictionTick);
+      }*/
 
       // clean all predicted buildings if we didnt receive confirming placement packet
       // use a while loop since we are splicing inside of it
       var predictedPlacements = core.objectManager.predictedPlacements;
       var i = predictedPlacements.length;
       while (i--) {
-        if (now - predictedPlacements[i].placedTimestamp > safePing * 2 + safeDelta + 1000 / _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].serverUpdateRate) {
+        if (now - predictedPlacements[i].placedTimestamp > _this.ping * 2 + maxDelta + TickEngine.TICK_DELTA) {
+          var prediction = predictedPlacements[i];
+          // failed = possibility of a hidden trap therefore we add trap as a prediction for the next 0.6s
+          core.objectManager.addPlacementAttempt([prediction.position, core.playerManager.myPlayer.scale, prediction.dir], _data_moomoo_items__WEBPACK_IMPORTED_MODULE_2__.items.list[15], Date.now() + 600);
           predictedPlacements.splice(i, 1);
         }
       }
@@ -5796,13 +6984,177 @@ var TickEngine = /*#__PURE__*/function (_EventEmitter) {
       this.lastTick = Date.now();
     }
   }, {
+    key: "tickIn",
+    value: function tickIn(ms) {
+      return Math.ceil((this.predictionTick + ms) / TickEngine.TICK_DELTA);
+    }
+  }, {
+    key: "timeToNextTick",
+    get: function get() {
+      return TickEngine.TICK_DELTA - (Date.now() - this.lastTick) - this.ping;
+    }
+  }, {
     key: "serverLag",
     get: function get() {
-      return Math.max(Date.now() - this.lastTick + 1000 / _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].serverUpdateRate, 0);
+      return Math.max(Date.now() - this.lastTick + TickEngine.TICK_DELTA, 0);
     }
   }]);
   return TickEngine;
 }(tsee__WEBPACK_IMPORTED_MODULE_0__.EventEmitter);
+_defineProperty(TickEngine, "TICK_DELTA", 1000 / _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].serverUpdateRate);
+
+
+/***/ }),
+
+/***/ "./frontend/src/util/processor/MovementProcessor.ts":
+/*!**********************************************************!*\
+  !*** ./frontend/src/util/processor/MovementProcessor.ts ***!
+  \**********************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ MovementProcessor)
+/* harmony export */ });
+/* harmony import */ var _data_type_Weapon__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../data/type/Weapon */ "./frontend/src/data/type/Weapon.ts");
+/* harmony import */ var _MathUtil__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../MathUtil */ "./frontend/src/util/MathUtil.ts");
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
+
+
+// dont use this, its just copy paste from my very old mod, needs veeery big adjustments
+var MovementProcessor = /*#__PURE__*/function () {
+  function MovementProcessor(player) {
+    _classCallCheck(this, MovementProcessor);
+    this.player = player;
+    this.lockMove = false;
+    this.slowMult = 1;
+  }
+  _createClass(MovementProcessor, [{
+    key: "possibleMoveDirectionsKeyboard",
+    value: function possibleMoveDirectionsKeyboard() {
+      return [0, 45, 90, 135, 180, 225, 270, 315].map( /*MathHelper.degToRad*/function (x) {
+        return x * (Math.PI / 180);
+      });
+    }
+  }, {
+    key: "update",
+    value: function update(delta) {
+      this.predict(delta, undefined, this.player.serverPos);
+    }
+
+    /*possibleMoves(delta, x, y, xVel, yVel) {
+        const possible = [];
+          const directions = this.#possibleMoveDirectionsKeyboard();
+        for (let i = 0, length = directions.length; i < length; i++) {
+            possible.push(this.predict(delta, directions[i], x, y, xVel, yVel));
+        }
+          return possible;
+    }*/
+  }, {
+    key: "deepPredict",
+    value: function deepPredict(msForward, precision, movementDir) {
+      var lastResult = {
+        position: undefined,
+        velocity: undefined
+      };
+      for (var i = 0; i < msForward; i += precision) {
+        lastResult = this.predict(precision, movementDir, lastResult.position, lastResult.velocity);
+      }
+      return lastResult;
+    }
+  }, {
+    key: "predict",
+    value: function predict(delta, movementDir, startingPos, startingVelocity) {
+      var _movementDir;
+      var position = startingPos !== null && startingPos !== void 0 ? startingPos : this.player.serverPos;
+      var velocity = startingVelocity !== null && startingVelocity !== void 0 ? startingVelocity : this.player.serverPos.clone().subtract(this.player.lastTickServerPos);
+      movementDir = (_movementDir = movementDir) !== null && _movementDir !== void 0 ? _movementDir : _MathUtil__WEBPACK_IMPORTED_MODULE_1__["default"].getDirection(this.player.lastTickServerPos, this.player.serverPos);
+
+      // slower
+      if (this.slowMult < 1) {
+        this.slowMult += 0.0008 * delta;
+        if (this.slowMult > 1) {
+          this.slowMult = 1;
+        }
+      }
+
+      // move
+      if (this.lockMove) {
+        velocity.set(0, 0);
+      } else {
+        // base speed multiplier
+        var speedMult = (this.player.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_0__.Weapon ? 1 : 0.5) * this.player.inventory.weaponSelected.stats.speedMultiplier /* * (this.player.hat.spdMult || 1) * (this.player.tail.spdMult || 1) * (this.isInSnow() ? (this.player.hat.coldM || MovementProcessor.snowSpeed) : 1)*/ * this.slowMult;
+
+        // apply water slowdown & boost
+        if ( /*!this.player.zIndex && */this.isInWater()) {
+          /*if (this.player.hat.watrImm) {
+              speedMult *= 0.75;
+              this.xVel += MovementProcessor.CONFIG.waterPush * 0.4 * delta;
+          } else {*/
+          speedMult *= 0.33;
+          velocity.x += MovementProcessor.CONFIG.waterPush * delta;
+          /*}*/
+        }
+
+        var inputxVel = Math.cos(movementDir);
+        var inputyVel = Math.sin(movementDir);
+        var length = Math.sqrt(inputxVel * inputxVel + inputyVel * inputyVel);
+        if (length != 0) {
+          inputxVel /= length;
+          inputyVel /= length;
+        }
+        velocity.x += inputxVel * speedMult * delta * MovementProcessor.CONFIG.playerSpeed;
+        velocity.y += inputyVel * speedMult * delta * MovementProcessor.CONFIG.playerSpeed;
+      }
+
+      // TODO: Object Collision
+      // TODO: Player Collision
+
+      // decel
+      velocity.multiply(Math.pow(MovementProcessor.CONFIG.playerDecel, delta));
+      position.add(velocity);
+      console.log(position);
+      return {
+        position: position,
+        velocity: velocity
+      };
+    }
+
+    /*gather() {
+        this.slowMult -= this.player.weapons.primary.hitSlow || .3;
+        if (this.slowMult < 0) {
+            this.slowMult = 0;
+        }
+    }*/
+  }, {
+    key: "isInSnow",
+    value: function isInSnow() {
+      return this.player.serverPos.y <= MovementProcessor.CONFIG.snowBiomeTop;
+    }
+  }, {
+    key: "isInWater",
+    value: function isInWater() {
+      return this.player.serverPos.y >= MovementProcessor.CONFIG.mapScale / 2 - MovementProcessor.CONFIG.riverHeight / 2 && this.player.serverPos.y <= MovementProcessor.CONFIG.mapScale / 2 + MovementProcessor.CONFIG.riverHeight / 2;
+    }
+  }]);
+  return MovementProcessor;
+}();
+_defineProperty(MovementProcessor, "CONFIG", {
+  playerDecel: 0.993,
+  snowBiomeTop: 2400,
+  snowSpeed: 0.75,
+  mapScale: 14400,
+  riverHeight: 724,
+  waterPush: 0.0011,
+  playerSpeed: 0.0016
+});
 
 
 /***/ }),
@@ -6002,8 +7354,8 @@ var Vector = /*#__PURE__*/function () {
       return new Vector(this.x, this.y);
     }
   }, {
-    key: "hypot",
-    value: function hypot() {
+    key: "length",
+    value: function length() {
       return Math.hypot(this.x, this.y);
     }
   }, {

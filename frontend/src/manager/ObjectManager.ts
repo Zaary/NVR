@@ -65,20 +65,17 @@ export default class ObjectManager {
         }
     }
 
-    findPlacementAngles(source: [Vector, number], item: Item) {
+    findPlacementAngles(source: [Vector, number], item: Item, ignore: GameObject[] = []) {
         const [position, scale] = source;
         const placeOffset = scale + item.scale + (item.placeOffset ?? 0);
-        const grids = this.getGridArrays(position.x, position.y, placeOffset + item.scale).flat(1);
+        const grids = this.getGridArrays(position.x, position.y, placeOffset + item.scale).flat(1).filter(x => !ignore.includes(x) && MathUtil.getDistance(position, x.position) <= placeOffset + item.scale);
 
         let blocks: [number, number][] = [];
         for (let i = 0; i < grids.length; i++) {
             const object = grids[i];
-
-            const offsetpow2 = Math.pow(placeOffset, 2);
-            const hypot = object.scale + item.scale;
-            const span = Math.acos(-(Math.pow(hypot, 2) - offsetpow2 * 2) / (2 * offsetpow2));
+            const tangent = this.findPlacementTangent(source, object, item, 1);
             const straight = MathUtil.getDirection(position, object.position);
-            const _bounds = [straight + span / 2, straight - span / 2];
+            const _bounds = [straight - tangent, straight + tangent];
             blocks.push([Math.min(_bounds[0], _bounds[1]), Math.max(_bounds[0], _bounds[1])]);
         }
 
@@ -214,15 +211,18 @@ export default class ObjectManager {
         let tmpObj;
 
         if (owner !== -1) { 
-            const predicted = this.predictedPlacements.find(obj => MathUtil.getDistance(obj.position, new Vector(x, y)) < 5 && obj.stats.id === data);
+            const predicted = this.predictedPlacements.find(obj => MathUtil.getDistance(obj.position, new Vector(x, y)) < 8 && obj.stats.id === data);
             if (predicted) {
                 // building prediction succeeded, remove item from predictions
                 this.predictedPlacements.splice(this.predictedPlacements.indexOf(predicted), 1);
-                console.log("prediction done!!", predicted);
             }
         }
 
-        tmpObj = this.gameObjects.findBySid(sid);
+        // remove old object with the same sid
+        if (tmpObj = this.gameObjects.findBySid(sid) !== null) {
+            this.gameObjects.remove(tmpObj);
+            tmpObj = null;
+        }
 
         // as we dont use object activity, this makes no sense
         /*if (!tmpObj) {

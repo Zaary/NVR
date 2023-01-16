@@ -10,7 +10,8 @@ enum State {
     IDLE,
     WINDMILLS,
     TRAP_ENEMY,
-    SPIKE_TRAPPED
+    SPIKE_TRAPPED,
+    
 }
 
 function combineAllowAngles(angles1: [number, number][], angles2: [number, number][]) {

@@ -2,13 +2,10 @@
   "name": "NVR",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "electron/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "serve": "ts-node backend/server/Server.ts",
-    "dev": "webpack --config webpack.dev.ts && npx ts-node backend/server/Server.ts",
-    "prodnobuild": "webpack --config webpack.prod.ts && npx ts-node backend/server/Server.ts",
-    "prod": "webpack --config webpack.prod.ts && tsc serverside && node backend/server/Server.ts"
+    "webpack": "webpack --config webpack.dev.ts --watch"
   },
   "repository": {
     "type": "git",

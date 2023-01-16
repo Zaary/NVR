@@ -1,5 +1,7 @@
 import { ClientPlayer, Player } from "../data/type/Player";
+import { MeleeWeapon, RangedWeapon } from "../data/type/Weapon";
 import { core } from "../main";
+import MathUtil from "../util/MathUtil";
 import { SidArray } from "../util/type/SidArray";
 import Vector from "../util/type/Vector";
 
@@ -45,7 +47,15 @@ export default class PlayerManager {
         return this.playerList.slice(1).sort((a, b) => a.serverPos.clone().subtract(this.myPlayer.serverPos).length() - b.serverPos.clone().subtract(this.myPlayer.serverPos).length())[0];
     }
 
-    getNearby(distance: number, condition?: (player: Player) => boolean) {
-        return this.playerList.filter(player => player.serverPos.clone().subtract(this.myPlayer.serverPos).length() <= distance && (!condition || condition(player)))[0];
+    getNearby(positon: Vector, distance: number, ignoreTeam = false) {
+        return this.playerList.filter(player => player !== this.myPlayer && (!ignoreTeam || player.team !== this.myPlayer.team) && player.serverPos.clone().subtract(positon).length() <= distance);
+    }
+
+    getMeleeThreats() {
+        return this.playerList.filter(player => MathUtil.getDistance(player.serverPos.clone().add(player.velocity), this.myPlayer.serverPos.clone().add(this.myPlayer.velocity)) <= Math.max(...player.inventory.weapons.filter(x => x instanceof MeleeWeapon && x !== null).map(x => x!.stats.range)));
+    }
+
+    getRangedThreats() {
+        return this.playerList.filter(player => MathUtil.getDistance(player.serverPos.clone().add(player.velocity), this.myPlayer.serverPos.clone().add(this.myPlayer.velocity)) <= Math.max(...player.inventory.weapons.filter(x => x instanceof RangedWeapon && x !== null).map(x => x!.stats.range)));
     }
 }

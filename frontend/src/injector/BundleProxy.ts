@@ -43,7 +43,7 @@ function evalBundle(code: string, injectedApi: any) {
     const logger = new Logger(window.console, "bundle-vm-" + hash);
 
     const exec = async () => {
-        vm.call(/*window*/vm, injectedApi, logger);
+        vm.call(/*window*/vm.bind(window), injectedApi, logger);
         const old: [Function | null, Function | undefined] = [window.onload, window.captchaCallback];
         window.onload = window.captchaCallback = () => {};
         if (_promise) await _promise;

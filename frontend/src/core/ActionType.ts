@@ -5,9 +5,10 @@
 enum ActionPriority {
     BIOMEHAT,
     AUTOBREAK,
-    AUTOHEAL,
     ANTIBULL,
-    ANTIINSTA
+    ANTIINSTA,
+    
+    FORCED
 }
 
 enum ActionType {

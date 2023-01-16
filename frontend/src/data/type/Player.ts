@@ -68,6 +68,10 @@ class Inventory {
 		}
 	}
 
+	remainingReloadTime(slot: WeaponSlot) {
+		return this.reloads[this.weapons[slot]?.id!];
+	}
+
 	findBestWeapon(finder: WeaponFinder) {
 		switch (finder) {
 			case WeaponFinder.BUILDING_BREAK:

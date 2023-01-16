@@ -60,7 +60,13 @@ function combineColors(base: Color, added: Color): Color {
 }
 
 function averageOfArray(array: number[]) {
-	return array.reduce((previous, acumulator) => previous + acumulator, 0) / array.length;
+	return sumArray(array) / array.length;
+}
+
+function sumArray(array: number[]) {
+	let a = 0;
+	for (let i = 0; i < array.length; i++) a += array[i];
+	return a;
 }
 
 function roundTo(value: number, places: number) {
@@ -87,5 +93,6 @@ export default {
 	combineColors,
 	averageOfArray,
 	roundTo,
-	lineSpan
+	lineSpan,
+	sumArray
 }
