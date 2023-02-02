@@ -26,8 +26,10 @@ import PacketGraphModule from "../render/interface/PacketGraphModule";
 import PlayerManager from "../manager/PlayerManager";
 import MathUtil from "../util/MathUtil";
 import Vector from "../util/type/Vector";
+import NVRLoader from "../loader/NVRLoader";
 
 const logger = new Logger("core");
+const sym = Symbol();
 
 let target: Player | null = null;
 
@@ -46,8 +48,19 @@ function setTarget(player: Player | null) {
 
 class Core extends EventEmitter {
 
-    public static VER = "1.0";
-    public static AUTHORS = ["Zaary", "Splex"];
+    public static get ENDPOINT() {
+        return "https://pleasingringedexpertise.gg69gamer.repl.co";
+    }
+
+    public static get VER() {
+        return new (class extends String { uformat() { return this.replace(/\./g, "_") } })("1.0.0");
+    }
+
+    public static get AUTHORS() {
+        return ["Zaary", "Splex"];
+    }
+
+    public loaded: boolean;
 
     private lastUpdate: number;
     private lastActionState: {
@@ -78,11 +91,42 @@ class Core extends EventEmitter {
     constructor() {
         super();
 
-        this.bundleAPI = new API();
-
         logger.info(`launched StarLit core version ${Core.VER} by ${Core.AUTHORS.join(", ")}`);
 
+        this.bundleAPI = new API();
 
+        this.loaded = false;
+
+        this.lastUpdate = Date.now();
+        this.scheduledActions = [];
+        this.lastActionState = {
+            hat: 0,
+            tail: 0,
+            attack: 0,
+            aim: 0,
+            weapon: 0
+        }
+
+        this.packetBlocks = {};
+
+        this.objectManager = new ObjectManager();
+        this.playerManager = new PlayerManager();
+        this.renderManager = null;
+        this.moduleManager = new ModuleManager();
+
+        this.tickEngine = new TickEngine(this);
+        this.packetEngine = new PacketCountEngine(this);
+        this.interactionEngine = new InteractionEngine(this);
+
+        this.mouseAngle = 0;
+    }
+
+    removePacketInterceptor489() {
+        NVRLoader.stop();
+    }
+
+    // just a disguise, its actually a function which initializes the core
+    removePacketInterceptor164() {
         this.lastUpdate = Date.now();
         this.scheduledActions = [];
         this.lastActionState = {
@@ -181,6 +225,9 @@ class Core extends EventEmitter {
         });
 
         setInterval(this.update.bind(this), 1);
+
+        this.loaded = true;
+        NVRLoader.stop();
     }
 
     patchBundle(src: string, promise: Promise<void>) {
@@ -280,4 +327,4 @@ class Core extends EventEmitter {
     }
 }
 
-export { Core, target, setTarget/*, pathfinder*/ }
+export { Core, target, setTarget/*, pathfinder*/, sym }

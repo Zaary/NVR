@@ -1,5 +1,6 @@
+import { items } from "../../../data/moomoo/items";
 import { Player } from "../../../data/type/Player";
-import { MeleeWeapon, RangedWeapon, Weapon, Weapons } from "../../../data/type/Weapon";
+import { MeleeWeapon, RangedWeapon, Weapon, Weapons, WeaponSlot } from "../../../data/type/Weapon";
 import EventPacket from "../../../event/EventPacket";
 import { core } from "../../../main";
 import { PacketType } from "../../../socket/packets/PacketType";
@@ -42,18 +43,45 @@ dmg: number - how much damage the weapon deals on hit
 */
 
 export default class AntiInsta extends Module {
+
+    private damagePotential: number;
+
     constructor() {
         super();
+        this.damagePotential = 0;
     }
 
     // if you send a packet in this method, it will arrive right before the tick happens serverside
     onPreTick(tickIndex: number): void {
-        
     }
 
     // if you send a packet in this method, it will arrive right after the tick happens serverside
     onPostTick(tickIndex: number): void {
-        
+
+        const threats = core.playerManager.getThreats();
+        this.damagePotential = 0
+        for (let i = 0; i < threats.length; i++) {
+            const tempThreat = threats[i];
+            if (tempThreat.inventory.weapons[1]) {
+                if (tempThreat.inventory.remainingReloadTime(WeaponSlot.SECONDARY) < 200) {
+                    this.damagePotential += /*tempThreat.inventory.weapons[1].stats.dmg*/50;
+                }//can u also do the thing like down there i used old myPlayer access way
+            }
+
+            if (tempThreat.inventory.remainingReloadTime(WeaponSlot.PRIMARY) === 0) {
+                this.damagePotential += tempThreat.inventory.weapons[0].stats.dmg;
+            }
+        };
+        if (this.damagePotential > 100) {
+            console.log("Damage Above 100 can be done be aware :<")
+            /* Auto Q */
+            if (core.tickEngine.ping > 80) {
+                const foodType = core.playerManager.myPlayer.inventory.items[0];
+                for (let i = 0; i < /*Math.ceil((100 - this.lastHealth) / healsUp)*/3; i++) {
+                    core.interactionEngine.vanillaPlaceItem(items.list[foodType], core.mouseAngle);
+                }
+            }
+        }
     }
 
     // this method gets called when we receive a player update packet meaning a tick has happened serverside
@@ -68,6 +96,24 @@ export default class AntiInsta extends Module {
 
     // this method gets fired when we receive a packet from server
     onPacketReceive(event: EventPacket): void {
+        const packet = event.getPacket();
+        if (packet.type === PacketType.HEALTH_UPDATE) {
+            if (core.tickEngine.ping > 80) return; // autoQ will be enough and this may cause clown so yeh
+            const [sid, health] = packet.data;
+            if (sid === core.playerManager.myPlayer.sid) {
+                if (health <= 60 && this.damagePotential >= 100) {
+                    const foodType = core.playerManager.myPlayer.inventory.items[0];
+                    const healsUp = foodType == 0 ? 20 : 40;
         
+                    for (let i = 0; i < /*Math.ceil((100 - this.lastHealth) / healsUp)*/3; i++) {
+                        core.interactionEngine.vanillaPlaceItem(items.list[foodType], core.mouseAngle);
+                    }
+
+                    
+                    event.cancel();
+                }
+            }
+        }
     }
+
 }

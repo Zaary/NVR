@@ -30,7 +30,7 @@ export default class Autoheal extends Module {
                 core.interactionEngine.vanillaPlaceItem(items.list[foodType], core.mouseAngle);
             }
             this.damageTime = Date.now();
-        } // ok
+        }
     }
 
     onPacketSend(event: EventPacket): void {

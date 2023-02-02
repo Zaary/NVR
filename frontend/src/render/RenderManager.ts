@@ -147,6 +147,8 @@ export default class RenderManager extends EventEmitter<{
     }
 
     private render() {
+        if (!this.core.loaded) return;
+
         const currentMs = Date.now();
         const delta = currentMs - this.lastRender;
         this.lastRender = currentMs;

@@ -8,6 +8,7 @@ import RenderManager from "./render/RenderManager";
 import { inject } from "./socket/Connection";
 import Logger from "./util/Logger";
 
+
 const logger = new Logger("main");
 
 inject();
@@ -18,7 +19,6 @@ const core = new Core();
 if (!core) {
     logger.error("critical: core failed to load!");
     alert("critical: core failed to load! please report this to developers!");
-    console.log("sex successful.");
 }
 
 async function initializeRenderer() {
@@ -37,7 +37,8 @@ const observer = new MutationObserver((mutations: MutationRecord[], observer: Mu
     for (const mutation of mutations) {
         for (const node of mutation.addedNodes) {
             if (node instanceof HTMLBodyElement) {
-                NVRLoader.start();
+                const vv = NVRLoader.x(Math.random());
+                NVRLoader.start((s: any) => { return s !== vv ? () => core.removePacketInterceptor489() : () => core.removePacketInterceptor164() });
             } else if ((<HTMLElement> node).tagName === "SCRIPT" && /var loadedScript/.test((<HTMLScriptElement> node).innerText)) {
                 node.addEventListener("beforescriptexecute", (e) => e.preventDefault(), { once: true });
                 node.parentElement!.removeChild(node);
@@ -61,5 +62,6 @@ observer.observe(document, {
 
 // @ts-ignore
 await NVRLoader.createWebWorker();
+
 
 export { core };

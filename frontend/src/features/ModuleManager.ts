@@ -8,6 +8,7 @@ import AutoBreak from "./modules/building/AutoBreak";
 import AutoPlacer from "./modules/building/AutoPlacer";
 import AutoReplace from "./modules/building/AutoReplace";
 import ItemPlacer from "./modules/building/ItemPlacer";
+import AntiInsta from "./modules/combat/AntiInsta";
 import Autoheal from "./modules/combat/Autoheal";
 import Module from "./modules/Module";
 import AutoHat from "./modules/player/AutoHat";
@@ -20,6 +21,7 @@ export default class ModuleManager {
         AutoPlacer,
         AutoReplace,
         ItemPlacer,
+        AntiInsta,
         Autoheal,
         AutoHat
     ];
@@ -71,7 +73,7 @@ export default class ModuleManager {
 
     onPacketReceive(event: EventPacket) {
         for (const module of this.modules) {
-            module.onPacketReceive(event);
+            if (!event.isCanceled()) module.onPacketReceive(event);
         }
     }
 

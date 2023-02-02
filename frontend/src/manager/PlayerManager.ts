@@ -58,4 +58,12 @@ export default class PlayerManager {
     getRangedThreats() {
         return this.playerList.filter(player => MathUtil.getDistance(player.serverPos.clone().add(player.velocity), this.myPlayer.serverPos.clone().add(this.myPlayer.velocity)) <= Math.max(...player.inventory.weapons.filter(x => x instanceof RangedWeapon && x !== null).map(x => x!.stats.range)));
     }
+
+    getVisible() {
+        return this.playerList.filter(player => player.visible);
+    }
+
+    getThreats() {
+        return this.getMeleeThreats().concat(this.getRangedThreats());
+    }
 }

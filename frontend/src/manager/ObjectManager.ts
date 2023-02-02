@@ -29,10 +29,6 @@ export default class ObjectManager {
         this.updateObjects = [];
 
         this.predictedPlacements = [];
-
-        Object.defineProperty(window, "objectManager", {
-            value: this
-        }); // lemme test it
     }
 
     canPlaceObject(source: [Vector, number, number], item: Item, lookupPredictions = false) {

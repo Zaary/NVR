@@ -7,6 +7,18 @@ import commonConfig from "./webpack.common"
 
 const prodConfig: Configuration = merge(commonConfig, {
     mode: "production",
+    optimization: {
+        minimizer: [
+            new TerserPlugin({
+                extractComments: false,
+                terserOptions: {
+                    mangle: {
+                        properties: true
+                    }
+                }
+            }),
+        ]
+    }
 });
 
 export default prodConfig;

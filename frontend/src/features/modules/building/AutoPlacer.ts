@@ -66,7 +66,7 @@ export default class AutoPlacer extends Module {
     constructor() {
         super();
         this.state = State.WINDMILLS;
-        this.toggled = false;
+        this.toggled = true;
         this.targetsTrappable = [];
         this.targetsTrapSpikable = [];
     }
@@ -175,15 +175,14 @@ export default class AutoPlacer extends Module {
     }
 
     onKeydown(keyCode: number): void {
-        if (keyCode == 82) {
+        /*if (keyCode == 82) {
             this.toggled = !this.toggled;
-        }
+        }*/
     }
 
-    onKeyup(keyCode: number): void {
-    }
+    onKeyup(keyCode: number): void {}
 
-    onRender(delta: number): void {
+    /*onRender(delta: number): void {
         const ctx = core.renderManager?.context!;
         const myPos = core.renderManager?.mapToContext(core.renderManager.cameraPosition, core.playerManager.myPlayer.renderPos)!;
         
@@ -195,5 +194,5 @@ export default class AutoPlacer extends Module {
             ctx.lineTo(myPos.x + Math.cos(a) * 30, myPos.y + Math.sin(a) * 30);
             ctx.stroke();
         }
-    }
+    }*/
 }

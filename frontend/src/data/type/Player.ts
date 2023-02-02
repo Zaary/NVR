@@ -68,6 +68,10 @@ class Inventory {
 		}
 	}
 
+	isReloaded(weaponSlot: WeaponSlot) {
+		
+	}
+
 	remainingReloadTime(slot: WeaponSlot) {
 		return this.reloads[this.weapons[slot]?.id!];
 	}

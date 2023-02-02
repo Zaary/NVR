@@ -91,3 +91,24 @@ body {
     text-align: center;
     font-size: 18px;
 }
+
+#loader .mark-error {
+    color: rgb(245, 55, 55);
+}
+
+#loader input[type=text] {
+    background: transparent;
+    backdrop-filter: saturate(50%);
+    width: 90%;
+    padding: 6px 10px;
+    margin: auto;
+    box-sizing: border-box;
+    border: 2px solid white;
+    border-radius: 4px;
+    color: white;
+    text-transform: uppercase;
+
+    &:focus {
+        outline: none;
+    }
+}
