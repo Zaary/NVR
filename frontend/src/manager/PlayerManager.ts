@@ -63,6 +63,10 @@ export default class PlayerManager {
         return this.playerList.filter(player => player.visible);
     }
 
+    isAnyoneInSight() {
+        return this.getVisible().length > 0;
+    }
+
     getThreats() {
         return this.getMeleeThreats().concat(this.getRangedThreats());
     }

@@ -14,4 +14,5 @@ export default abstract class Module {
     onRender(delta: number) {};
     onActionRun(action: Action) {};
     onBuildingHit(player: Player, building: PlayerBuilding, damage: number) {};
+    onBuildingBreak(building: PlayerBuilding) {};
 }

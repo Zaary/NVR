@@ -155,7 +155,7 @@ function processIn(packet: Packet) {
                         const gatherAngle = MathUtil.roundTo(MathUtil.getDirection(player.serverPos, object.position), 1);
                         const safeSpan = MathUtil.lineSpan(object.position.clone(), player.lastTickServerPos.clone(), player.serverPos.clone().add(player.velocity));
 
-                        if (MathUtil.getAngleDist(wiggle[0], gatherAngle) <= safeSpan + Number.EPSILON) {
+                        if (true/*MathUtil.getAngleDist(wiggle[0], gatherAngle) <= safeSpan + Number.EPSILON*/) {
                             if (object instanceof PlayerBuilding) {
                                 // damage the building depending on the player's weapon damage
                                 const damage = weapon.stats.dmg * weapon.stats.buildingDmgMultiplier;

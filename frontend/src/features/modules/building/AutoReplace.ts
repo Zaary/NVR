@@ -1,6 +1,7 @@
 import { Item, items } from "../../../data/moomoo/items";
 import { PlayerBuilding } from "../../../data/type/GameObject";
 import { Player } from "../../../data/type/Player";
+import EventPacket from "../../../event/EventPacket";
 import { core } from "../../../main";
 import { connection } from "../../../socket/Connection";
 import { Packet } from "../../../socket/packets/Packet";
@@ -20,6 +21,7 @@ export default class AutoReplace extends Module {
     private spamming: boolean;
     private buildData: BuildData | null;
     private placeLimiter: number;
+    private lastBreak: number;
 
     constructor() {
         super();
@@ -27,15 +29,27 @@ export default class AutoReplace extends Module {
         this.spamming = false;
         this.buildData = null;
         this.placeLimiter = 0;
+        this.lastBreak = -1;
+    }
+
+    tryToPlace() {
+        if (this.placeLimiter++ % 2 == 0 && core.playerManager.isAnyoneInSight()) {
+            core.interactionEngine.vanillaPlaceItem(this.buildData!.item, this.buildData!.angle);
+        }
     }
 
     onUpdate(delta: number): void {
         if (this.buildData !== null) {
-            if (this.placeLimiter++ % 4 == 0) core.interactionEngine.vanillaPlaceItem(this.buildData.item, this.buildData.angle);
+            this.tryToPlace();
         }
     }
 
     onPreTick(tickIndex: number): void {
+        if (this.buildData !== null && this.buildData.tick + 1 === tickIndex) {
+            this.buildData = null;
+            console.log("deleting build data");
+        }
+
         const myPlayer = core.playerManager.myPlayer;
         const spikeItem = items.list[myPlayer.inventory.items[2]];
         const trapItem = items.list[15];
@@ -46,11 +60,12 @@ export default class AutoReplace extends Module {
         for (let i = 0; i < predictedBreaks.length; i++) {
             const [breaker, building] = predictedBreaks[i];
             const buildingAngle = MathUtil.getDirection(myPlayer.serverPos, building.position);
-            
-            const nearbyPlayer = core.playerManager.getNearby(building.position, 220, true)[0];
+
+            const nearbyPlayer = breaker === myPlayer ? core.playerManager.getNearby(myPlayer.serverPos, 500, false)[0] : breaker;
 
             if (nearbyPlayer) {
                 const playerToBuilding = MathUtil.getDistance(nearbyPlayer.serverPos.clone().add(breaker.velocity), building.position);
+                console.log(nearbyPlayer);
 
                 if (playerToBuilding < nearbyPlayer.scale + building.scale + spikeItem.scale * 2 + myPlayer.scale + (spikeItem.placeOffset ?? 0)) {
                     const angles = core.objectManager.findPlacementAngles([myPlayer.serverPos, myPlayer.scale], spikeItem, [building]);
@@ -69,8 +84,8 @@ export default class AutoReplace extends Module {
                         tick: tickIndex
                     }
                 }
-
-                connection.send(new Packet(PacketType.CHAT, ["replacing [" + this.buildData.item.name + "]"]));
+                this.lastBreak = building.sid;
+                this.tryToPlace();
             }
         }
 
@@ -78,17 +93,30 @@ export default class AutoReplace extends Module {
     }
 
     onPostTick(tickIndex: number): void {
-        if (this.buildData !== null && this.buildData.tick === tickIndex) {
-            this.buildData = null;
-        }
+        if (this.buildData !== null) this.tryToPlace();
     }
 
     onBuildingHit(player: Player, building: PlayerBuilding, damage: number): void {
-        if (building.health <= damage) {
+        if (building.health <= damage * 2) {
             // +1 because after the weapon is reloaded in one tick, it only can gather in the tick after it
             const tick = core.tickEngine.tickIn(player.inventory.reloads[player.inventory.weaponSelected.id]) + 1;
             if (!this.predictedBreaks.has(tick)) this.predictedBreaks.set(tick, []);
             this.predictedBreaks.get(tick)!.push([player, building]);
+        }
+    }
+
+    onBuildingBreak(building: PlayerBuilding): void {
+        const angle = MathUtil.getDirection(core.playerManager.myPlayer.serverPos, building.position);
+        const trapItem = items.list[15];
+        if (this.buildData === null && this.lastBreak !== building.sid && MathUtil.getDistance(core.playerManager.myPlayer.serverPos, building.position) < 180) {
+            this.buildData = {
+                item: trapItem,
+                angle: angle,
+                tick: -1
+            }
+            this.placeLimiter = 0;
+            this.tryToPlace();
+            this.buildData = null;
         }
     }
 }

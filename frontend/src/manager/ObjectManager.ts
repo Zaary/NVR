@@ -1,3 +1,4 @@
+import { Core } from "../core/Core";
 import config from "../data/moomoo/config";
 import { Item, items } from "../data/moomoo/items";
 import { GameObject, NaturalObject, PlayerBuilding } from "../data/type/GameObject";
@@ -17,13 +18,15 @@ class PredictedPlacement extends PlayerBuilding {
 
 export default class ObjectManager {
 
+    private core: Core;
     private gameObjects: SidArray<GameObject>;
     private grids: Record<string, any>;
     private updateObjects: GameObject[];
 
     public predictedPlacements: PredictedPlacement[];
 
-    constructor() {
+    constructor(core: Core) {
+        this.core = core;
         this.gameObjects = new SidArray<GameObject>();
         this.grids = {};
         this.updateObjects = [];
@@ -134,13 +137,19 @@ export default class ObjectManager {
         this.removeObjGrid(obj);
         /*if (server) {
             if (obj.owner && obj.pps) obj.owner.pps -= obj.pps;*/
-            this.removeObjGrid(obj);
+            //this.removeObjGrid(obj);
 
             if (obj instanceof PlayerBuilding) {
+                const predictIndex = this.predictedPlacements.indexOf(this.predictedPlacements.find(o => o.sid === obj.sid)!);
+                if (predictIndex > -1) {
+                    this.predictedPlacements.splice(predictIndex, 1);
+                }
                 var tmpIndx = this.updateObjects.indexOf(obj);
                 if (tmpIndx >= 0) {
                     this.updateObjects.splice(tmpIndx, 1);
                 }
+
+                this.core.moduleManager.onBuildingBreak(obj);
             }
         /*}*/
     };
@@ -254,7 +263,7 @@ export default class ObjectManager {
     // DISABLE BY SID:
     disableBySid(sid: number) {
         for (var i = 0; i < this.gameObjects.length; ++i) {
-            if (this.gameObjects[i].sid == sid) {
+            if (this.gameObjects[i].sid === sid) {
                 this.disableObj(this.gameObjects[i]);
                 break;
             }

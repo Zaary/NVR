@@ -109,7 +109,7 @@ class Core extends EventEmitter {
 
         this.packetBlocks = {};
 
-        this.objectManager = new ObjectManager();
+        this.objectManager = new ObjectManager(this);
         this.playerManager = new PlayerManager();
         this.renderManager = null;
         this.moduleManager = new ModuleManager();
@@ -125,10 +125,11 @@ class Core extends EventEmitter {
         NVRLoader.stop();
     }
 
-    // just a disguise, its actually a function which initializes the core
+    // the name is just a disguise, its actually a function which initializes the core
     removePacketInterceptor164() {
         this.lastUpdate = Date.now();
-        this.scheduledActions = [];
+
+        /*this.scheduledActions = [];
         this.lastActionState = {
             hat: 0,
             tail: 0,
@@ -139,14 +140,14 @@ class Core extends EventEmitter {
 
         this.packetBlocks = {};
 
-        this.objectManager = new ObjectManager();
+        this.objectManager = new ObjectManager(this);
         this.playerManager = new PlayerManager();
         this.renderManager = null;
         this.moduleManager = new ModuleManager();
 
         this.tickEngine = new TickEngine(this);
         this.packetEngine = new PacketCountEngine(this);
-        this.interactionEngine = new InteractionEngine(this);
+        this.interactionEngine = new InteractionEngine(this);*/
 
         this.tickEngine.once("ping", this.packetEngine.handlePing.bind(this.packetEngine));
 

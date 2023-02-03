@@ -95,6 +95,12 @@ export default class ModuleManager {
         }
     }
 
+    onBuildingBreak(building: PlayerBuilding) {
+        for (const module of this.modules) {
+            module.onBuildingBreak(building);
+        }
+    }
+
     getModule(clazz: Class<Module>) {
         for (const module of this.modules) {
             if (module instanceof clazz) return module;
