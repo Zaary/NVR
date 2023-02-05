@@ -153,6 +153,7 @@ interface Item {
 	placeOffset?: number;
 	pre?: number;
 	dmg?: number;
+	healAmount?: number;
 	spritePadding?: number;
 	pDmg?: number;
 	turnSpeed?: number;
@@ -182,6 +183,7 @@ const list: Item[] = [{
 	name: "apple",
 	desc: "restores 20 health when consumed",
 	req: ["food", 10],
+	healAmount: 20,
 	/*consume: function(doer: Player) {
 		return doer.changeHealth(20, doer);
 	},*/
@@ -194,6 +196,7 @@ const list: Item[] = [{
 	name: "cookie",
 	desc: "restores 40 health when consumed",
 	req: ["food", 15],
+	healAmount: 40,
 	/*consume: function(doer: Player) {
 		return doer.changeHealth(40, doer);
 	},*/
@@ -206,6 +209,7 @@ const list: Item[] = [{
 	name: "cheese",
 	desc: "restores 30 health and another 50 over 5 seconds",
 	req: ["food", 25],
+	healAmount: 30,
 	/*consume: function(doer: Player) {
 		if (doer.changeHealth(30, doer) || doer.health < 100) {
 			doer.dmgOverTime.dmg = -10;

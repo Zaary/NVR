@@ -63,12 +63,12 @@ export default class AntiInsta extends Module {
         for (let i = 0; i < threats.length; i++) {
             const tempThreat = threats[i];
             if (tempThreat.inventory.weapons[1]) {
-                if (tempThreat.inventory.remainingReloadTime(WeaponSlot.SECONDARY) < 200) {
+                if (tempThreat.inventory.remainingReloadTime(WeaponSlot.SECONDARY) <= core.tickEngine.timeToNextTick) {
                     this.damagePotential += /*tempThreat.inventory.weapons[1].stats.dmg*/50;
                 }//can u also do the thing like down there i used old myPlayer access way
             }
 
-            if (tempThreat.inventory.remainingReloadTime(WeaponSlot.PRIMARY) === 0) {
+            if (tempThreat.inventory.remainingReloadTime(WeaponSlot.PRIMARY) <= core.tickEngine.timeToNextTick) {
                 this.damagePotential += tempThreat.inventory.weapons[0].stats.dmg;
             }
         };
@@ -78,7 +78,7 @@ export default class AntiInsta extends Module {
             if (core.tickEngine.ping > 80) {
                 const foodType = core.playerManager.myPlayer.inventory.items[0];
                 for (let i = 0; i < /*Math.ceil((100 - this.lastHealth) / healsUp)*/3; i++) {
-                    core.interactionEngine.vanillaPlaceItem(items.list[foodType], core.mouseAngle);
+                    //core.interactionEngine.vanillaPlaceItem(items.list[foodType], core.mouseAngle);
                 }
             }
         }
@@ -106,7 +106,7 @@ export default class AntiInsta extends Module {
                     const healsUp = foodType == 0 ? 20 : 40;
         
                     for (let i = 0; i < /*Math.ceil((100 - this.lastHealth) / healsUp)*/3; i++) {
-                        core.interactionEngine.vanillaPlaceItem(items.list[foodType], core.mouseAngle);
+                        //core.interactionEngine.vanillaPlaceItem(items.list[foodType], core.mouseAngle);
                     }
 
                     

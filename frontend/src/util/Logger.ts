@@ -34,15 +34,15 @@ class Logger {
     }
 
     info(...message: any[]) {
-        this.console.log(...format(this.id, Level.INFO, ...message));
+        this.console.info(...format(this.id, Level.INFO, ...message));
     }
     
     warn(...message: any[]) {
-        this.console.log(...format(this.id, Level.WARN, ...message));
+        this.console.warn(...format(this.id, Level.WARN, ...message));
     }
 
     error(...message: any[]) {
-        this.console.log(...format(this.id, Level.ERROR, ...message));
+        this.console.error(...format(this.id, Level.ERROR, ...message));
     }
 
     trace(...message: any[]) {

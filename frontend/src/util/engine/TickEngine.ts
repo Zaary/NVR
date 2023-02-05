@@ -8,6 +8,20 @@ import { Packet } from "../../socket/packets/Packet";
 import { PacketType } from "../../socket/packets/PacketType";
 import MathUtil from "../MathUtil";
 
+export enum TickRoundType {
+    ROUND,
+    FLOOR,
+    CEIL
+}
+
+function getStandardDeviation(array: number[]) {
+    const n = array.length;
+    const mean = array.reduce((a, b) => a + b) / n;
+    return Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n);
+}
+
+const roundArray = [Math.round, Math.floor, Math.ceil];
+
 class TickEngine extends EventEmitter<{
     ping: (ping: number) => void;
     serverlag: (lag: number) => void;
@@ -20,6 +34,8 @@ class TickEngine extends EventEmitter<{
 
     public static TICK_DELTA = 1000 / config.serverUpdateRate;
 
+    public static HAT_LOOP = [51, 50, 28, 29, 30, 36, 37, 38, 44, 35, 42, 43, 49];
+
     private pingQueue: number[];
     private lastPing: number;
     public ping: number;
@@ -28,8 +44,13 @@ class TickEngine extends EventEmitter<{
     private lastTick: number;
 
     private predictionTick: number;
-    private waitingForPrePrediction: number;
+    private nextPreTick: number;
     private waitingForPostPrediction: number;
+
+    private futureProgress: number;
+
+    private lastPredictedPre: number;
+    private lastPredictedPost: number;
 
     private pings: number[];
     private deltas: number[];
@@ -46,8 +67,13 @@ class TickEngine extends EventEmitter<{
         this.lastTick = 0;
 
         this.predictionTick = -1;
-        this.waitingForPrePrediction = -1;
-        this.waitingForPostPrediction = -1;
+        this.nextPreTick = 0;
+        this.waitingForPostPrediction = 0;
+
+        this.futureProgress = 0;
+
+        this.lastPredictedPre = -1;
+        this.lastPredictedPost = -1;
 
         this.pings = [];
         this.deltas = [];
@@ -74,13 +100,12 @@ class TickEngine extends EventEmitter<{
 
                 this.ping = (Date.now() - shift) / 2;
 
-                /*if (this.pings.length > 5) {
-                    this.pings.pop();
+                if (this.pings.length > 5) {
                     this.pings.push(this.ping);
                     this.pings.shift();
                 } else {
                     this.pings.push(this.ping);
-                }*/
+                }
 
                 this.emit("ping", this.ping);
             } else if (packet.type == PacketType.PLAYER_UPDATE) {
@@ -91,6 +116,7 @@ class TickEngine extends EventEmitter<{
                 if (this.serverLag > 0) this.emit("serverlag", this.serverLag);
 
                 core.objectManager.resetWiggles(this.tickIndex);
+                core.playerManager.resetSwingStreaks(this.tickIndex);
                 this.emit("tick", this.tickIndex);
             } else if (packet.type === PacketType.IO_INIT) {
                 canReceivePing = true;
@@ -103,47 +129,44 @@ class TickEngine extends EventEmitter<{
             const now = Date.now();
             
             this.deltas.push(delta);
-            if (this.deltas.length > 8) this.deltas.shift();
+            if (this.deltas.length > 5) this.deltas.shift();
 
             const maxDelta = Math.max(...this.deltas);
+            const maxPing = Math.max(...this.pings);
 
             if (this.predictionTick === -1) return;
             
             this.predictionTick += delta;
 
-            const futureProgress = (this.predictionTick + maxDelta + this.ping * 2) / TickEngine.TICK_DELTA;
-
-            // TODO: make offset automatically adjust itself
-
-            // 30%
-            const offset = /*0.3*/ this.ping / TickEngine.TICK_DELTA;
+            const offset = getStandardDeviation(this.deltas) + getStandardDeviation(this.pings);
+            const futureProgress = 1 + (this.predictionTick + delta + this.ping + offset) / TickEngine.TICK_DELTA;
+            this.futureProgress = futureProgress;
 
             // emit 30% before the actual tick
-            if (futureProgress >= this.waitingForPrePrediction - offset) {
-                this.emit("pretick", this.waitingForPrePrediction);
-                this.waitingForPrePrediction = Math.ceil(futureProgress);
+            if (futureProgress >= this.nextPreTick) {
+                if (futureProgress - this.nextPreTick >= 1) return this.nextPreTick = Math.ceil(futureProgress);
+
+                if (this.nextPreTick > this.lastPredictedPre) {
+                    const predictedTickIndex = this.nextPreTick;
+
+                    this.lastPredictedPre = predictedTickIndex;
+
+                    this.emit("pretick", predictedTickIndex);
+                    
+                    //const hat = TickEngine.HAT_LOOP[predictedTickIndex % TickEngine.HAT_LOOP.length];
+                    //connection.send(new Packet(PacketType.BUY_AND_EQUIP, [0, hat, 0]));
+                    //console.log("equip:", hat, "at tick:", predictedTickIndex);
+
+                    this.nextPreTick++;/*Math.ceil(futureProgress);*/
+                }
             }
 
             // emit 30% after the actual tick
-            if (futureProgress >= this.waitingForPostPrediction + offset) {
+            if (futureProgress >= this.waitingForPostPrediction + offset && this.waitingForPostPrediction > this.lastPredictedPost) {
                 this.emit("posttick", this.waitingForPostPrediction);
+                this.lastPredictedPost = this.waitingForPostPrediction;
                 this.waitingForPostPrediction = Math.ceil(futureProgress);
             }
-
-            // emit pre-tick at 60% of the current tick passed
-            /*if (this.predictionTick >= this.emittedPredictionPreTick + 0.65) {
-                const value = Math.ceil(this.predictionTick);
-                console.log("pre", value, Date.now());
-                this.emit("pretick", value);
-                this.emittedPredictionPreTick = value;
-            }
-
-            // emit post-tick at 20% of the current tick passed
-            if (this.predictionTick >= this.emittedPredictionPostTick + 0.35) {
-                console.log("post", Math.floor(this.predictionTick), Date.now());
-                this.emit("posttick", Math.floor(this.predictionTick));
-                this.emittedPredictionPostTick = Math.ceil(this.predictionTick);
-            }*/
 
             // clean all predicted buildings if we didnt receive confirming placement packet
             // use a while loop since we are splicing inside of it
@@ -166,6 +189,22 @@ class TickEngine extends EventEmitter<{
 
     tickIn(ms: number) {
         return Math.ceil((this.predictionTick + ms) / TickEngine.TICK_DELTA);
+    }
+
+    roundToTick(ms: number, type: TickRoundType) {
+        return roundArray[type]((this.lastTick % TickEngine.TICK_DELTA + ms) / TickEngine.TICK_DELTA) * TickEngine.TICK_DELTA;
+    }
+
+    getTickIndex(ms: number) {
+        return this.tickIndex + Math.ceil((ms - this.lastTick) / TickEngine.TICK_DELTA);
+    }
+
+    getNextPredictableTick() {
+        return Math.round(this.futureProgress) + 1;
+    }
+
+    isTickPredictable(tick: number) {
+        return tick - this.futureProgress > 1;
     }
 
     get timeToNextTick() {

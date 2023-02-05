@@ -55,8 +55,8 @@ function translateAllowAngles(placeableAngles: [number, number][], stepDeg: numb
 
 export default class AutoPlacer extends Module {
 
-    private targetsTrappable: Player[];
-    private targetsTrapSpikable: Player[];
+    private targetsTrappable: Set<Player>;
+    private targetsTrapSpikable: Set<Player>;
 
     private debugAngles: number[] = [];
 
@@ -67,13 +67,13 @@ export default class AutoPlacer extends Module {
         super();
         this.state = State.WINDMILLS;
         this.toggled = true;
-        this.targetsTrappable = [];
-        this.targetsTrapSpikable = [];
+        this.targetsTrappable = new Set();
+        this.targetsTrapSpikable = new Set();
     }
 
     calcState() {
-        this.targetsTrappable = [];
-        this.targetsTrapSpikable = [];
+        this.targetsTrappable.clear();
+        this.targetsTrapSpikable.clear();
 
         const myPlayer = core.playerManager.myPlayer;
         const enemies = core.playerManager.playerList.slice(1).filter(x => x.visible);
@@ -92,13 +92,13 @@ export default class AutoPlacer extends Module {
 
             if (distance <= trappingDistance && nextDistance <= trappingDistance && !enemy.state.isTrapped) {
                 this.state = State.TRAP_ENEMY;
-                this.targetsTrappable.push(enemy);
+                this.targetsTrappable.add(enemy);
             }
             
             if (enemy.state.isTrapped) {
                 if (MathUtil.getDistance(enemy.state.data.trap!.position, myPlayer.serverPos) - myPlayer.scale - trapItem.scale - spikeItem.scale * 2 - (spikeItem.placeOffset ?? 0) <= 0) {
                     this.state = State.SPIKE_TRAPPED;
-                    this.targetsTrapSpikable.push(enemy);
+                    this.targetsTrapSpikable.add(enemy);
                 }
             }
         }
@@ -106,7 +106,7 @@ export default class AutoPlacer extends Module {
         if (this.state === State.IDLE) this.state = State.WINDMILLS;
     }
 
-    onUpdate(delta: number): void {
+    onUpdate(tickIndex: number): void {
         if (!this.toggled) return;
 
         const myPlayer = core.playerManager.myPlayer;
@@ -137,8 +137,8 @@ export default class AutoPlacer extends Module {
             case State.TRAP_ENEMY: {
                 // TODO: use ping & tick based predicted position instead of last received positions (sometimes causes it to place trap on old enemy position)
                 const trapItem = items.list[15];
-                for (let i = 0; i < this.targetsTrappable.length; i++) {
-                    const target = this.targetsTrappable[i];
+                for (let iterator = this.targetsTrappable.values(), iteration = null, value = (iteration = iterator.next()).value; !iteration.done; value = (iteration = iterator.next()).value) {
+                    const target = value;
                     const targetDir = MathUtil.getDirection(myPlayer.serverPos, target.serverPos);
                     const trappingDistance = myPlayer.scale + target.scale + trapItem.scale + trapItem.scale * trapItem.colDiv! + trapItem.placeOffset!;
                     const angles = translateAllowAngles(core.objectManager.findPlacementAngles([core.playerManager.myPlayer.serverPos, core.playerManager.myPlayer.scale], trapItem), 3);
@@ -154,8 +154,8 @@ export default class AutoPlacer extends Module {
             case State.SPIKE_TRAPPED: {
                 const trapItem = items.list[15];
                 const spikeItem = items.list[core.playerManager.myPlayer.inventory.items[2]];
-                for (let i = 0; i < this.targetsTrapSpikable.length; i++) {
-                    const target = this.targetsTrapSpikable[i];
+                for (let iterator = this.targetsTrapSpikable.values(), iteration = null, value = (iteration = iterator.next()).value; !iteration.done; value = (iteration = iterator.next()).value) {
+                    const target = value;
 
                     const trap = target.state.data.trap;
 

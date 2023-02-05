@@ -4,6 +4,7 @@
 
 enum ActionPriority {
     BIOMEHAT,
+    ANTITRAP,
     AUTOBREAK,
     ANTIBULL,
     ANTIINSTA,

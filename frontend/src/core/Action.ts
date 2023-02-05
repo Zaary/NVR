@@ -7,13 +7,15 @@ class Action {
     public priority: ActionPriority;
     public executeTick: number;
     public data: any[];
+    public force: boolean;
 
-    constructor(id: number, type: ActionType, priority: ActionPriority, executeTick: number, data: any[]) {
+    constructor(id: number, type: ActionType, priority: ActionPriority, executeTick: number, data: any[], force: boolean) {
         this.id = id;
         this.type = type;
         this.priority = priority;
         this.executeTick = executeTick;
         this.data = data;
+        this.force = force;
     }
 }
 

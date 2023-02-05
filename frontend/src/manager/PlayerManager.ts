@@ -43,6 +43,17 @@ export default class PlayerManager {
         }
     }
 
+    resetSwingStreaks(tickIndex: number) {
+        for (let i = 0; i < this.playerList.length; i++) {
+            const player = this.playerList[i];
+
+            if (player.nextAttack + 2 === tickIndex) {
+                player.nextAttack = 0;
+                player.swingStreak = 0;
+            }
+        }
+    }
+
     findTarget() {
         return this.playerList.slice(1).sort((a, b) => a.serverPos.clone().subtract(this.myPlayer.serverPos).length() - b.serverPos.clone().subtract(this.myPlayer.serverPos).length())[0];
     }
@@ -60,11 +71,15 @@ export default class PlayerManager {
     }
 
     getVisible() {
-        return this.playerList.filter(player => player.visible);
+        return this.playerList.filter(player => player !== this.myPlayer && player.visible);
     }
 
     isAnyoneInSight() {
         return this.getVisible().length > 0;
+    }
+
+    isAnyoneInRadius(radius: number) {
+        return this.getVisible().filter(x => MathUtil.getDistance(this.myPlayer.serverPos, x.serverPos) <= radius);
     }
 
     getThreats() {

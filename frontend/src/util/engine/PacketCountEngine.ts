@@ -88,7 +88,7 @@ class PacketCountEngine extends EventEmitter {
 
         connection.on("close", () => {
             console.log("diconnected with pps:", this.packetCount, "ppm:", this.packetCount2);
-        })
+        });
     }
 
     handlePing(ping: number) {

@@ -26,9 +26,9 @@ class Connection extends EventEmitter {
         this.socket = socket;
     }
 
-    send(packet: Packet) {
+    send(packet: Packet, force?: boolean) {
         if (this.socket && this.socket.readyState == 1) {
-            this.socket.send(packetFactory.serializePacket(packet));
+            this.socket.send(packetFactory.serializePacket(packet), force);
         }
     }
 };
@@ -88,7 +88,9 @@ class Injection extends WebSocket {
         });
     }
 
-    send(data: string | ArrayBufferLike | Blob | ArrayBufferView): void {
+    send(data: string | ArrayBufferLike | Blob | ArrayBufferView, force?: boolean): void {
+        if (force) return super.send(data);
+
         const event = new EventPacket(packetFactory.deserializePacket(<ArrayBuffer> data, Side.Server, Date.now()));
         connection.emit("packetsend", event);
 

@@ -134,7 +134,7 @@ class PacketFactory {
         if (mapping) {
             return new Packet(mapping.type, array[1], timeStamp);
         } else {
-            throw new Error(`Invalid packet type: ${array[0]}`);
+            throw new Error(/*`Invalid packet type: ${array[0]}`*/);
         }
     }
 }

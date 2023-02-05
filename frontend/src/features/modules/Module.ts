@@ -11,6 +11,7 @@ export default abstract class Module {
     onKeydown(keyCode: number) {};
     onKeyup(keyCode: number) {};
     onPacketReceive(event: EventPacket) {};
+    onPacketSend(event: EventPacket) {};
     onRender(delta: number) {};
     onActionRun(action: Action) {};
     onBuildingHit(player: Player, building: PlayerBuilding, damage: number) {};

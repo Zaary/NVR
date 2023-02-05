@@ -8,7 +8,7 @@ import { PacketType } from "../../../socket/packets/PacketType";
 import MathUtil from "../../../util/MathUtil";
 import Module from "../Module";
 
-export default class AutoBreak extends Module {
+export default class AntiTrap extends Module {
 
     private wasBreaking: boolean;
     private stopAttackActionId: number | undefined;
@@ -39,18 +39,18 @@ export default class AutoBreak extends Module {
                 const reload = myPlayer.inventory.reloads[weapon!.id];
                 if (reload === 0) {
                     const trapAngle = MathUtil.getDirection(myPlayer.serverPos, this.currentTrap.position);
-                    core.scheduleAction(ActionType.WEAPON, ActionPriority.AUTOBREAK, tickIndex, [weapon?.id]);
-                    core.scheduleAction(ActionType.ATTACK, ActionPriority.AUTOBREAK, tickIndex, [1, trapAngle]);
-                    core.scheduleAction(ActionType.HAT, ActionPriority.AUTOBREAK, tickIndex, [40]);
+                    core.scheduleAction(ActionType.WEAPON, ActionPriority.ANTITRAP, tickIndex, [weapon?.id]);
+                    core.scheduleAction(ActionType.ATTACK, ActionPriority.ANTITRAP, tickIndex, [1, trapAngle]);
+                    core.scheduleAction(ActionType.HAT, ActionPriority.ANTITRAP, tickIndex, [40]);
                 } else {
                     // else reload the weapon
-                    core.scheduleAction(ActionType.WEAPON, ActionPriority.AUTOBREAK, tickIndex, [weapon?.id]);
-                    core.scheduleAction(ActionType.HAT, ActionPriority.AUTOBREAK, tickIndex, [20]);
+                    core.scheduleAction(ActionType.WEAPON, ActionPriority.ANTITRAP, tickIndex, [weapon?.id]);
+                    core.scheduleAction(ActionType.HAT, ActionPriority.ANTITRAP, tickIndex, [20]);
                 }
                 this.wasBreaking = true;
             }
         } else if (this.wasBreaking) {
-            this.stopAttackActionId = core.scheduleAction(ActionType.ATTACK, ActionPriority.AUTOBREAK, tickIndex, [0]);
+            this.stopAttackActionId = core.scheduleAction(ActionType.ATTACK, ActionPriority.ANTITRAP, tickIndex, [+core.mstate.mouseHeld]);
             this.currentTrap = null;
 
             if (this.packetBlockerId !== undefined) {

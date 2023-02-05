@@ -27,6 +27,7 @@
     "@types/express": "^4.17.13",
     "@types/msgpack-lite": "^0.1.8",
     "babel-loader": "^8.2.5",
+    "babel-plugin-transform-remove-strict-mode": "0.0.2",
     "cors": "^2.8.5",
     "css-loader": "^6.7.3",
     "device-uuid": "^1.0.4",

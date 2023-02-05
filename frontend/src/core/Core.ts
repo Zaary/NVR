@@ -28,6 +28,10 @@ import MathUtil from "../util/MathUtil";
 import Vector from "../util/type/Vector";
 import NVRLoader from "../loader/NVRLoader";
 
+interface MState {
+    mouseHeld: boolean;
+}
+
 const logger = new Logger("core");
 const sym = Symbol();
 
@@ -62,8 +66,10 @@ class Core extends EventEmitter {
 
     public loaded: boolean;
 
+    public mstate: MState;
+
     private lastUpdate: number;
-    private lastActionState: {
+    public lastActionState: {
         hat: number;
         tail: number;
         attack: number;
@@ -96,6 +102,10 @@ class Core extends EventEmitter {
         this.bundleAPI = new API();
 
         this.loaded = false;
+
+        this.mstate = {
+            mouseHeld: false
+        }
 
         this.lastUpdate = Date.now();
         this.scheduledActions = [];
@@ -216,7 +226,9 @@ class Core extends EventEmitter {
                 }
             }
 
-            PacketHandler.processOut(event.getPacket());
+            if (PacketHandler.processOut(event.getPacket())) {
+                this.moduleManager.onPacketSend(event);
+            }
         });
 
         // listen for received packets (always process the packet before passing it to modules)
@@ -246,6 +258,14 @@ class Core extends EventEmitter {
 
         this.renderManager.on("mousemove", event => {
             this.mouseAngle = MathUtil.getDirection(new Vector(window.innerWidth / 2, window.innerHeight / 2), new Vector(event.clientX, event.clientY));
+        });
+
+        this.renderManager.on("mousedown", event => {
+            this.mstate.mouseHeld = true;
+        });
+
+        this.renderManager.on("mouseup", event => {
+            this.mstate.mouseHeld = false;
         });
     }
 
@@ -309,7 +329,7 @@ class Core extends EventEmitter {
                 break;
             case ActionType.ATTACK:
                 if (action.data[0] === this.lastActionState.attack && action.data[1] === this.lastActionState.aim) return;
-                connection.send(new Packet(PacketType.ATTACK, action.data));
+                connection.send(new Packet(PacketType.ATTACK, action.data), action.force);
                 break;
             case ActionType.WEAPON:
                 if (action.data[0] === this.lastActionState.weapon) return;
@@ -321,10 +341,14 @@ class Core extends EventEmitter {
         this.moduleManager.onActionRun(action);
     }
 
-    scheduleAction(action: ActionType, priority: ActionPriority, tick: number = this.tickEngine.tickIndex + 1, data: any[]): number {
-        const ac = new Action(this.actionIdCounter++, action, priority, tick, data);
+    scheduleAction(action: ActionType, priority: ActionPriority, tick: number = this.tickEngine.tickIndex + 1, data: any[], force?: boolean): number {
+        const ac = new Action(this.actionIdCounter++, action, priority, tick, data, force ? true : false);
         this.scheduledActions.push(ac);
         return ac.id;
+    }
+
+    isHighestPriority(priority: ActionPriority, tick: number) {
+        return this.scheduledActions.filter(x => x.priority > priority && x.executeTick === tick).length === 0;
     }
 }
 

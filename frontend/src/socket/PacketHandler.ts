@@ -1,15 +1,22 @@
 import { items } from "../data/moomoo/items";
 import { GameObject, PlayerBuilding } from "../data/type/GameObject";
-import { Player } from "../data/type/Player";
+import { ClientPlayer, Player } from "../data/type/Player";
 //import { playerUtil } from "../util/PlayerUtil";
 import { Packet } from "./packets/Packet";
 import { PacketType } from "./packets/PacketType";
 import { core } from "../main";
 import Vector from "../util/type/Vector";
 import PlayerManager from "../manager/PlayerManager";
-import { MeleeWeapon, Weapon, weaponList } from "../data/type/Weapon";
+import { MeleeWeapon, Weapon, weaponList, WeaponSlot } from "../data/type/Weapon";
 import MathUtil from "../util/MathUtil";
 import { util } from "../data/type/MoomooUtil";
+import { TickEngine, TickRoundType } from "../util/engine/TickEngine";
+import Logger from "../util/Logger";
+import { ActionPriority, ActionType } from "../core/ActionType";
+import AutoHat from "../features/modules/player/AutoHat";
+import { connection } from "./Connection";
+
+const logger = new Logger("packethandler");
 
 let lastPath = 0;
 
@@ -29,6 +36,14 @@ function processIn(packet: Packet) {
                 const player = core.playerManager.playerList.findBySid(playerData[0]);
                 
                 if (player) {
+                    if (player === core.playerManager.myPlayer) {
+                        //if (playerData[10] === 0) console.log("disequip at tick:", core.tickEngine.tickIndex);
+                    }
+                    if (player === core.playerManager.myPlayer) {
+                        //console.log("check tick:", core.tickEngine.tickIndex, "current hat:", playerData[9]);
+                        //if (window[core.tickEngine.tickIndex] !== playerData[9]) console.log("fail");
+                    }
+
                     /*player.dt = 0;
 
                     player.t1 = (player.t2 === undefined) ? Date.now() : player.t2;
@@ -85,6 +100,7 @@ function processIn(packet: Packet) {
                     player.visible = true;
                 }
             }
+
             /*setTarget(playerUtil.findTarget(players));
             if (target && currentPlayer && Date.now() - lastPath > 500) {
                 lastPath = Date.now();
@@ -172,36 +188,124 @@ function processIn(packet: Packet) {
                     }
                 }
             }
+
+            
+            if (player === core.playerManager.myPlayer) (<ClientPlayer> player).justStartedAttacking = false;
+
+
+            player.nextAttack = core.tickEngine.getTickIndex(Date.now() - core.tickEngine.ping * 2 + player.inventory.weaponSelected.stats.reloadTime) + 1;
+            player.swingStreak++;
+            console.log("current tick:", core.tickEngine.tickIndex, "scheduled next:", player.nextAttack);
             break;
         }
-        // case: ...
+        case PacketType.HEALTH_UPDATE: {
+            const player = core.playerManager.playerList.findBySid(packet.data[0])!;
+            const newHealth = packet.data[1];
+            const delta = newHealth - player.health;
+            const tracker = player.shame;
+
+            if (delta < 0) {
+                tracker.lastDamage = core.tickEngine.roundToTick(Date.now() - core.tickEngine.ping, TickRoundType.ROUND);
+                if (Date.now() + core.tickEngine.ping - tracker.lastDamage <= 120) {
+                    if (tracker.points++ >= 8) {
+                        tracker.isClowned = true;
+                        tracker.timer = 30 * 1000;
+                        tracker.points = 0;
+                    }
+                }
+            }
+
+            if (player === core.playerManager.myPlayer) {
+                const player = core.playerManager.myPlayer;
+                const lastPacketHealth = player.packetHealth;
+                player.packetHealth = newHealth;
+
+                if (newHealth < lastPacketHealth) {
+                    player.health -= lastPacketHealth - player.packetHealth;
+                }
+
+                if (player.packetHealth > player.health) {
+                    logger.warn(core.playerManager.myPlayer.health, "health was not in sync: " + player.health + " -> " + newHealth + ", packet-health: " + player.packetHealth);
+                    player.health = player.packetHealth;
+                }
+            } else {
+                player.health = newHealth;
+            }
+            break;
+        }
     }
 }
+
+let isAttackScheduled = -1;
 
 function processOut(packet: Packet) {
     switch (packet.type) {
         case PacketType.ATTACK: {
             const myPlayer = core.playerManager.myPlayer;
-            myPlayer.isAttacking = packet.data[0];
-            if (myPlayer.isAttacking && myPlayer.inventory.heldItem instanceof Weapon && myPlayer.reloads[myPlayer.inventory.heldItem.id] === 0) {
-                myPlayer.inventory.resetReload(myPlayer.inventory.heldItem);
+            const nextPredictableTick = core.tickEngine.getNextPredictableTick();
+            let wasHeal = false;
+
+            if (packet.data[0] === 1) {
+                const heldItem = myPlayer.inventory.heldItem;
+                if (!(heldItem instanceof Weapon)) {
+                    if (heldItem.group.id === 0 && myPlayer.health < 100) {
+                        myPlayer.shame.lastDamage = -1;
+                        myPlayer.health = Math.min(myPlayer.health + heldItem.healAmount!, 100);
+                        myPlayer.inventory.heldItem = myPlayer.inventory.weaponSelected;
+                        wasHeal = true;
+                    }
+                }
+            } else {
+                if (!core.tickEngine.isTickPredictable(core.tickEngine.getTickIndex(Date.now() + myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id]))) {
+                    myPlayer.swingStreak = 0;
+                }
+                /*if (isAttackScheduled > -1) {
+                    core.scheduleAction(ActionType.ATTACK, ActionPriority.BIOMEHAT, isAttackScheduled + 1, [0, packet.data[1]], true);
+                    isAttackScheduled = -1;
+                }*/
             }
+
+            if (!wasHeal && packet.data[0] === 1 && myPlayer.inventory.heldItem instanceof Weapon && (myPlayer.swingStreak === 0 || myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id] - core.tickEngine.ping <= 0)) {
+                //const [hat, tail] = .computeHat(core.tickEngine.tickIndex);
+                
+                
+                //myPlayer.nextAttack = core.tickEngine.getTickIndex(Date.now() - core.tickEngine.ping + myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id]);
+                /*if (!core.tickEngine.isTickPredictable(core.tickEngine.tickIndex + 1)) {
+                    core.scheduleAction(ActionType.ATTACK, ActionPriority.BIOMEHAT, nextPredictableTick, [1, packet.data[1]], true);
+                    isAttackScheduled = nextPredictableTick;
+                }*/
+                myPlayer.justStartedAttacking = true;
+                myPlayer.inventory.resetReload(myPlayer.inventory.heldItem);
+                //return false;
+            }
+
+            myPlayer.isAttacking = packet.data[0];
             break;
         }
         case PacketType.SELECT_ITEM: {
             const myPlayer = core.playerManager.myPlayer;
-            const lastHeld = myPlayer.inventory.heldItem.id;
+            const lastHeld = `${myPlayer.inventory.heldItem instanceof Weapon}_${myPlayer.inventory.heldItem.id}`;
             if (packet.data[1]) {
                 myPlayer.inventory.heldItem = weaponList[packet.data[0]];
             } else {
-                if (packet.data[0] === lastHeld) {
+                if (`${packet.data[1]}_${packet.data[0]}` === lastHeld) {
                     myPlayer.inventory.heldItem = myPlayer.inventory.weaponSelected;
                 } else {
                     myPlayer.inventory.heldItem = items.list[packet.data[0]];
                 }
             }
+            break;
+        }
+        case PacketType.AUTO_ATK: {
+            const myPlayer = core.playerManager.myPlayer;
+            myPlayer.isAutoAttacking = !myPlayer.isAutoAttacking;
+            if (myPlayer.isAutoAttacking && myPlayer.inventory.heldItem instanceof Weapon && myPlayer.inventory.reloads[myPlayer.inventory.heldItem.id] === 0) {
+                //myPlayer.justStartedAttacking = true;
+            }
+            break;
         }
     }
+    return true;
 }
 
 const PacketHandler = { processIn, processOut };

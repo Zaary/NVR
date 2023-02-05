@@ -2,6 +2,7 @@ import { EventEmitter } from "tsee";
 import { Core } from "../../core/Core";
 import { Item, items } from "../../data/moomoo/items";
 import { GameObject } from "../../data/type/GameObject";
+import { Weapon } from "../../data/type/Weapon";
 import { connection } from "../../socket/Connection";
 import { Packet } from "../../socket/packets/Packet";
 import { PacketType } from "../../socket/packets/PacketType";
@@ -25,10 +26,17 @@ export default class InteractionEngine extends EventEmitter {
     }
 
     vanillaPlaceItem(item: Item, angle: number) {
-        connection.send(new Packet(PacketType.SELECT_ITEM, [item.id, false]));
+        const myPlayer = this.core.playerManager.myPlayer;
+        const wasAttacking = myPlayer.isAttacking;
+        const lastHeldItem = myPlayer.inventory.heldItem;
+
+        if (lastHeldItem instanceof Weapon || lastHeldItem.id !== item.id) {
+            connection.send(new Packet(PacketType.SELECT_ITEM, [item.id, false]));
+        }
         connection.send(new Packet(PacketType.ATTACK, [1, angle]));
-        connection.send(new Packet(PacketType.ATTACK, [0, angle]));
+        connection.send(new Packet(PacketType.ATTACK, [+wasAttacking, angle]));
         // TODO: switch to last item instead of primary weapon
-        connection.send(new Packet(PacketType.SELECT_ITEM, [this.core.playerManager.myPlayer.inventory.weaponSelected.id, true]));
+        connection.send(new Packet(PacketType.SELECT_ITEM, [lastHeldItem.id, lastHeldItem instanceof Weapon]));
+
     }
 }

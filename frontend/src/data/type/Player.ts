@@ -104,6 +104,25 @@ interface State {
 	}
 }
 
+class ShameTracker {
+
+	public points: number;
+	public timer: number;
+	public isClowned: boolean;
+	public lastDamage: number;
+
+	constructor() {
+		this.points = 0;
+		this.timer = 0;
+		this.isClowned = false;
+		this.lastDamage = -1;
+	}
+
+	isSafeHeal(ping: number) {
+		return Date.now() + ping - this.lastDamage > 120;
+	}
+}
+
 class Player {
 	
     public id: string;
@@ -137,7 +156,8 @@ class Player {
 
 	public maxHealth: number = 100;
 	public health: number = this.maxHealth;
-
+	
+	public shame: ShameTracker;
 
 	public skinColor: number;
 
@@ -149,6 +169,9 @@ class Player {
 	public reloads: { [key: number]: number } = {};
 
 	public state: State;
+
+	public nextAttack: number;
+	public swingStreak: number;
     
 	public visible: boolean = false;
     forcePos: any;
@@ -171,6 +194,7 @@ class Player {
 		this.dir = dir;
 		this.health = health;
 		this.maxHealth = maxHealth;
+		this.shame = new ShameTracker();
 		this.scale = scale;
 		this.skinColor = skinColor;
 
@@ -191,6 +215,9 @@ class Player {
 				trap: undefined
 			}
 		}
+
+		this.nextAttack = 0;
+		this.swingStreak = 0;
     }
 
 	updatePlayer(objectManager: ObjectManager, x: number, y: number, dir: number, buildIndex: number, weaponIndex: number, _weaponVariant: number, _team: string, _isLeader: boolean, _skinIndex: number, _tailIndex: number, _iconIndex: boolean, _zIndex: number) {
@@ -250,7 +277,11 @@ class Player {
 class ClientPlayer extends Player {
 	public alive: boolean;
 
+	public packetHealth: number;
+
 	public isAttacking: boolean;
+	public isAutoAttacking: boolean;
+	public justStartedAttacking: boolean;
 
 	public ownedHats: number[];
 	public ownedTails: number[];
@@ -258,9 +289,22 @@ class ClientPlayer extends Player {
 	constructor(id: string, sid: number, name: string, position: Vector, dir: number, health: number, maxHealth: number, scale: number, skinColor: number) {
 		super(id, sid, name, position, dir, health, maxHealth, scale, skinColor);
 		this.alive = false;
+		this.packetHealth = this.maxHealth;
 		this.isAttacking = false;
+		this.isAutoAttacking = false;
+		this.justStartedAttacking = false;
 		this.ownedHats = hats.filter(x => x.price === 0).map(x => x.id);
 		this.ownedTails = accessories.filter(x => x.price === 0).map(x => x.id);
+
+		this.ownedHats.push(0);
+		this.ownedTails.push(0);
+	}
+
+	updateData(id: string, sid: number, name: string, position: Vector, dir: number, health: number, maxHealth: number, scale: number, skinColor: number): void {
+		super.updateData(id, sid, name, position, dir, health, maxHealth, scale, skinColor);
+		this.packetHealth = maxHealth;
+		this.isAutoAttacking = false;
+		this.isAttacking = false;
 	}
 }
 

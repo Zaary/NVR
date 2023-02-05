@@ -8,59 +8,55 @@ import Module from "../Module";
 
 export default class Autoheal extends Module {
 
-    private damageTime: number;
-    private lastHealth: number;
     private hasFoodInHand: boolean;
 
     constructor() {
         super();
-        this.damageTime = -1;
-        this.lastHealth = 100;
         this.hasFoodInHand = false;
     }
     
     onUpdate(delta: number): void {
-        if (this.lastHealth <= 0) this.lastHealth = 100;
+        const myPlayer = core.playerManager.myPlayer;
         
-        if (core.playerManager.myPlayer.alive && this.lastHealth < 100 && Date.now() - this.damageTime > 120 && this.hasFoodInHand === false) {
+        if (myPlayer.alive && myPlayer.health < 100 && myPlayer.shame.isSafeHeal(core.tickEngine.ping) && this.hasFoodInHand === false) {
             const foodType = core.playerManager.myPlayer.inventory.items[0];
             const healsUp = foodType == 0 ? 20 : 40;
 
-            for (let i = 0; i < Math.ceil((100 - this.lastHealth) / healsUp); i++) {
+            for (let i = 0; i < Math.ceil((myPlayer.maxHealth - myPlayer.health) / healsUp); i++) {
                 core.interactionEngine.vanillaPlaceItem(items.list[foodType], core.mouseAngle);
             }
-            this.damageTime = Date.now();
         }
     }
 
     onPacketSend(event: EventPacket): void {
-        if (!core.playerManager.myPlayer) return;
+        const myPlayer = core.playerManager.myPlayer;
+        if (!myPlayer) return;
+
         const packet = event.getPacket();
 
         if (packet.type == PacketType.SELECT_ITEM) {
-            if (packet.data[0] === core.playerManager.myPlayer.inventory.items[0] && packet.data[1] !== true) {
+            if (packet.data[0] === myPlayer.inventory.items[0] && packet.data[1] !== true) {
                 this.hasFoodInHand = !this.hasFoodInHand;
             } else {
                 this.hasFoodInHand = false;
             }
         } else if (packet.type === PacketType.ATTACK) {
-            if (this.hasFoodInHand && this.lastHealth < 100) {
-                this.damageTime = 1 / 0
+            if (this.hasFoodInHand && myPlayer.health < 100) {
                 this.hasFoodInHand = false;
             }
         }
     }
 
     onPacketReceive(event: EventPacket): void {
-        const packet = event.getPacket();
+        /*const packet = event.getPacket();
 
         if (packet.type === PacketType.HEALTH_UPDATE) {
             const [sid, health] = packet.data;
             if (sid === core.playerManager.myPlayer.sid) {
-                if (health < this.lastHealth) this.damageTime = Date.now() - core.tickEngine.ping;
-                this.lastHealth = health;
+               // if (health < this.lastHealth) this.damageTime = Date.now() - core.tickEngine.ping;
+                
             }
-        }
+        }*/
     }
 
     // ...

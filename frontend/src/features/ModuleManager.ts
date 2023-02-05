@@ -4,7 +4,7 @@ import { Player } from "../data/type/Player";
 import EventPacket from "../event/EventPacket";
 import Logger from "../util/Logger";
 import { Class } from "../util/type/Definitions";
-import AutoBreak from "./modules/building/AutoBreak";
+import AntiTrap from "./modules/building/AntiTrap";
 import AutoPlacer from "./modules/building/AutoPlacer";
 import AutoReplace from "./modules/building/AutoReplace";
 import ItemPlacer from "./modules/building/ItemPlacer";
@@ -17,11 +17,11 @@ const logger = new Logger("module-manager");
 
 export default class ModuleManager {
     private static classes: Class<Module>[] = [
-        AutoBreak,
+        AntiTrap,
         AutoPlacer,
         AutoReplace,
         ItemPlacer,
-        AntiInsta,
+        //AntiInsta,
         Autoheal,
         AutoHat
     ];
@@ -74,6 +74,12 @@ export default class ModuleManager {
     onPacketReceive(event: EventPacket) {
         for (const module of this.modules) {
             if (!event.isCanceled()) module.onPacketReceive(event);
+        }
+    }
+
+    onPacketSend(event: EventPacket) {
+        for (const module of this.modules) {
+            if (!event.isCanceled()) module.onPacketSend(event);
         }
     }
 
