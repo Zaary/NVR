@@ -2,5 +2,5 @@
     "presets": [
         ["@babel/preset-typescript", { "modules": false }]
     ],/*"@babel/preset-env", */
-    "plugins": ["transform-remove-strict-mode"]
+    "plugins": []
 }

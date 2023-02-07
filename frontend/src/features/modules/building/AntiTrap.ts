@@ -37,11 +37,11 @@ export default class AntiTrap extends Module {
 
                 const weapon = myPlayer.inventory.findBestWeapon(Inventory.WeaponFinders.BUILDING_BREAK);
                 const reload = myPlayer.inventory.reloads[weapon!.id];
-                if (reload === 0) {
+                if (reload <= core.tickEngine.timeToNextTick) {
                     const trapAngle = MathUtil.getDirection(myPlayer.serverPos, this.currentTrap.position);
                     core.scheduleAction(ActionType.WEAPON, ActionPriority.ANTITRAP, tickIndex, [weapon?.id]);
                     core.scheduleAction(ActionType.ATTACK, ActionPriority.ANTITRAP, tickIndex, [1, trapAngle]);
-                    core.scheduleAction(ActionType.HAT, ActionPriority.ANTITRAP, tickIndex, [40]);
+                    //core.scheduleAction(ActionType.HAT, ActionPriority.ANTITRAP, tickIndex, [40]);
                 } else {
                     // else reload the weapon
                     core.scheduleAction(ActionType.WEAPON, ActionPriority.ANTITRAP, tickIndex, [weapon?.id]);
@@ -65,5 +65,9 @@ export default class AntiTrap extends Module {
             this.stopAttackActionId = undefined;
             this.wasBreaking = false;
         }
+    }
+
+    isTrapped() {
+        return core.playerManager.myPlayer.state.isTrapped;
     }
 }

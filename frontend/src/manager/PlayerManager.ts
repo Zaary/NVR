@@ -74,6 +74,10 @@ export default class PlayerManager {
         return this.playerList.filter(player => player !== this.myPlayer && player.visible);
     }
 
+    getVisibleEnemies() {
+        return this.playerList.filter(player => player.visible && (!player.team || player.team !== this.myPlayer.team) && player !== this.myPlayer);
+    }
+
     isAnyoneInSight() {
         return this.getVisible().length > 0;
     }

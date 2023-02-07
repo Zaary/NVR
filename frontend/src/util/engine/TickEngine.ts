@@ -139,7 +139,7 @@ class TickEngine extends EventEmitter<{
             this.predictionTick += delta;
 
             const offset = getStandardDeviation(this.deltas) + getStandardDeviation(this.pings);
-            const futureProgress = 1 + (this.predictionTick + delta + this.ping + offset) / TickEngine.TICK_DELTA;
+            const futureProgress = 0.8 + (this.predictionTick + delta + this.ping + offset) / TickEngine.TICK_DELTA;
             this.futureProgress = futureProgress;
 
             // emit 30% before the actual tick

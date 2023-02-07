@@ -35,15 +35,15 @@ export default class AutoReplace extends Module {
     } 
 
     tryToPlace() {
-        if (this.placeLimiter % 4 == 0) {
+        //if (this.placeLimiter % 4 == 0) {
             core.interactionEngine.vanillaPlaceItem(this.buildData!.item, this.buildData!.angle);
-        }
+        //}
     }
 
     onUpdate(delta: number): void {
-        if (this.buildData !== null && this.buildData.isPost) {
+        /*if (this.buildData !== null && this.buildData.isPost) {
             this.tryToPlace();
-        }
+        }*/
     }
 
     onPreTick(tickIndex: number): void {
