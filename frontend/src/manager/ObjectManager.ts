@@ -4,14 +4,18 @@ import { Item, items } from "../data/moomoo/items";
 import { GameObject, NaturalObject, PlayerBuilding } from "../data/type/GameObject";
 import { util } from "../data/type/MoomooUtil";
 import { Player } from "../data/type/Player";
+import AntiTrap from "../features/modules/building/AntiTrap";
+import AlghoritmUtil from "../util/AlghoritmUtil";
+import ArrayUtil from "../util/ArrayUtil";
 import MathUtil from "../util/MathUtil";
+import GridSet from "../util/type/GridSet";
 import { SidArray } from "../util/type/SidArray";
 import Vector from "../util/type/Vector";
 
-class PredictedPlacement extends PlayerBuilding {
+export class PredictedPlacement extends PlayerBuilding {
     public placedTimestamp: number;
     constructor(position: Vector, dir: number, scale: number, type: number, placedTimestamp: number) {
-        super(-1, position, dir, scale, type, -1);
+        super(-1, position, dir, scale, type, -1, false);
         this.placedTimestamp = placedTimestamp;
     }
 }
@@ -34,18 +38,30 @@ export default class ObjectManager {
         this.predictedPlacements = [];
     }
 
-    canPlaceObject(source: [Vector, number, number], item: Item, lookupPredictions = false) {
+    getPlacementVector(source: Vector, scale: number, angle: number, item: Item) {
+        const placeOffset = scale + item.scale + (item.placeOffset ?? 0);
+        return source.clone().directionMove(angle, placeOffset);
+    }
+
+    canPlaceObject(source: [Vector, number, number], item: Item, lookupPredictions = false, ignored: number[] = []) {
+        const [position, scale, angle] = source;
+        const targetPosition = this.getPlacementVector(position, scale, angle, item);
+        return this.isPositionFree(targetPosition, item.scale, lookupPredictions, ignored);
+    }
+
+    private isPositionFree(placementVector: Vector, scale: number, lookupPredictions = false, ignored: number[] = []) {
+        const grids = this.getGridArrays(placementVector.x, placementVector.y, scale);
+        return grids.filter(x => ignored.indexOf(x.sid) === -1 && MathUtil.getDistance(x.position, placementVector) <= x.getPlaceColScale() + scale).length === 0 && (!lookupPredictions || this.predictedPlacements.filter(x => MathUtil.getDistance(x.position, placementVector) <= x.getPlaceColScale() + scale).length === 0);
+    }
+
+    getBlockingBuildings(source: [Vector, number, number], item: Item, ignored: number[] = []) {
         const [position, scale, angle] = source;
 
         const placeOffset = scale + item.scale + (item.placeOffset ?? 0);
-        const targetPosition = position.clone().directionMove(angle, placeOffset);
-        
-        return this.isPositionFree(targetPosition, item.scale, lookupPredictions);
-    }
+        const placementVector = position.clone().directionMove(angle, placeOffset);
 
-    private isPositionFree(placementVector: Vector, scale: number, lookupPredictions = false) {
         const grids = this.getGridArrays(placementVector.x, placementVector.y, scale);
-        return grids.flat(1).filter(x => MathUtil.getDistance(x.position, placementVector) <= x.getScale() + scale).length === 0 && (!lookupPredictions || this.predictedPlacements.filter(x => MathUtil.getDistance(x.position, placementVector) <= x.getScale() + scale).length === 0);
+        return grids.filter(x => ignored.indexOf(x.sid) === -1 && MathUtil.getDistance(x.position, placementVector) <= x.getPlaceColScale() + scale);
     }
 
     /**
@@ -64,38 +80,60 @@ export default class ObjectManager {
         }
     }
 
-    findPlacementAngles(source: [Vector, number], item: Item, ignore: GameObject[] = []) {
+    findPlacementArcs(source: [Vector, number], item: Item, ignore: GameObject[] = []) {
         const [position, scale] = source;
+
         const placeOffset = scale + item.scale + (item.placeOffset ?? 0);
-        const grids = this.getGridArrays(position.x, position.y, placeOffset + item.scale).flat(1).filter(x => !ignore.includes(x) && MathUtil.getDistance(position, x.position) <= placeOffset + item.scale);
+        
+        const blockingBuildings = this.getGridArrays(position.x, position.y, placeOffset).filter(x => ignore.indexOf(x) === -1 && MathUtil.getDistance(x.position, position) - x.getPlaceColScale() <= placeOffset + item.scale);
 
-        let blocks: [number, number][] = [];
-        for (let i = 0; i < grids.length; i++) {
-            const object = grids[i];
-            const tangent = this.findPlacementTangent(source, object, item, 1);
-            const straight = MathUtil.getDirection(position, object.position);
-            const _bounds = [straight - tangent, straight + tangent];
-            blocks.push([Math.min(_bounds[0], _bounds[1]), Math.max(_bounds[0], _bounds[1])]);
+        const blockingAngles: [number, number][] = [];
+
+        for (const building of blockingBuildings) {
+            const tangentAngle = this.findPlacementTangent(source, building, item, 0);
+            const buildingAngle = MathUtil.polarToCartesian(MathUtil.getDirection(source[0], building.position));
+
+            const startAngle = MathUtil.clampCartesian(buildingAngle - tangentAngle);
+            const endAngle = MathUtil.clampCartesian(buildingAngle + tangentAngle);
+   
+            blockingAngles.push([startAngle, endAngle]);
         }
 
-        let allows: [number, number][] = [];
-        let lastOpener = 0;
-        for (let i = 0; i < blocks.length; i++) {
-            const block = blocks[i];
+        const allowsCartesian = AlghoritmUtil.allowedAnglesFromBlocked(blockingAngles);
+        const mergedCartesian = AlghoritmUtil.mergeArcsCartesian(allowsCartesian);
+        return ArrayUtil.mapTupleArray(mergedCartesian, MathUtil.cartesianToPolar);
+    }
+    
+    splitPlacement(playerScale: number, item: Item, angle: number): [number, number] {
+        const splitTangent = this.findSplitTangent(playerScale, item);
+        return [angle - splitTangent, angle + splitTangent];
+    }
 
-            if (lastOpener != block[0]) allows.push([lastOpener, block[0]]);
-            lastOpener = block[1];
-        }
-        allows.push([lastOpener, Math.PI * 2]);
+    tryToSplitPlacement(source: [Vector, number], angle: number, item: Item, ignore: GameObject[] = []): [number, number] | null {
+        const split = this.splitPlacement(source[1], item, angle);
+        const ignoredMapped = ignore.map(x => x.sid);
+        return this.canPlaceObject([...source, split[0]], item, false, ignoredMapped) && this.canPlaceObject([...source, split[1]], item, false, ignoredMapped) ? split : null;
+    }
 
-        return allows;
+    findSplitTangent(playerScale: number, item: Item) {
+        /*const t = (playerScale + item.scale + (item.placeOffset ?? 0)) ** 2;
+        return Math.acos((item.scale ** 2 - t * 2 + 5) / (-2 * t));*/
+
+        const t = playerScale + item.scale + (item.placeOffset ?? 0);
+        const p = item.scale * 2;
+        const s = t;
+        return Math.acos((p ** 2 - s ** 2 - t ** 2) / (-2 * s * t));
     }
 
     findPlacementTangent(source: [Vector, number], target: GameObject, item: Item, additionalDistanceFromObject: number) {
-        const t = source[1] + item.scale + (item.placeOffset ?? 0)
-        const p = target.getScale(true) + item.scale + additionalDistanceFromObject;
+        const t = source[1] + item.scale + (item.placeOffset ?? 0);
+        const p = target.getPlaceColScale() + item.scale;
         const s = MathUtil.getDistance(source[0], target.position);
         return Math.acos((p ** 2 - s ** 2 - t ** 2) / (-2 * s * t));
+    }
+
+    getVisibleBuildings(source: Vector, camera: Vector, zoomFactor: number = 1) {
+        return this.getGridArrays(source.x, source.y, config.maxScreenWidth * zoomFactor).filter(x => Math.abs(x.position.x - camera.x) <= config.maxScreenWidth * zoomFactor && Math.abs(x.position.y - camera.y) <= config.maxScreenHeight * zoomFactor)
     }
 
     // SET OBJECT GRIDS
@@ -149,6 +187,19 @@ export default class ObjectManager {
                     this.updateObjects.splice(tmpIndx, 1);
                 }
 
+                if (obj.owner.sid !== -1 && !this.core.playerManager.checkTeam(obj.owner.sid)) {
+                    const myPlayer = this.core.playerManager.myPlayer;
+        
+                    const isCollision = MathUtil.getDistance(myPlayer.serverPos, obj.position) < myPlayer.scale + obj.getPlaceColScale();
+        
+                    if (obj.type === 15 && isCollision && (<PlayerBuilding> obj).owner.sid !== myPlayer.sid && myPlayer.state.data.trap === obj) {
+                        myPlayer.state.isTrapped = false;
+                        myPlayer.state.data.trap = undefined;
+                        const antiTrap = <AntiTrap> this.core.moduleManager.getModule(AntiTrap);
+                        antiTrap.setTrapBroken();
+                    }
+                }
+
                 this.core.moduleManager.onBuildingBreak(obj);
             }
         /*}*/
@@ -169,53 +220,53 @@ export default class ObjectManager {
     };*/
 
     // GET GRID ARRAY
-    getGridArrays(xPos: number, yPos: number, s: number): GameObject[][] {
-        let tmpX, tmpY, tmpArray = [], tmpGrid;
+    getGridArrays(xPos: number, yPos: number, s: number): GameObject[] {
+        let tmpX, tmpY, uniqueGameObjects = new GridSet(), tmpGrid;
 
         let tmpS = config.mapScale / config.colGrid;
 
         tmpX = Math.floor(xPos / tmpS);
         tmpY = Math.floor(yPos / tmpS);
-        tmpArray.length = 0;
         try {
             if (this.grids[tmpX + "_" + tmpY])
-                tmpArray.push(this.grids[tmpX + "_" + tmpY]);
+            uniqueGameObjects.addGrid(this.grids[tmpX + "_" + tmpY]);
             if (xPos + s >= (tmpX + 1) * tmpS) { // RIGHT
                 tmpGrid = this.grids[(tmpX + 1) + "_" + tmpY];
-                if (tmpGrid) tmpArray.push(tmpGrid);
+                if (tmpGrid) uniqueGameObjects.addGrid(tmpGrid);
                 if (tmpY && yPos - s <= tmpY * tmpS) { // TOP RIGHT
                     tmpGrid = this.grids[(tmpX + 1) + "_" + (tmpY - 1)];
-                    if (tmpGrid) tmpArray.push(tmpGrid);
+                    if (tmpGrid) uniqueGameObjects.addGrid(tmpGrid);
                 } else if (yPos + s >= (tmpY + 1) * tmpS) { // BOTTOM RIGHT
                     tmpGrid = this.grids[(tmpX + 1) + "_" + (tmpY + 1)];
-                    if (tmpGrid) tmpArray.push(tmpGrid);
+                    if (tmpGrid) uniqueGameObjects.addGrid(tmpGrid);
                 }
             } if (tmpX && xPos - s <= tmpX * tmpS) { // LEFT
                 tmpGrid = this.grids[(tmpX - 1) + "_" + tmpY];
-                if (tmpGrid) tmpArray.push(tmpGrid);
+                if (tmpGrid) uniqueGameObjects.addGrid(tmpGrid);
                 if (tmpY && yPos - s <= tmpY * tmpS) { // TOP LEFT
                     tmpGrid = this.grids[(tmpX - 1) + "_" + (tmpY - 1)];
-                    if (tmpGrid) tmpArray.push(tmpGrid);
+                    if (tmpGrid) uniqueGameObjects.addGrid(tmpGrid);
                 } else if (yPos + s >= (tmpY + 1) * tmpS) { // BOTTOM LEFT
                     tmpGrid = this.grids[(tmpX - 1) + "_" + (tmpY + 1)];
-                    if (tmpGrid) tmpArray.push(tmpGrid);
+                    if (tmpGrid) uniqueGameObjects.addGrid(tmpGrid);
                 }
             } if (yPos + s >= (tmpY + 1) * tmpS) { // BOTTOM
                 tmpGrid = this.grids[tmpX + "_" + (tmpY + 1)];
-                if (tmpGrid) tmpArray.push(tmpGrid);
+                if (tmpGrid) uniqueGameObjects.addGrid(tmpGrid);
             } if (tmpY && yPos - s <= tmpY * tmpS) { // TOP
                 tmpGrid = this.grids[tmpX + "_" + (tmpY - 1)];
-                if (tmpGrid) tmpArray.push(tmpGrid);
+                if (tmpGrid) uniqueGameObjects.addGrid(tmpGrid);
             }
         } catch (e) {}
-        return tmpArray;
-    };
+        //console.log(Array.from(uniqueGameObjects.values()));
+        return Array.from(uniqueGameObjects.values());
+    }
 
     // ADD NEW:
     add(sid: number, x: number, y: number, dir: number, s: number, type: number, data: any, owner: any) {
         let tmpObj;
 
-        if (owner !== -1) { 
+        if (owner !== -1) {
             const predicted = this.predictedPlacements.find(obj => MathUtil.getDistance(obj.position, new Vector(x, y)) < 8 && obj.stats.id === data);
             if (predicted) {
                 // building prediction succeeded, remove item from predictions
@@ -224,7 +275,7 @@ export default class ObjectManager {
         }
 
         // remove old object with the same sid
-        if (tmpObj = this.gameObjects.findBySid(sid) !== null) {
+        if ((tmpObj = this.gameObjects.findBySid(sid)) !== null) {
             this.gameObjects.remove(tmpObj);
             tmpObj = null;
         }
@@ -245,7 +296,10 @@ export default class ObjectManager {
             if (owner === -1) {
                 tmpObj = new NaturalObject(sid, new Vector(x, y), dir, s, type);
             } else {
-                tmpObj = new PlayerBuilding(sid, new Vector(x, y), dir, s, data, owner);
+                const item = items.list[data];
+                const vec = new Vector(x, y);
+                const placementSighted = this.core.playerManager.getAllVisible().some(player => player.sid === owner && MathUtil.getDistance(player.lastTickServerPos.clone(), vec) - (player.scale + s + (item.placeOffset ?? 1)) <= player.velocity.length()); // it usually is ~0.5 difference but just to be safe
+                tmpObj = new PlayerBuilding(sid, new Vector(x, y), dir, s, data, owner, placementSighted);
             }
 
             this.gameObjects.push(tmpObj);
@@ -258,6 +312,20 @@ export default class ObjectManager {
         this.setObjectGrids(tmpObj);
         
         this.updateObjects.push(tmpObj);
+
+
+        if (owner !== -1 && !this.core.playerManager.checkTeam(owner)) {
+            const myPlayer = this.core.playerManager.myPlayer;
+
+            const isCollision = MathUtil.getDistance(myPlayer.serverPos, tmpObj.position) < myPlayer.scale + tmpObj.getPlaceColScale();
+
+            const antiTrap = <AntiTrap> this.core.moduleManager.getModule(AntiTrap);
+            if (tmpObj.type === 15 && isCollision && (<PlayerBuilding> tmpObj).owner.sid !== myPlayer.sid && myPlayer.state.data.trap !== tmpObj) {
+                myPlayer.state.isTrapped = true;
+                myPlayer.state.data.trap = <PlayerBuilding> tmpObj;
+                antiTrap.initializeTrap(<PlayerBuilding> tmpObj);
+            }
+        }
     };
 
     // DISABLE BY SID:

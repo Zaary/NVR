@@ -5,6 +5,7 @@ import { Player } from "../../../data/type/Player";
 import { core } from "../../../main";
 import MathUtil from "../../../util/MathUtil";
 import Module from "../Module";
+import AntiTrap from "./AntiTrap";
 
 enum State {
     IDLE,
@@ -109,9 +110,10 @@ export default class AutoPlacer extends Module {
     onUpdate(tickIndex: number): void {
         if (!this.toggled) return;
 
+        const antiTrap = (<AntiTrap> core.moduleManager.getModule(AntiTrap));
         const myPlayer = core.playerManager.myPlayer;
 
-        if (!myPlayer.alive) return;
+        if (!myPlayer.alive/* || antiTrap.isBreaking*/) return;
         
         this.calcState();
 
@@ -120,7 +122,7 @@ export default class AutoPlacer extends Module {
                 return;
                 const windmillItem = items.list[core.playerManager.myPlayer.inventory.items[3]];
 
-                const placeableangles = core.objectManager.findPlacementAngles([core.playerManager.myPlayer.serverPos, core.playerManager.myPlayer.scale], windmillItem);
+                const placeableangles = core.objectManager.findPlacementArcs([core.playerManager.myPlayer.serverPos, core.playerManager.myPlayer.scale], windmillItem);
                 const backdir = (MathUtil.getDirection(core.playerManager.myPlayer.lerpPos, core.playerManager.myPlayer.serverPos) + Math.PI) % (Math.PI * 2);
 
                 const singleAngles = translateAllowAngles(placeableangles, 3);
@@ -141,7 +143,7 @@ export default class AutoPlacer extends Module {
                     const target = value;
                     const targetDir = MathUtil.getDirection(myPlayer.serverPos, target.serverPos);
                     const trappingDistance = myPlayer.scale + target.scale + trapItem.scale + trapItem.scale * trapItem.colDiv! + trapItem.placeOffset!;
-                    const angles = translateAllowAngles(core.objectManager.findPlacementAngles([core.playerManager.myPlayer.serverPos, core.playerManager.myPlayer.scale], trapItem), 3);
+                    const angles = translateAllowAngles(core.objectManager.findPlacementArcs([core.playerManager.myPlayer.serverPos, core.playerManager.myPlayer.scale], trapItem), 3);
                     const placeAngles = angles.filter(angle => MathUtil.getAngleDist(angle, targetDir) <= Math.sin(trappingDistance / (target.scale + trapItem.scale * trapItem.colDiv!)));
 
                     core.interactionEngine.safePlacement(trapItem, targetDir);
@@ -160,7 +162,7 @@ export default class AutoPlacer extends Module {
                     const trap = target.state.data.trap;
 
                     if (trap) {
-                        const tangentAngle = core.objectManager.findPlacementTangent([myPlayer.serverPos, myPlayer.scale], trap, spikeItem, 5);
+                        const tangentAngle = core.objectManager.findPlacementTangent([myPlayer.serverPos, myPlayer.scale], trap, spikeItem, 1);
                         const straightAngle = MathUtil.getDirection(myPlayer.serverPos, trap.position);
                         const targetAngle = MathUtil.getDirection(myPlayer.serverPos, target.serverPos);
                         const angle1 = straightAngle + tangentAngle;

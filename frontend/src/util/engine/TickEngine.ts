@@ -16,8 +16,8 @@ export enum TickRoundType {
 
 function getStandardDeviation(array: number[]) {
     const n = array.length;
-    const mean = array.reduce((a, b) => a + b) / n;
-    return Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n);
+    const mean = array.reduce((a, b) => a + b, 0) / n;
+    return Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b, 0) / n);
 }
 
 const roundArray = [Math.round, Math.floor, Math.ceil];
@@ -38,14 +38,17 @@ class TickEngine extends EventEmitter<{
 
     private pingQueue: number[];
     private lastPing: number;
+
     public ping: number;
+    public pingStd: number;
+
     private firstPinged: boolean;
     private firstPonged: boolean;
     private lastTick: number;
 
     private predictionTick: number;
     private nextPreTick: number;
-    private waitingForPostPrediction: number;
+    private nextPostTick: number;
 
     private futureProgress: number;
 
@@ -61,14 +64,17 @@ class TickEngine extends EventEmitter<{
 
         this.pingQueue = [];
         this.lastPing = 0;
+
         this.ping = 0;
+        this.pingStd = 0;
+
         this.firstPinged = false;
         this.firstPonged = false;
         this.lastTick = 0;
 
         this.predictionTick = -1;
         this.nextPreTick = 0;
-        this.waitingForPostPrediction = 0;
+        this.nextPostTick = 0;
 
         this.futureProgress = 0;
 
@@ -107,6 +113,8 @@ class TickEngine extends EventEmitter<{
                     this.pings.push(this.ping);
                 }
 
+                this.pingStd = getStandardDeviation(this.pings);
+
                 this.emit("ping", this.ping);
             } else if (packet.type == PacketType.PLAYER_UPDATE) {
                 this.tickIndex++;
@@ -134,17 +142,21 @@ class TickEngine extends EventEmitter<{
             const maxDelta = Math.max(...this.deltas);
             const maxPing = Math.max(...this.pings);
 
+            const avgDelta = MathUtil.averageOfArray(this.deltas);
+
+            const deltaStd = getStandardDeviation(this.deltas);
+
             if (this.predictionTick === -1) return;
             
             this.predictionTick += delta;
 
-            const offset = getStandardDeviation(this.deltas) + getStandardDeviation(this.pings);
-            const futureProgress = 0.8 + (this.predictionTick + delta + this.ping + offset) / TickEngine.TICK_DELTA;
+            const offset = deltaStd + getStandardDeviation(this.pings);
+            const futureProgress = (this.predictionTick + delta + this.ping + offset) / TickEngine.TICK_DELTA;
             this.futureProgress = futureProgress;
 
             // emit 30% before the actual tick
-            if (futureProgress >= this.nextPreTick) {
-                if (futureProgress - this.nextPreTick >= 1) return this.nextPreTick = Math.ceil(futureProgress);
+            if (futureProgress + 0.8 >= this.nextPreTick) {
+                if (futureProgress + 0.8 - this.nextPreTick >= 1) return this.nextPreTick = Math.ceil(futureProgress + 0.8);
 
                 if (this.nextPreTick > this.lastPredictedPre) {
                     const predictedTickIndex = this.nextPreTick;
@@ -161,11 +173,20 @@ class TickEngine extends EventEmitter<{
                 }
             }
 
-            // emit 30% after the actual tick
-            if (futureProgress >= this.waitingForPostPrediction + offset && this.waitingForPostPrediction > this.lastPredictedPost) {
-                this.emit("posttick", this.waitingForPostPrediction);
-                this.lastPredictedPost = this.waitingForPostPrediction;
-                this.waitingForPostPrediction = Math.ceil(futureProgress);
+            // post tick
+            //const postOffset = deltaStd / TickEngine.TICK_DELTA;
+            if (futureProgress >= this.nextPostTick) {
+                if (futureProgress - this.nextPostTick >= 1) return this.nextPostTick = Math.ceil(futureProgress);
+
+                if (this.nextPostTick > this.lastPredictedPost) {
+                    const predictedTickIndex = this.nextPostTick;
+
+                    this.lastPredictedPost = predictedTickIndex;
+
+                    this.emit("posttick", predictedTickIndex);
+ 
+                    this.nextPostTick++;
+                }
             }
 
             // clean all predicted buildings if we didnt receive confirming placement packet
@@ -205,6 +226,10 @@ class TickEngine extends EventEmitter<{
 
     isTickPredictable(tick: number) {
         return tick - this.futureProgress > 1;
+    }
+
+    toTicks(ms: number) {
+        return Math.ceil(ms / TickEngine.TICK_DELTA);
     }
 
     get timeToNextTick() {

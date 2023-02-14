@@ -208,7 +208,7 @@ export default class HoverInfoModule extends Renderer {
         
         const gridArrays = this.core.objectManager.getGridArrays(mapPosition.x, mapPosition.y, 100);
 
-        const object = gridArrays.flat(1).filter(x => MathUtil.getDistance(mapPosition, x.position) < x.scale).sort((a, b) => MathUtil.getDistance(mapPosition, a.position) - MathUtil.getDistance(mapPosition, b.position))[0];
+        const object = gridArrays.filter(x => MathUtil.getDistance(mapPosition, x.position) < x.scale).sort((a, b) => MathUtil.getDistance(mapPosition, a.position) - MathUtil.getDistance(mapPosition, b.position))[0];
 
         const myPlayer = this.core.playerManager.myPlayer;
 

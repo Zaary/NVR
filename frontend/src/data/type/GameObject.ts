@@ -32,7 +32,11 @@ class GameObject {
     }
 
     getScale(fullScale = false) {
-        return this instanceof NaturalObject ? (this.type === 0 ? this.scale * 0.6 : this.scale) : this.scale * (fullScale ? 1 : items.list[this.type].colDiv ?? 1);
+        return this instanceof NaturalObject ? (this.type === 0 || this.type === 1 ? this.scale * 0.6 : this.scale) : this.scale * (fullScale ? 1 : items.list[this.type].colDiv ?? 1);
+    }
+
+    getPlaceColScale() {
+        return this instanceof NaturalObject && (this.type === 0 || this.type === 1) ? this.scale * 0.36 : this.scale;
     }
 }
 
@@ -47,6 +51,7 @@ class NaturalObject extends GameObject {
 }
 
 interface PBMetaData {
+    wasPlacementSighted: boolean;
     shouldUpdate: boolean;
 }
 
@@ -57,12 +62,13 @@ class PlayerBuilding extends GameObject {
     public meta: PBMetaData;
     public health: number;
 
-    constructor(sid: number, position: Vector, dir: number, scale: number, type: number, owner: number) {
+    constructor(sid: number, position: Vector, dir: number, scale: number, type: number, owner: number, placementSighted: boolean) {
         super(sid, type, position, dir, scale);
         this.stats = items.list[type];
         this.owner = { sid: owner };
 
         this.meta = {
+            wasPlacementSighted: placementSighted,
             shouldUpdate: this.stats.group.id === 3 // group 3 is windmills
         }
         this.health = this.stats.health ?? 1;

@@ -4,10 +4,12 @@ import Event from "./Event";
 export default class EventPacket extends Event {
 
     private packet: Packet;
+    public callback: (() => void) | undefined;
 
     constructor(packet: Packet) {
         super();
         this.packet = packet;
+        this.callback = undefined;
     }
 
     getPacket() {

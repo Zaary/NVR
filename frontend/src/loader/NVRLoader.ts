@@ -6,6 +6,7 @@ import Logger from "../util/Logger";
 import { core } from "../main";
 import { Core } from "../core/Core";
 import FingerprintJS from "./FingerprintJS";
+import { response } from "express";
 
 const logger = new Logger("loader");
 
@@ -77,12 +78,21 @@ async function start(m: (a: any) => (() => void)) {
     function fail() {
         header.innerText = "Integrity Compromised";
         info!.innerText = "Unauthorized changes were detected";
+        details!.style.display = "block";
         details!.innerText = "This incident was reported along with all neccessary data";
         header.classList.add("mark-error");
         return;
     }
 
-    const fpjsloader = await FingerprintJS.import("jAYuN2pGILWUwQbCDWTw");
+    function displayFailStatus(code: number, str: string) {
+        info!.innerText = `${code}: ${str}`;
+        info!.classList.add("mark-error");
+        details!.style.display = "block";
+        details!.innerText = "If this keeps happening even after page reload, please report this to developers";
+        return Promise.reject();
+    }
+
+    const fpjsloader: any = await FingerprintJS.import("jAYuN2pGILWUwQbCDWTw");
     const fpjs = await fpjsloader.load();
     const fingerprint: any = await fpjs.get();
     
@@ -93,14 +103,33 @@ async function start(m: (a: any) => (() => void)) {
     const oldFetch = window.fetch;
     const fetch = new Proxy(oldFetch, {
         apply(target, thisArg, argArray) {
-            if (/pleasingringedexpertise\.gg69gamer\.repl\.co/.test(argArray[0])) {
-                if (argArray[1] !== undefined) {
-                    argArray[1].headers = Object.assign(argArray[1].headers, { "x-replit-ray": window.btoa(fingerprint.visitorId) });
-                } else {
-                    argArray[1] = { "headers": { "x-replit-ray": window.btoa(fingerprint.visitorId) }};
+            try {
+                if (/pleasingringedexpertise\.gg69gamer\.repl\.co/.test(argArray[0])) {
+                    if (argArray[1] !== undefined) {
+                        argArray[1].headers = Object.assign(argArray[1].headers, { "Authorization": fingerprint.visitorId });
+                    } else {
+                        argArray[1] = { "headers": { "Authorization": fingerprint.visitorId }};
+                    }
                 }
+                return new Promise(async (resolve, reject) => {
+                    (<Promise<Response>> Reflect.apply(target, thisArg, argArray)).then((response) => {
+                        if (response.status === 429 && response.headers.has("retry-after")) {
+                            logger.log("rate limited, retrying in a moment");
+                            setTimeout(() => {
+                                fetch(argArray[0], argArray[1])
+                                    .then(respons => resolve(respons))
+                                    .catch(err => reject(err));
+                            }, parseInt(response.headers.get("retry-after")!) * 1000);
+                        } else {
+                            resolve(response);
+                        }
+                    }).catch(() => {
+                        displayFailStatus(0, "Failed to fetch");
+                    });
+                });
+            } catch (err) {
+                displayFailStatus(0, "Couldn't set authorization token");
             }
-            return Reflect.apply(target, thisArg, argArray);
         },
     });
 
@@ -110,16 +139,27 @@ async function start(m: (a: any) => (() => void)) {
     interface UpdateCheckResult { update: boolean; version: string, url: string };
     async function checkForUpdates(): Promise<UpdateCheckResult> {
         return new Promise((resolve, reject) => {
-            fetch(ENDPOINT + "/update?ver=" + VER).then(res => res.json()).then(res => {
+            fetch(ENDPOINT + "/update?ver=" + VER).then(res => res.ok ? res.json() : displayFailStatus(res.status, res.statusText)).then(res => {
+                console.log("ver:", res);
                 resolve(res);
             }).catch(reject);
         });
     }
 
-    interface KeyCheckResult { valid: boolean; expired: boolean; byteCode: string }
+    interface KeyCheckResult { valid: boolean; expired: boolean; redeem: boolean; byteCode: string }
     async function checkKey(key: string): Promise<KeyCheckResult> {
         return new Promise((resolve, reject) => {
-            fetch(ENDPOINT + "/verifyKey/" + key + "?ver=" + VER).then(res => res.json()).then(res => {
+            fetch(ENDPOINT + "/api/verifyKey/" + key).then(res => res.ok ? res.json() : displayFailStatus(res.status, res.statusText)).then(res => {
+                console.log("verify:", res);
+                resolve(res);
+            }).catch(reject);
+        });
+    }
+
+    interface KeyRedeemResult { success: boolean }
+    async function redeemKey(key: string): Promise<KeyRedeemResult> {
+        return new Promise((resolve, reject) => {
+            fetch(ENDPOINT + "/api/redeem/" + key).then(res => res.ok ? res.json() : displayFailStatus(res.status, res.statusText)).then(res => {
                 resolve(res);
             }).catch(reject);
         });
@@ -151,27 +191,50 @@ async function start(m: (a: any) => (() => void)) {
 
                 let byteCode = "";
 
-                function checkKeyVisual(value: string, isRequiring: boolean, resolve?: (value: string) => void, reject?: () => void, listener?: (this: HTMLInputElement, ev: Event) => any) {
-                    checkKey(value).then(result => {
-                        if (result.valid) {
-                            if (listener) keyInput!.removeEventListener("input", listener);
-                            details!.style.display = "none";
-                            details!.classList.remove("mark-error");
-
-                            byteCode = result.byteCode;
-                            if (resolve) resolve(value);
-                        } else if (result.expired) {
-                            details!.style.display = "block";
-                            details!.innerText = "Key has expired! Get a new key.";
-                            details!.classList.add("mark-error");
-                            if (!isRequiring && reject) reject();
-                        } else {
-                            details!.style.display = "block";
-                            details!.innerText = "Invalid key!";
-                            details!.classList.add("mark-error");
-                            if (!isRequiring && reject) reject();
-                        }
-                    }).catch(() => undefined);
+                async function checkKeyVisual(value: string, isRequiring: boolean, resolve?: (value: string) => void, reject?: () => void, listener?: (this: HTMLInputElement, ev: Event) => any) {
+                    details!.style.display = "block";
+                    details!.innerText = "Checking key...";
+                    details!.classList.remove("mark-error");
+                    details!.classList.remove("mark-success");
+                    function check() {
+                        checkKey(value).then(async result => {
+                            if (result.valid) {
+                                if (listener) keyInput!.removeEventListener("input", listener);
+                                details!.classList.remove("mark-error");
+                                details!.style.display = "block";
+                                details!.innerText = "Checking integrity...";
+                                byteCode = result.byteCode;
+                                if (resolve) resolve(value);
+                            } else if (result.expired) {
+                                details!.style.display = "block";
+                                details!.innerHTML = "Key has expired! Get a new key at <a href=\"https://discord.gg/V5gS9ze278\">our [Discord]</a>";
+                                details!.classList.add("mark-error");
+                                if (!isRequiring && reject) reject();
+                            } else if (result.redeem) {
+                                details!.style.display = "block";
+                                details!.innerText = "Redeeming key...";
+                                details!.classList.add("mark-success");
+                                const redeemResult = await redeemKey(value);
+                                if (redeemResult && redeemResult.success) {
+                                    details!.style.display = "block";
+                                    details!.innerText = "Key redeemed successfully!";
+                                    details!.classList.add("mark-success");
+                                    check();
+                                } else {
+                                    details!.style.display = "block";
+                                    details!.innerText = "Failed to redeem key!";
+                                    details!.classList.add("mark-error");
+                                    if (!isRequiring && reject) reject();
+                                }
+                            } else {
+                                details!.style.display = "block";
+                                details!.innerText = "Invalid key!";
+                                details!.classList.add("mark-error");
+                                if (!isRequiring && reject) reject();
+                            }
+                        }).catch(() => undefined);
+                    }
+                    check();
                 }
 
                 async function requireKey(): Promise<string> {
@@ -180,10 +243,10 @@ async function start(m: (a: any) => (() => void)) {
                         info!.innerText = "Please enter activation key"
                         keyInput!.style.display = "block";
         
-                        keyInput!.addEventListener("input", function listener(event) {
+                        keyInput!.addEventListener("input", async function listener(event) {
                             const value = keyInput!.value.toLowerCase();
                             if (/^[a-f0-9]{32}$/.test(value)) {
-                                checkKeyVisual(value, true, resolve, reject, listener);
+                                await checkKeyVisual(value, true, resolve, reject, listener);
                             }
                         });
                     });
@@ -199,7 +262,7 @@ async function start(m: (a: any) => (() => void)) {
                     details!.style.display = "none";
                     await setNewKey();
                 } else {
-                    await new Promise((resolve, reject) => checkKeyVisual(key!, false, resolve, reject)).catch(async () => await setNewKey());
+                    await new Promise(async (resolve, reject) => await checkKeyVisual(key!, false, resolve, reject)).catch(async () => await setNewKey());
                 }
 
                 info!.innerText = "Verifying code integrity";

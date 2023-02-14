@@ -10,20 +10,31 @@ import AutoReplace from "./modules/building/AutoReplace";
 import ItemPlacer from "./modules/building/ItemPlacer";
 import AntiInsta from "./modules/combat/AntiInsta";
 import Autoheal from "./modules/combat/Autoheal";
+import NoToxic from "./modules/misc/NoToxic";
 import Module from "./modules/Module";
 import AutoHat from "./modules/player/AutoHat";
 
 const logger = new Logger("module-manager");
 
 export default class ModuleManager {
+    /**
+     * ORDER IS VERY IMPORTANT!!!
+     * 
+     * AntiTrap runs after placing it would mess it up
+     * AutoHat runs last because of all the attacks from placements that could confuse it
+     */
     private static classes: Class<Module>[] = [
-        AntiTrap,
         AutoPlacer,
         AutoReplace,
         ItemPlacer,
         //AntiInsta,
         Autoheal,
-        AutoHat
+        
+        NoToxic,
+
+        AntiTrap,
+        AutoHat,
+        
     ];
 
     private modules: Module[] = [];

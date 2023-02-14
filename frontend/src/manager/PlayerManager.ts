@@ -7,10 +7,12 @@ import Vector from "../util/type/Vector";
 
 export default class PlayerManager {
     public playerList: SidArray<Player>;
+    public myClan: SidArray<Player>;
     public myPlayer: ClientPlayer;
 
     constructor() {
         this.playerList = new SidArray();
+        this.myClan = new SidArray<Player>;
         this.myPlayer = new ClientPlayer("", -1, "", new Vector, 0, 0, 0, 0, 0);
     }
 
@@ -47,11 +49,15 @@ export default class PlayerManager {
         for (let i = 0; i < this.playerList.length; i++) {
             const player = this.playerList[i];
 
-            if (player.nextAttack + 2 === tickIndex) {
+            if (player.nextAttack + 1 === tickIndex) {
                 player.nextAttack = 0;
                 player.swingStreak = 0;
             }
         }
+    }
+
+    checkTeam(sid: number) {
+        return false;
     }
 
     findTarget() {
@@ -59,31 +65,39 @@ export default class PlayerManager {
     }
 
     getNearby(positon: Vector, distance: number, ignoreTeam = false) {
-        return this.playerList.filter(player => player !== this.myPlayer && (!ignoreTeam || player.team !== this.myPlayer.team) && player.serverPos.clone().subtract(positon).length() <= distance);
+        return this.playerList.filter((player, index) => /*index !== 0 && */player.visible && (!ignoreTeam || player.team !== this.myPlayer.team) && player.serverPos.clone().subtract(positon).length() <= distance);
     }
 
     getMeleeThreats() {
-        return this.playerList.filter(player => MathUtil.getDistance(player.serverPos.clone().add(player.velocity), this.myPlayer.serverPos.clone().add(this.myPlayer.velocity)) <= Math.max(...player.inventory.weapons.filter(x => x instanceof MeleeWeapon && x !== null).map(x => x!.stats.range)));
+        return this.playerList.filter((player, index) => index !== 0 && player.visible && MathUtil.getDistance(player.serverPos.clone().add(player.velocity), this.myPlayer.serverPos.clone().add(this.myPlayer.velocity)) <= Math.max(...player.inventory.weapons.filter(x => x instanceof MeleeWeapon && x !== null).map(x => x!.stats.range)));
     }
 
     getRangedThreats() {
-        return this.playerList.filter(player => MathUtil.getDistance(player.serverPos.clone().add(player.velocity), this.myPlayer.serverPos.clone().add(this.myPlayer.velocity)) <= Math.max(...player.inventory.weapons.filter(x => x instanceof RangedWeapon && x !== null).map(x => x!.stats.range)));
+        return this.playerList.filter((player, index) => index !== 0 && player.visible && MathUtil.getDistance(player.serverPos.clone().add(player.velocity), this.myPlayer.serverPos.clone().add(this.myPlayer.velocity)) <= Math.max(...player.inventory.weapons.filter(x => x instanceof RangedWeapon && x !== null).map(x => x!.stats.range)));
     }
 
     getVisible() {
-        return this.playerList.filter(player => player !== this.myPlayer && player.visible);
+        return this.playerList.filter((player, index) => index !== 0 && player.visible);
+    }
+
+    getAllVisible() {
+        return this.playerList.filter(player => player.visible);
     }
 
     getVisibleEnemies() {
-        return this.playerList.filter(player => player.visible && (!player.team || player.team !== this.myPlayer.team) && player !== this.myPlayer);
+        return this.playerList.filter((player, index) => index !== 0 && player.visible && (!player.team || player.team !== this.myPlayer.team));
     }
 
     isAnyoneInSight() {
         return this.getVisible().length > 0;
     }
 
-    isAnyoneInRadius(radius: number) {
-        return this.getVisible().filter(x => MathUtil.getDistance(this.myPlayer.serverPos, x.serverPos) <= radius);
+    getEnemiesInRadius(radius: number) {
+        return this.getVisible().filter((player, index) => index !== 0 && player.visible && MathUtil.getDistance(this.myPlayer.serverPos, player.serverPos) <= radius && (!player.team || player.team !== this.myPlayer.team));
+    }
+
+    isEnemyInRadius(radius: number) {
+        return this.getEnemiesInRadius(radius).length > 0;
     }
 
     getThreats() {

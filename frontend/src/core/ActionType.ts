@@ -3,6 +3,7 @@
 // (because enums starts indexing from 0 and for us, higher index = higher priority)
 
 enum ActionPriority {
+    COMPATIBILITY,
     BIOMEHAT,
     ANTITRAP,
     AUTOBREAK,

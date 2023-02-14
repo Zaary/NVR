@@ -13,7 +13,7 @@ type Dimensions = {
     height: number;
 }
 
-type RendererID = "background";
+type RendererID = "background" | "buildingVisualisation";
 type InterfaceRendererID = "packetCount" | "packetGraph";
 
 export abstract class Renderer {

@@ -96,6 +96,10 @@ body {
     color: rgb(245, 55, 55);
 }
 
+#loader .mark-success {
+    color: rgb(81, 247, 59);
+}
+
 #loader input[type=text] {
     background: transparent;
     backdrop-filter: saturate(50%);

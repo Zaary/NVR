@@ -26,6 +26,12 @@ class Connection extends EventEmitter {
         this.socket = socket;
     }
 
+    sendWMeta(packet: Packet, meta: any[]) {
+        if (this.socket && this.socket.readyState == 1) {
+            this.socket.sendWMeta(packetFactory.serializePacket(packet), meta);
+        }
+    }
+
     send(packet: Packet, force?: boolean) {
         if (this.socket && this.socket.readyState == 1) {
             this.socket.send(packetFactory.serializePacket(packet), force);
@@ -55,7 +61,7 @@ class Injection extends WebSocket {
 
         this.addEventListener("message", function({ data: buffer }: { data: ArrayBuffer }) {
             try {
-                const event = new EventPacket(packetFactory.deserializePacket(buffer, Side.Client, Date.now()));
+                const event = new EventPacket(packetFactory.deserializePacket(buffer, Side.ClientBound, Date.now()));
                 connection.emit("packetreceive", event);
 
                 if (event.isCanceled()) return;
@@ -91,12 +97,26 @@ class Injection extends WebSocket {
     send(data: string | ArrayBufferLike | Blob | ArrayBufferView, force?: boolean): void {
         if (force) return super.send(data);
 
-        const event = new EventPacket(packetFactory.deserializePacket(<ArrayBuffer> data, Side.Server, Date.now()));
+        const event = new EventPacket(packetFactory.deserializePacket(<ArrayBuffer> data, Side.ServerBound, Date.now()));
         connection.emit("packetsend", event);
 
         if (!event.isCanceled()) {
             connection.emit("packetsendp", event.getPacket());
             super.send(packetFactory.serializePacket(event.getPacket()));
+
+            if (event.callback) event.callback();
+        }
+    }
+
+    sendWMeta(data: string | ArrayBufferLike | Blob | ArrayBufferView, meta: any): void {
+        const event = new EventPacket(packetFactory.deserializePacket(<ArrayBuffer> data, Side.ServerBound, Date.now()));
+        connection.emit("packetsend", event, meta);
+
+        if (!event.isCanceled()) {
+            connection.emit("packetsendp", event.getPacket());
+            super.send(packetFactory.serializePacket(event.getPacket()));
+
+            if (event.callback) event.callback();
         }
     }
 }

@@ -12,7 +12,8 @@ import { GameObject, NaturalObject, PlayerBuilding } from "./GameObject";
 
 enum WeaponFinder {
 	BUILDING_BREAK,
-	MOVEMENT_SPEED
+	MOVEMENT_SPEED,
+	DAMAGE
 }
 
 class Inventory {
@@ -68,10 +69,6 @@ class Inventory {
 		}
 	}
 
-	isReloaded(weaponSlot: WeaponSlot) {
-		
-	}
-
 	remainingReloadTime(slot: WeaponSlot) {
 		return this.reloads[this.weapons[slot]?.id!];
 	}
@@ -82,6 +79,8 @@ class Inventory {
 				return (<MeleeWeapon[]> this.weapons.flat(1).filter(x => x !== null && x instanceof MeleeWeapon)).sort((a: MeleeWeapon, b: MeleeWeapon) => b.stats.dmg * b.stats.buildingDmgMultiplier - a.stats.dmg * a.stats.buildingDmgMultiplier)[0];
 			case WeaponFinder.MOVEMENT_SPEED:
 				return this.weapons.flat(1).filter(x => x !== null).sort((a, b) => b!.stats.speedMultiplier - a!.stats.speedMultiplier)[0];
+			case WeaponFinder.DAMAGE:
+				return this.weapons[0];
 		}
 	}
 
@@ -147,6 +146,10 @@ class Player {
 	public velocity: Vector;
 
 	public movementProcessor: MovementProcessor;
+
+	public hitBuildingsLastTick: PlayerBuilding[];
+	public hasAttackedThisTick: boolean;
+	public _attackedThisTickTempVariable: boolean;
 	
 	/*public zIndex: number = 0;
 	public xVel: number = 0;
@@ -160,6 +163,9 @@ class Player {
 	public shame: ShameTracker;
 
 	public skinColor: number;
+
+	public skinIndex: number;
+	public tailIndex: number;
 
 	public scale: number = config.playerScale;
 	public speed: number = config.playerSpeed;
@@ -191,12 +197,15 @@ class Player {
 		this.renderPos = position;
 		this.lerpPos = new Vector;
 		this.velocity = new Vector;
+		this.serverDir = dir;
 		this.dir = dir;
 		this.health = health;
 		this.maxHealth = maxHealth;
 		this.shame = new ShameTracker();
 		this.scale = scale;
 		this.skinColor = skinColor;
+		this.skinIndex = 0;
+		this.tailIndex = 0;
 
         this.team = null;
 		
@@ -206,6 +215,10 @@ class Player {
 		this.inventory = new Inventory(this);
 
 		this.movementProcessor = new MovementProcessor(this);
+
+		this.hitBuildingsLastTick = [];
+		this.hasAttackedThisTick = false;
+		this._attackedThisTickTempVariable = false;
 
 		this.state = {
 			isTrapped: false,
@@ -225,11 +238,15 @@ class Player {
 		this.lastTickServerPos = this.serverPos.clone();
 		this.serverPos = new Vector(x, y);
 		this.velocity = this.serverPos.clone().subtract(this.lastTickServerPos);
-		this.dir = dir;
+		//this.dir = dir;
+		this.serverDir = this.dir = dir;
 		this.state.buildIndex = buildIndex;
 
+		this.skinIndex = _skinIndex;
+		this.tailIndex = _tailIndex;
+
 		const holdsWeapon = buildIndex === -1;
-		this.inventory.heldItem = holdsWeapon ? weaponList[weaponIndex] : items.list[buildIndex];
+		//this.inventory.heldItem = holdsWeapon ? weaponList[weaponIndex] : items.list[buildIndex];
 		this.inventory.weaponSelected = weaponList[weaponIndex];
 
                     /*player.buildIndex = playerData[4];
@@ -250,7 +267,7 @@ class Player {
 		this.state.data.trap = undefined;
 
 		// objects
-		const grids = objectManager.getGridArrays(this.serverPos.x, this.serverPos.y, this.scale + this.velocity.length() * 2).flat(1);
+		const grids = objectManager.getGridArrays(this.serverPos.x, this.serverPos.y, this.scale + this.velocity.length() * 2);
 		for (let i = 0; i < grids.length; i++) {
 			const object = grids[i];
 			if (object instanceof NaturalObject) continue;
@@ -259,6 +276,22 @@ class Player {
 
 			if (object.type === 15 && isCollision && (<PlayerBuilding> object).owner.sid !== this.sid) this.state.isTrapped = true, this.state.data.trap = <PlayerBuilding> object;
 		}
+
+		// update health of hitted buildings
+		for (let i = 0; i < this.hitBuildingsLastTick.length; i++) {
+			const building = this.hitBuildingsLastTick[i];
+			
+			const weapon = this.inventory.weaponSelected;
+			if (weapon instanceof MeleeWeapon) {
+				const hatMultiplier = hats.find(x => x.id === this.skinIndex)?.bDmg ?? 1;
+				const damage = weapon.stats.dmg * weapon.stats.buildingDmgMultiplier * hatMultiplier;
+        		building.health -= damage;
+				console.log("building " + building.stats.name + " new health:", building.health);
+			} else {
+				console.warn("detected hit while holding ranged weapon");
+			}
+		}
+		this.hitBuildingsLastTick = [];
 	}
 
 	updateData(id: string, sid: number, name: string, position: Vector, dir: number, health: number, maxHealth: number, scale: number, skinColor: number) {
@@ -266,7 +299,8 @@ class Player {
 		this.sid = sid;
 		this.name = name;
 		this.serverPos = position;
-		this.dir = dir;
+		//this.dir = dir;
+		this.serverDir = this.dir = dir;
 		this.health = health;
 		this.maxHealth = maxHealth;
 		this.scale = scale;

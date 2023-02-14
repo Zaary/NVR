@@ -29,4 +29,8 @@ export class SidArray<T> extends Array<T extends IndexedItem ? T : never> {
     removeBySid(sid: number) {
         this.remove(this.findBySid(sid));
     }
+
+    clear() {
+        this.length = 0;
+    }
 }

@@ -27,6 +27,8 @@ import PlayerManager from "../manager/PlayerManager";
 import MathUtil from "../util/MathUtil";
 import Vector from "../util/type/Vector";
 import NVRLoader from "../loader/NVRLoader";
+import BuildingVisualisationModule from "../render/BuildingVisualisationModule";
+import { items } from "../data/moomoo/items";
 
 interface MState {
     mouseHeld: boolean;
@@ -74,7 +76,7 @@ class Core extends EventEmitter {
         tail: number;
         attack: number;
         aim: number;
-        weapon: number;
+        weapon: [number, boolean];
     };
     private scheduledActions: Action[];
     private actionIdCounter = 0;
@@ -97,6 +99,10 @@ class Core extends EventEmitter {
     constructor() {
         super();
 
+        Object.defineProperty(window, "core", {
+            value: this
+        });
+
         logger.info(`launched StarLit core version ${Core.VER} by ${Core.AUTHORS.join(", ")}`);
 
         this.bundleAPI = new API();
@@ -114,15 +120,17 @@ class Core extends EventEmitter {
             tail: 0,
             attack: 0,
             aim: 0,
-            weapon: 0
+            weapon: [0, true]
         }
 
         this.packetBlocks = {};
 
+        this.moduleManager = new ModuleManager(); // initialize modules first so engines can hook into them
+
         this.objectManager = new ObjectManager(this);
         this.playerManager = new PlayerManager();
         this.renderManager = null;
-        this.moduleManager = new ModuleManager();
+        
 
         this.tickEngine = new TickEngine(this);
         this.packetEngine = new PacketCountEngine(this);
@@ -162,6 +170,8 @@ class Core extends EventEmitter {
         this.tickEngine.once("ping", this.packetEngine.handlePing.bind(this.packetEngine));
 
         this.tickEngine.on("pretick", (tick: number) => {
+            this.scheduledActions = []; // since modules use actions, we can clear right before calling them
+
             this.moduleManager.onPreTick(tick);
 
             // run actions based on priority
@@ -169,7 +179,6 @@ class Core extends EventEmitter {
             this.runUppermostAction(ActionType.TAIL, tick);
             this.runUppermostAction(ActionType.WEAPON, tick); // important to switch weapon before attack
             this.runUppermostAction(ActionType.ATTACK, tick);
-            this.scheduledActions = [];
         });
 
         this.tickEngine.on("posttick", (tick: number) => {
@@ -202,13 +211,11 @@ class Core extends EventEmitter {
                 }
             } else if (packet.type === PacketType.ATTACK) {
                 this.lastActionState.attack = packet.data[0];
-                this.lastActionState.aim = packet.data[1];
+                if (typeof packet.data[1] === "number") this.lastActionState.aim = packet.data[1];
             } else if (packet.type === PacketType.SET_ANGLE) {
                 this.lastActionState.aim = packet.data[0];
             } else if (packet.type === PacketType.SELECT_ITEM) {
-                if (packet.data[1]) {
-                    this.lastActionState.weapon = packet.data[0];
-                }
+                this.lastActionState.weapon = [packet.data[0], packet.data[1]];
             }
         });
 
@@ -216,7 +223,7 @@ class Core extends EventEmitter {
         // and messes up autobreak aim (kinda lazy solution)
         // should be fixed explicitly in the future and
         // remove the packet cancelling
-        connection.on("packetsend", (event: EventPacket) => {
+        connection.on("packetsend", (event: EventPacket, meta: any) => {
             const packet = event.getPacket();
             //console.log(packet);
             if (this.packetBlocks.hasOwnProperty(packet.type)) {
@@ -226,9 +233,8 @@ class Core extends EventEmitter {
                 }
             }
 
-            if (PacketHandler.processOut(event.getPacket())) {
-                this.moduleManager.onPacketSend(event);
-            }
+            PacketHandler.processOut(event, meta);
+            this.moduleManager.onPacketSend(event);
         });
 
         // listen for received packets (always process the packet before passing it to modules)
@@ -251,6 +257,8 @@ class Core extends EventEmitter {
         this.renderManager = new RenderManager(this, canvas, 1920, 1080);
         
         //await this.renderManager.createRenderer("background", HoverInfoModule, this);
+        await this.renderManager.createRenderer("buildingVisualisation", BuildingVisualisationModule, this);
+
         await this.renderManager.createInterfaceRenderer("packetCount", PacketCountModule, this);
         await this.renderManager.createInterfaceRenderer("packetGraph", PacketGraphModule, this);
         
@@ -301,7 +309,7 @@ class Core extends EventEmitter {
         const sorted = this.scheduledActions.filter(a => a.type == action && a.executeTick == tick && (() => {
             if (a.type === ActionType.HAT && !this.playerManager.myPlayer.ownedHats.includes(a.data[0])) return false;
             if (a.type === ActionType.TAIL && !this.playerManager.myPlayer.ownedTails.includes(a.data[0])) return false;
-            if (a.type === ActionType.WEAPON && !this.playerManager.myPlayer.inventory.hasWeapon(a.data[0])) return false;
+            if (a.type === ActionType.WEAPON && (a.data[1] ? !this.playerManager.myPlayer.inventory.hasWeapon(a.data[0]) : this.playerManager.myPlayer.inventory.items[items.list[a.data[0]].group.id] !== a.data[0])) return false;
             return true;
         })()).sort((a, b) => b.priority - a.priority);
         if (sorted.length > 0) {
@@ -332,8 +340,8 @@ class Core extends EventEmitter {
                 connection.send(new Packet(PacketType.ATTACK, action.data), action.force);
                 break;
             case ActionType.WEAPON:
-                if (action.data[0] === this.lastActionState.weapon) return;
-                connection.send(new Packet(PacketType.SELECT_ITEM, [action.data[0], true]));
+                if (action.data[0] === this.lastActionState.weapon[0] && action.data[1] === this.lastActionState.weapon[1]) return;
+                connection.send(new Packet(PacketType.SELECT_ITEM, [action.data[0], action.data[1]]));
             default:
                 return;
         }
@@ -345,6 +353,10 @@ class Core extends EventEmitter {
         const ac = new Action(this.actionIdCounter++, action, priority, tick, data, force ? true : false);
         this.scheduledActions.push(ac);
         return ac.id;
+    }
+
+    cleanActions(priority: ActionPriority, action?: ActionType, tick?: number) {
+        this.scheduledActions = this.scheduledActions.filter(x => x.priority === priority && (action === undefined || x.type === action) && (tick === undefined || tick === x.executeTick));
     }
 
     isHighestPriority(priority: ActionPriority, tick: number) {

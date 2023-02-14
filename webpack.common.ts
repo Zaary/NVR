@@ -65,6 +65,9 @@ const commonConfig: Configuration = {
 	    filename: "[name].js",
   	},
 	resolve: {
+		modules: [
+			"node_modules"
+		],
 		extensions: [".ts", ".js"]
 	},
 	optimization: {
@@ -109,7 +112,7 @@ const commonConfig: Configuration = {
 		new BannerPlugin({
 			banner: fs.readFileSync(path.join(process.cwd(), "frontend", "userscript_header.txt")).toString('utf8')
 		})
-	]
+	],
 }
 
 export default commonConfig;

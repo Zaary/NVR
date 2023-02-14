@@ -36,7 +36,7 @@ enum PacketType {
     PLAYER_ADD,
     SPAWN,
     IO_INIT,
-    UPDATE_ANIMALS,
+    ANIMALS_UPDATE,
     CLAN_LIST,
     BUY_AND_EQUIP,
     DEATH,
@@ -48,7 +48,9 @@ enum PacketType {
     REMOVE_ALL_OBJ,
     UPDATE_PLACE_LIMIT,
     ADD_PROJECTILE,
-    UPDATE_PROJECTILES
+    UPDATE_PROJECTILES,
+    TURRET_SHOOT,
+    ANIMAL_ANIMATION
   }
   
   export { PacketType };

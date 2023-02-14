@@ -9,9 +9,9 @@ type PacketData = any[];
  * An enumeration containing the different sides of communication (for conflicting packets)
  */
 enum Side {
-    Server,
-    Client,
-    Both
+    ServerBound,
+    ClientBound,
+    BiDirectional
 }
 
 /**

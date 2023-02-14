@@ -15,6 +15,7 @@ import Logger from "../util/Logger";
 import { ActionPriority, ActionType } from "../core/ActionType";
 import AutoHat from "../features/modules/player/AutoHat";
 import { connection } from "./Connection";
+import EventPacket from "../event/EventPacket";
 
 const logger = new Logger("packethandler");
 
@@ -36,7 +37,17 @@ function processIn(packet: Packet) {
                 const player = core.playerManager.playerList.findBySid(playerData[0]);
                 
                 if (player) {
+                    if (player._attackedThisTickTempVariable) {
+                        player.hasAttackedThisTick = true;
+                        player._attackedThisTickTempVariable = false;
+
+                        player.nextAttack = core.tickEngine.getTickIndex(Date.now() - core.tickEngine.ping * 2 + player.inventory.weaponSelected.stats.reloadTime)/* + 1*/;
+                        player.swingStreak++;
+                        //console.log("current tick:", core.tickEngine.tickIndex, "scheduled next:", player.nextAttack);
+                    }
+
                     if (player === core.playerManager.myPlayer) {
+                        
                         //if (playerData[10] === 0) console.log("disequip at tick:", core.tickEngine.tickIndex);
                     }
                     if (player === core.playerManager.myPlayer) {
@@ -154,6 +165,12 @@ function processIn(packet: Packet) {
         case PacketType.GATHER_ANIM: {
             const player = core.playerManager.playerList.findBySid(packet.data[0]);
             if (!player) return;
+            
+            if (player === core.playerManager.myPlayer) {
+                //console.log("hit!: skin=" + player.skinIndex + ", tail=" + player.tailIndex);
+            }
+
+            player._attackedThisTickTempVariable = true;
 
             // set reload
             player.inventory.resetReload(player.inventory.heldItem instanceof MeleeWeapon ? player.inventory.heldItem : player.inventory.weapons[0]);
@@ -161,7 +178,7 @@ function processIn(packet: Packet) {
 
             // damage objects
             const weapon = <MeleeWeapon> player.inventory.weaponSelected;
-            const grids = core.objectManager.getGridArrays(player.serverPos.x, player.serverPos.y, weapon.stats.range + player.velocity.length() * 2).flat(1);
+            const grids = core.objectManager.getGridArrays(player.serverPos.x, player.serverPos.y, weapon.stats.range + player.velocity.length() * 2);
 
             for (let i = 0; i < grids.length; i++) {
                 const object = grids[i];
@@ -174,10 +191,8 @@ function processIn(packet: Packet) {
                         if (true/*MathUtil.getAngleDist(wiggle[0], gatherAngle) <= safeSpan + Number.EPSILON*/) {
                             if (object instanceof PlayerBuilding) {
                                 // damage the building depending on the player's weapon damage
-                                const damage = weapon.stats.dmg * weapon.stats.buildingDmgMultiplier;
-                                object.health -= damage;
-
-                                core.moduleManager.onBuildingHit(player, object, damage);
+                                player.hitBuildingsLastTick.push(object);
+                                //core.moduleManager.onBuildingHit(player, object, damage);
                             }
 
                             // remove the wiggle as its confirmed by gather packet
@@ -191,11 +206,6 @@ function processIn(packet: Packet) {
 
             
             if (player === core.playerManager.myPlayer) (<ClientPlayer> player).justStartedAttacking = false;
-
-
-            player.nextAttack = core.tickEngine.getTickIndex(Date.now() - core.tickEngine.ping * 2 + player.inventory.weaponSelected.stats.reloadTime) + 1;
-            player.swingStreak++;
-            console.log("current tick:", core.tickEngine.tickIndex, "scheduled next:", player.nextAttack);
             break;
         }
         case PacketType.HEALTH_UPDATE: {
@@ -230,6 +240,7 @@ function processIn(packet: Packet) {
                 }
             } else {
                 player.health = newHealth;
+                if (newHealth <= 0) player.visible = false;
             }
             break;
         }
@@ -238,62 +249,106 @@ function processIn(packet: Packet) {
 
 let isAttackScheduled = -1;
 
-function processOut(packet: Packet) {
+function processOut(event: EventPacket, meta?: any) {
+    const packet = event.getPacket();
     switch (packet.type) {
         case PacketType.ATTACK: {
             const myPlayer = core.playerManager.myPlayer;
             const nextPredictableTick = core.tickEngine.getNextPredictableTick();
-            let wasHeal = false;
+            let wasPlace = false;
 
             if (packet.data[0] === 1) {
                 const heldItem = myPlayer.inventory.heldItem;
                 if (!(heldItem instanceof Weapon)) {
-                    if (heldItem.group.id === 0 && myPlayer.health < 100) {
-                        myPlayer.shame.lastDamage = -1;
-                        myPlayer.health = Math.min(myPlayer.health + heldItem.healAmount!, 100);
+                    wasPlace = true;
+
+                    if (heldItem.group.id === 0) {
+                        if (myPlayer.health < 100) {
+                            myPlayer.shame.lastDamage = -1;
+                            myPlayer.health = Math.min(myPlayer.health + heldItem.healAmount!, 100);
+                            myPlayer.inventory.heldItem = myPlayer.inventory.weaponSelected;
+                        }
+                        return;
+                    }
+
+                    const blocking = core.objectManager.getBlockingBuildings([myPlayer.serverPos, myPlayer.scale, packet.data[1] ?? myPlayer.serverDir], heldItem, packet.data[2] ?? []);
+                    
+                    if (blocking.length === 0) {
                         myPlayer.inventory.heldItem = myPlayer.inventory.weaponSelected;
-                        wasHeal = true;
+                        //console.log("placed item. new held:", myPlayer.inventory.heldItem);
+                        if (meta) {
+                            event.callback = () => {
+                                meta[1](false);
+                            }
+                        }
+                    } else {
+                        //console.log("blocked", meta);
+                        if (meta) {
+                            event.callback = () => {
+                                meta[1](true);
+                            }
+                        }
+                    }
+
+                    /*if (!meta || blocking.length === 0) {
+                        if (meta) meta[1](false);
+                        myPlayer.inventory.heldItem = myPlayer.inventory.weaponSelected;
+                        console.log("placed item non blocked, now holding item:", myPlayer.inventory.heldItem);
+                    }*/
+                } else {
+                    myPlayer.isAttacking = true;
+                    //console.log("started attacking");
+
+                    if (packet.data[0] === 1 && myPlayer.inventory.heldItem instanceof Weapon && (myPlayer.swingStreak === 0 || myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id] - core.tickEngine.ping <= 0)) {
+                        //const [hat, tail] = .computeHat(core.tickEngine.tickIndex);
+                        
+                        
+                        //myPlayer.nextAttack = core.tickEngine.getTickIndex(Date.now() - core.tickEngine.ping + myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id]);
+                        /*if (!core.tickEngine.isTickPredictable(core.tickEngine.tickIndex + 1)) {
+                            core.scheduleAction(ActionType.ATTACK, ActionPriority.BIOMEHAT, nextPredictableTick, [1, packet.data[1]], true);
+                            isAttackScheduled = nextPredictableTick;
+                        }*/
+                        myPlayer.justStartedAttacking = true;
+                        myPlayer.inventory.resetReload(myPlayer.inventory.heldItem);
+                        //return false;
                     }
                 }
             } else {
                 if (!core.tickEngine.isTickPredictable(core.tickEngine.getTickIndex(Date.now() + myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id]))) {
                     myPlayer.swingStreak = 0;
                 }
+                myPlayer.isAttacking = false;
+                //console.log("stopped attacking");
                 /*if (isAttackScheduled > -1) {
                     core.scheduleAction(ActionType.ATTACK, ActionPriority.BIOMEHAT, isAttackScheduled + 1, [0, packet.data[1]], true);
                     isAttackScheduled = -1;
                 }*/
             }
 
-            if (!wasHeal && packet.data[0] === 1 && myPlayer.inventory.heldItem instanceof Weapon && (myPlayer.swingStreak === 0 || myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id] - core.tickEngine.ping <= 0)) {
-                //const [hat, tail] = .computeHat(core.tickEngine.tickIndex);
-                
-                
-                //myPlayer.nextAttack = core.tickEngine.getTickIndex(Date.now() - core.tickEngine.ping + myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id]);
-                /*if (!core.tickEngine.isTickPredictable(core.tickEngine.tickIndex + 1)) {
-                    core.scheduleAction(ActionType.ATTACK, ActionPriority.BIOMEHAT, nextPredictableTick, [1, packet.data[1]], true);
-                    isAttackScheduled = nextPredictableTick;
-                }*/
-                myPlayer.justStartedAttacking = true;
-                myPlayer.inventory.resetReload(myPlayer.inventory.heldItem);
-                //return false;
+            if (typeof packet.data[1] === "number") {
+                //core.lastActionState.aim = packet.data[1];
+                myPlayer.dir = packet.data[1];
             }
-
-            myPlayer.isAttacking = packet.data[0];
             break;
         }
         case PacketType.SELECT_ITEM: {
             const myPlayer = core.playerManager.myPlayer;
-            const lastHeld = `${myPlayer.inventory.heldItem instanceof Weapon}_${myPlayer.inventory.heldItem.id}`;
+            const lastHeldWasWeapon = myPlayer.inventory.heldItem instanceof Weapon;
+            const lastHeld = myPlayer.inventory.heldItem.id;
             if (packet.data[1]) {
                 myPlayer.inventory.heldItem = weaponList[packet.data[0]];
+                //console.log("selecting back to weapon:", myPlayer.inventory.heldItem);
             } else {
-                if (`${packet.data[1]}_${packet.data[0]}` === lastHeld) {
+                if (!lastHeldWasWeapon && packet.data[0] === lastHeld) {
+                    //console.log("clicked item twice:", myPlayer.inventory.heldItem, "going to ", myPlayer.inventory.heldItem);
                     myPlayer.inventory.heldItem = myPlayer.inventory.weaponSelected;
                 } else {
+                    myPlayer.isAttacking = false;
                     myPlayer.inventory.heldItem = items.list[packet.data[0]];
+                    //console.log("selecting item:", myPlayer.inventory.heldItem)
                 }
             }
+            //console.log("selected item:", myPlayer.inventory.heldItem);
             break;
         }
         case PacketType.AUTO_ATK: {
@@ -304,8 +359,23 @@ function processOut(packet: Packet) {
             }
             break;
         }
+        case PacketType.SET_ANGLE: {
+            //core.lastActionState.aim = packet.data[0];
+            core.playerManager.myPlayer.dir = packet.data[0];
+            break;
+        }
+        case PacketType.BUY_AND_EQUIP: {
+            if (packet.data[0] === 0) {
+                const myPlayer = core.playerManager.myPlayer;
+                if (packet.data[2] === 0) {
+                    if (myPlayer.ownedHats.includes(packet.data[1])) myPlayer.skinIndex = packet.data[1];
+                } else {
+                    if (myPlayer.ownedTails.includes(packet.data[1])) myPlayer.tailIndex = packet.data[1];
+                }
+            }
+        }
+        
     }
-    return true;
 }
 
 const PacketHandler = { processIn, processOut };

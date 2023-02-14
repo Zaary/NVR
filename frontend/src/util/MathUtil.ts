@@ -81,6 +81,65 @@ function lineSpan(origin: Vector, p1: Vector, p2: Vector) {
     return Math.acos((BC * BC + AB * AB - AC * AC) / (2 * BC * AB));
 }
 
+// no one knows how much these functions mean to me me (i literally spent several hours figuring this shit out and raging multiple times)
+function polarToCartesian(angle: number) {
+    return (angle < 0 && angle > -Math.PI) ? -angle : Math.PI * 2 - angle;
+}
+
+function cartesianToPolar(angle: number) {
+    return (angle > Math.PI) ? Math.PI * 2 - angle : -angle;
+}
+
+function clampPolar(angle: number) {
+    return (angle >= -Math.PI && angle <= Math.PI) ? angle : ((angle < -Math.PI) ? angle + 2 * Math.PI : angle - 2 * Math.PI);
+}
+
+function clampCartesian(angle: number) {
+    return (angle >= 0 && angle <= 2 * Math.PI) ? angle : ((angle < 0) ? angle + 2 * Math.PI : angle - 2 * Math.PI);
+}
+
+function middleOfCartesianArc(angles: [number, number]) {
+    let startAngle = angles[0];
+    let endAngle = angles[1];
+
+    if (endAngle < startAngle) {
+        endAngle += 2 * Math.PI;
+    }
+
+    return (startAngle + (endAngle - startAngle) / 2) % (Math.PI * 2);
+}
+
+/*
+function angleToUnitCircle(angle: number) {
+	var unitAngle;
+	if (angle >= 0 && angle <= Math.PI) {
+	  	unitAngle = angle;
+	} else {
+	  	unitAngle = Math.PI * -2 + angle;
+	}
+	return unitAngle;
+}
+
+
+function clampUnitCircleAngle(angle: number) {
+	angle %= Math.PI * 2;
+	if (angle < -Math.PI) {
+		return angle + Math.PI * 2;
+	} else if (angle > Math.PI) {
+		return angle - Math.PI * 2;
+	}
+	return angle;
+}
+
+function unitCircleAngleToFull(angle: number) {
+	if (angle < 0) {
+		return angle + Math.PI * 2;
+	} else {
+		return angle;
+	}
+}
+*/
+
 export default {
     randInt,
     randFloat,
@@ -94,5 +153,10 @@ export default {
 	averageOfArray,
 	roundTo,
 	lineSpan,
-	sumArray
+	sumArray,
+	polarToCartesian,
+	cartesianToPolar,
+	clampPolar,
+	clampCartesian,
+	middleOfCartesianArc
 }
