@@ -16,4 +16,5 @@ export default abstract class Module {
     onActionRun(action: Action) {};
     onBuildingHit(player: Player, building: PlayerBuilding, damage: number) {};
     onBuildingBreak(building: PlayerBuilding) {};
+    onPlayerUpdate(player: Player) {};
 }

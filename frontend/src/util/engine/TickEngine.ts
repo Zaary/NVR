@@ -124,7 +124,10 @@ class TickEngine extends EventEmitter<{
                 if (this.serverLag > 0) this.emit("serverlag", this.serverLag);
 
                 core.objectManager.resetWiggles(this.tickIndex);
-                core.playerManager.resetSwingStreaks(this.tickIndex);
+                core.playerManager.tickReset(this.tickIndex);
+
+                core.projectileManager.tickSpawnAllScheduled(this.tickIndex);
+
                 this.emit("tick", this.tickIndex);
             } else if (packet.type === PacketType.IO_INIT) {
                 canReceivePing = true;

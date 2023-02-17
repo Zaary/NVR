@@ -12,7 +12,7 @@ export default class PlayerManager {
 
     constructor() {
         this.playerList = new SidArray();
-        this.myClan = new SidArray<Player>;
+        this.myClan = new SidArray();
         this.myPlayer = new ClientPlayer("", -1, "", new Vector, 0, 0, 0, 0, 0);
     }
 
@@ -45,7 +45,7 @@ export default class PlayerManager {
         }
     }
 
-    resetSwingStreaks(tickIndex: number) {
+    tickReset(tickIndex: number) {
         for (let i = 0; i < this.playerList.length; i++) {
             const player = this.playerList[i];
 
@@ -53,6 +53,8 @@ export default class PlayerManager {
                 player.nextAttack = 0;
                 player.swingStreak = 0;
             }
+
+            player.hasFiredProjectileThisTick = false;
         }
     }
 

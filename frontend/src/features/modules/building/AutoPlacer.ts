@@ -162,7 +162,7 @@ export default class AutoPlacer extends Module {
                     const trap = target.state.data.trap;
 
                     if (trap) {
-                        const tangentAngle = core.objectManager.findPlacementTangent([myPlayer.serverPos, myPlayer.scale], trap, spikeItem, 1);
+                        const tangentAngle = core.objectManager.findPlacementTangent([myPlayer.serverPos, myPlayer.scale], trap, spikeItem, 3);
                         const straightAngle = MathUtil.getDirection(myPlayer.serverPos, trap.position);
                         const targetAngle = MathUtil.getDirection(myPlayer.serverPos, target.serverPos);
                         const angle1 = straightAngle + tangentAngle;

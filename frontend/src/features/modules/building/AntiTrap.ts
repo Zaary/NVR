@@ -16,11 +16,13 @@ export default class AntiTrap extends Module {
 
     private currentTrap: PlayerBuilding | null;
     private willTrapBreakNextTick: boolean;
+    private aimPacketsBlocker: number;
 
     constructor() {
         super();
         this.currentTrap = null;
         this.willTrapBreakNextTick = false;
+        this.aimPacketsBlocker = -1;
     }
 
     /*activate(tickIndex = core.tickEngine.getNextPredictableTick(), isNotSync?: boolean) {
@@ -140,6 +142,8 @@ export default class AntiTrap extends Module {
         const currentWeapon = <MeleeWeapon> myPlayer.inventory.heldItem;
         const lastHeldItemId = currentWeapon.id;
 
+        if (this.aimPacketsBlocker === -1) this.aimPacketsBlocker = core.createPacketBlock(PacketType.SET_ANGLE);
+
         if (core.tickEngine.isTickPredictable(core.tickEngine.tickIndex + 1)) {
             const predictableTick = core.tickEngine.tickIndex + 1;
             let scheduledWeapon = bestWeapon;
@@ -152,9 +156,11 @@ export default class AntiTrap extends Module {
 
             if (myPlayer.inventory.reloads[scheduledWeapon.id] <= (lastHeldItemId === scheduledWeapon.id ? core.tickEngine.timeToNextTick : 0)) {
                 core.scheduleAction(ActionType.ATTACK, ActionPriority.AUTOBREAK, predictableTick, [1, angle]);
-                myPlayer.nextAttack = predictableTick + 1;
+                //console.log("predictable, reloaded");
+                //myPlayer.nextAttack = predictableTick + 1;
             } else {
                 myPlayer.nextAttack = core.tickEngine.tickIn(myPlayer.inventory.reloads[scheduledWeapon.id]) + (lastHeldItemId === scheduledWeapon.id ? 1 : 2);
+                //console.log("predictable, not reloaded");
             }
         } else {
             if (core.isHighestPriority(ActionPriority.AUTOBREAK, core.tickEngine.tickIndex)) {
@@ -162,10 +168,12 @@ export default class AntiTrap extends Module {
                 if (myPlayer.inventory.heldItem !== bestWeapon && (myPlayer.inventory.heldItem instanceof MeleeWeapon && trap.health > currentWeapon.stats.dmg * currentWeapon.stats.buildingDmgMultiplier * (myPlayer.ownedHats.includes(40) ? tankGear.bDmg! : 1))) {
                     connection.send(new Packet(PacketType.SELECT_ITEM, [bestWeapon.id, true]));
                 }
-                if (myPlayer.inventory.reloads[myPlayer.inventory.heldItem.id] <= (lastHeldItemId === myPlayer.inventory.heldItem.id ? core.tickEngine.timeToNextTick : 0)) {
+                if (myPlayer.inventory.reloads[bestWeapon.id] <= (lastHeldItemId === myPlayer.inventory.heldItem.id ? core.tickEngine.timeToNextTick : 0)) {
+                    console.log("unpredictable, reloaded: ", myPlayer.inventory.reloads[bestWeapon.id], (lastHeldItemId === myPlayer.inventory.heldItem.id ? core.tickEngine.timeToNextTick : 0));
                     connection.send(new Packet(PacketType.ATTACK, [1, angle]));
                 } else {
                     myPlayer.nextAttack = core.tickEngine.tickIn(myPlayer.inventory.reloads[myPlayer.inventory.heldItem.id]) + (lastHeldItemId === myPlayer.inventory.heldItem.id ? 1 : 2);
+                    //console.log("unpredictable, not reloaded");
                 }
             }
         }
@@ -174,6 +182,8 @@ export default class AntiTrap extends Module {
     setTrapBroken() {
         this.currentTrap = null;
         this.willTrapBreakNextTick = false;
+
+        if (this.aimPacketsBlocker > -1) core.removePacketBlock(PacketType.SET_ANGLE, this.aimPacketsBlocker);
 
         const myPlayer = core.playerManager.myPlayer;
         const bestWeapon = myPlayer.inventory.findBestWeapon(Inventory.WeaponFinders.DAMAGE)!;

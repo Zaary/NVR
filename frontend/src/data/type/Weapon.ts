@@ -1,3 +1,5 @@
+import { ProjectileItem, Projectiles } from "./Projectile";
+
 enum WeaponType {
     TOOL_HAMMER,
     HAND_AXE,
@@ -65,59 +67,17 @@ class MeleeWeapon extends Weapon {
 }
 
 class RangedWeapon extends Weapon {
+	public projectile: ProjectileItem;
     public stats: RangedWeaponStats;
 
-    constructor(id: number, slot: WeaponSlot, type: WeaponType, stats: RangedWeaponStats) {
+    constructor(id: number, slot: WeaponSlot, type: WeaponType, projectile: ProjectileItem, stats: RangedWeaponStats) {
         super(id, slot, type, stats);
+		this.projectile = projectile;
         this.stats = stats;
     }
 }
 
-const projectiles = [{
-	indx: 0,
-	layer: 0,
-	src: "arrow_1",
-	dmg: 25,
-	speed: 1.6,
-	scale: 103,
-	range: 1000
-}, {
-	indx: 1,
-	layer: 1,
-	dmg: 25,
-	scale: 20
-}, {
-	indx: 0,
-	layer: 0,
-	src: "arrow_1",
-	dmg: 35,
-	speed: 2.5,
-	scale: 103,
-	range: 1200
-}, {
-	indx: 0,
-	layer: 0,
-	src: "arrow_1",
-	dmg: 30,
-	speed: 2,
-	scale: 103,
-	range: 1200
-}, {
-	indx: 1,
-	layer: 1,
-	dmg: 16,
-	scale: 20
-}, {
-	indx: 0,
-	layer: 0,
-	src: "bullet_1",
-	dmg: 50,
-	speed: 3.6,
-	scale: 160,
-	range: 1400
-}];
-
-const Weapons = { // it does, i want to add more things, im just adjusting something here
+const Weapons = { // important: keep the order to access weapon objects using their IDs
     TOOL_HAMMER: new MeleeWeapon(0, WeaponSlot.PRIMARY, WeaponType.TOOL_HAMMER, { dmg: 25, buildingDmgMultiplier: 1, range: 65, reloadTime: 300, speedMultiplier: 1 }),
     HAND_AXE: new MeleeWeapon(1, WeaponSlot.PRIMARY, WeaponType.HAND_AXE, { dmg: 30, buildingDmgMultiplier: 1, range: 70, reloadTime: 400, speedMultiplier: 1 }),
     GREAT_AXE: new MeleeWeapon(2, WeaponSlot.PRIMARY, WeaponType.GREAT_AXE, { dmg: 35, buildingDmgMultiplier: 1, range: 75, reloadTime: 400, speedMultiplier: 1 }),
@@ -127,13 +87,13 @@ const Weapons = { // it does, i want to add more things, im just adjusting somet
     BAT: new MeleeWeapon(6, WeaponSlot.PRIMARY, WeaponType.BAT, { dmg: 20, buildingDmgMultiplier: 1, range: 110, reloadTime: 300, speedMultiplier: 1 }),
     DAGGERS: new MeleeWeapon(7, WeaponSlot.PRIMARY, WeaponType.DAGGERS, { dmg: 20, buildingDmgMultiplier: 1, range: 65, reloadTime: 100, speedMultiplier: 1.13 }),
     STICK: new MeleeWeapon(8, WeaponSlot.PRIMARY, WeaponType.STICK, { dmg: 1, buildingDmgMultiplier: 1, range: 70, reloadTime: 400, speedMultiplier: 1 }),
-    HUNTING_BOW: new RangedWeapon(9, WeaponSlot.SECONDARY, WeaponType.HUNTING_BOW, { range: 1000, speedMultiplier: 0.75, reloadTime: 600, dmg: 25 }),
+    HUNTING_BOW: new RangedWeapon(9, WeaponSlot.SECONDARY, WeaponType.HUNTING_BOW, Projectiles.BOW_ARROW, { range: 1000, speedMultiplier: 0.75, reloadTime: 600, dmg: 25 }),
     GREAT_HAMMER: new MeleeWeapon(10, WeaponSlot.SECONDARY, WeaponType.GREAT_HAMMER, { dmg: 10, buildingDmgMultiplier: 7.5, range: 75, reloadTime: 400, speedMultiplier: 1 }),
     SHIELD: new MeleeWeapon(11, WeaponSlot.SECONDARY, WeaponType.SHIELD, { dmg: 0, buildingDmgMultiplier: 1, range: 0, reloadTime: 0, speedMultiplier: 0.7 }),
-    CROSSBOW: new RangedWeapon(12, WeaponSlot.SECONDARY, WeaponType.CROSSBOW, { range: 1200, speedMultiplier: 0.7, reloadTime: 700, dmg: 30 }),
-    REPEATER_CROSSBOW: new RangedWeapon(13, WeaponSlot.SECONDARY, WeaponType.REPEATER_CROSSBOW, { range: 1200, speedMultiplier: 0.7, reloadTime: 230, dmg: 25 }),
+    CROSSBOW: new RangedWeapon(12, WeaponSlot.SECONDARY, WeaponType.CROSSBOW, Projectiles.CROSSBOW_ARROW, { range: 1200, speedMultiplier: 0.7, reloadTime: 700, dmg: 30 }),
+    REPEATER_CROSSBOW: new RangedWeapon(13, WeaponSlot.SECONDARY, WeaponType.REPEATER_CROSSBOW, Projectiles.REPEATER_CROSSBOW_ARROW, { range: 1200, speedMultiplier: 0.7, reloadTime: 230, dmg: 25 }),
     MC_GRABBY: new MeleeWeapon(14, WeaponSlot.SECONDARY, WeaponType.MC_GRABBY, { dmg: 0, buildingDmgMultiplier: 1, range: 125, reloadTime: 700, speedMultiplier: 1.05 }),
-    MUSKET: new RangedWeapon(15, WeaponSlot.SECONDARY, WeaponType.MUSKET, { range: 1400, speedMultiplier: 0.6, reloadTime: 1500, dmg: 50 })
+    MUSKET: new RangedWeapon(15, WeaponSlot.SECONDARY, WeaponType.MUSKET, Projectiles.MUSKET_BULLET, { range: 1400, speedMultiplier: 0.6, reloadTime: 1500, dmg: 50 })
 }
 
 const weaponList = Object.values(Weapons);

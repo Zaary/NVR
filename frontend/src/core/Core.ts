@@ -29,6 +29,7 @@ import Vector from "../util/type/Vector";
 import NVRLoader from "../loader/NVRLoader";
 import BuildingVisualisationModule from "../render/BuildingVisualisationModule";
 import { items } from "../data/moomoo/items";
+import ProjectileManager from "../manager/ProjectileManager";
 
 interface MState {
     mouseHeld: boolean;
@@ -85,10 +86,11 @@ class Core extends EventEmitter {
 
     public bundleAPI: API;
 
+    public moduleManager: ModuleManager;
     public objectManager: ObjectManager;
+    public projectileManager: ProjectileManager;
     public playerManager: PlayerManager;
     public renderManager: RenderManager | null;
-    public moduleManager: ModuleManager;
 
     public tickEngine: TickEngine;
     public packetEngine: PacketCountEngine;
@@ -129,6 +131,8 @@ class Core extends EventEmitter {
 
         this.objectManager = new ObjectManager(this);
         this.playerManager = new PlayerManager();
+        this.projectileManager = new ProjectileManager(this);
+
         this.renderManager = null;
         
 

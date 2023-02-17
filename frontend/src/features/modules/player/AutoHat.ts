@@ -72,6 +72,7 @@ export default class AutoHat extends Module {
                 hat = 7;
                 tail = 0;
             } else if (antiTrap.isBreaking || objectsHit > 0) {
+                console.log("autohat: TANK");
                 hat = 40;
             }
 
@@ -144,6 +145,7 @@ export default class AutoHat extends Module {
                 if (packet.data[0] && myPlayer.justStartedAttacking) {
                     const [hat, tail] = this.getHat(true);
                     const attackArriveTick = core.tickEngine.tickIndex + 1;
+                    console.log("first hit autohat activated");
                     if (core.tickEngine.isTickPredictable(attackArriveTick)) {
                         core.scheduleAction(ActionType.HAT, ActionPriority.BIOMEHAT, attackArriveTick, [hat]);
                         core.scheduleAction(ActionType.TAIL, ActionPriority.BIOMEHAT, attackArriveTick, [tail]);

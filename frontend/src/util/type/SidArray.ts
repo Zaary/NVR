@@ -8,6 +8,16 @@ export class SidArray<T> extends Array<T extends IndexedItem ? T : never> {
         super(size);
     }
 
+    hasSid(sid: number) {
+        for (let i = 0, length = this.length; i < length; i++) {
+            const item = this[i];
+            if (item.sid === sid) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     findBySid(sid: number): T | null { 
         for (let i = 0, length = this.length; i < length; i++) {
             const item = this[i];

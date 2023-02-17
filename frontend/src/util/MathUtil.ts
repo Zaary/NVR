@@ -81,6 +81,68 @@ function lineSpan(origin: Vector, p1: Vector, p2: Vector) {
     return Math.acos((BC * BC + AB * AB - AC * AC) / (2 * BC * AB));
 }
 
+function lineInRectMooMoo(recX: number, recY: number, recX2: number, recY2: number, x1: number, y1: number, x2: number, y2: number) {
+	var minX = x1;
+	var maxX = x2;
+	if (x1 > x2) {
+		minX = x2;
+		maxX = x1;
+	}
+	if (maxX > recX2)
+		maxX = recX2;
+	if (minX < recX)
+		minX = recX;
+	if (minX > maxX)
+		return false;
+	var minY = y1;
+	var maxY = y2;
+	var dx = x2 - x1;
+	if (Math.abs(dx) > 0.0000001) {
+		var a = (y2 - y1) / dx;
+		var b = y1 - a * x1;
+		minY = a * minX + b;
+		maxY = a * maxX + b;
+	}
+	if (minY > maxY) {
+		var tmp = maxY;
+		maxY = minY;
+		minY = tmp;
+	}
+	if (maxY > recY2)
+		maxY = recY2;
+	if (minY < recY)
+		minY = recY;
+	if (minY > maxY)
+		return false;
+	return true;
+}
+
+function getTangentSpanIntersectionRadius(distanceToTarget: number, targetScale: number, intersectionRadius: number) {
+	return Math.acos((targetScale ** 2 - distanceToTarget ** 2 - intersectionRadius ** 2) / (-2 * distanceToTarget * intersectionRadius));
+}
+
+function getTangentSpanSimple(distanceToTarget: number, targetScale: number) {
+	const tangentDistance = Math.sqrt(Math.pow(distanceToTarget, 2) - Math.pow(targetScale, 2));
+	return Math.atan(targetScale / tangentDistance);
+}
+
+function willTargetBeHit(source: Vector, targetPosition: Vector, targetSize: number, shotAngle: number) {
+	// Calculate the distance from the observer to the target
+	const distanceToTarget = getDistance(source, targetPosition);
+	
+	// Calculate the tangent span of the target
+	const tangentSpan = getTangentSpanSimple(distanceToTarget, targetSize);
+	
+	// Calculate the angle from the observer to the target
+	const angleToTarget = getDirection(source, targetPosition);
+	
+	// Calculate the difference between the shot angle and the angle to the target
+	const angleDifference = getAngleDist(angleToTarget, shotAngle);
+	
+	// Check if the shot angle is within the tangent span of the target
+	return angleDifference <= tangentSpan;
+}
+
 // no one knows how much these functions mean to me me (i literally spent several hours figuring this shit out and raging multiple times)
 function polarToCartesian(angle: number) {
     return (angle < 0 && angle > -Math.PI) ? -angle : Math.PI * 2 - angle;
@@ -153,7 +215,11 @@ export default {
 	averageOfArray,
 	roundTo,
 	lineSpan,
+	lineInRectMooMoo,
 	sumArray,
+	getTangentSpanIntersectionRadius,
+	getTangentSpanSimple,
+	willTargetBeHit,
 	polarToCartesian,
 	cartesianToPolar,
 	clampPolar,

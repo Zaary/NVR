@@ -1,5 +1,7 @@
+import { SidArray } from "../../util/type/SidArray";
 import Vector from "../../util/type/Vector";
 import { Item, items } from "../moomoo/items";
+import { Projectile } from "./Projectile";
 
 class GameObject {
     // base properties
@@ -31,11 +33,11 @@ class GameObject {
         }
     }
 
-    getScale(fullScale = false) {
+    getScale(fullScale = false): number {
         return this instanceof NaturalObject ? (this.type === 0 || this.type === 1 ? this.scale * 0.6 : this.scale) : this.scale * (fullScale ? 1 : items.list[this.type].colDiv ?? 1);
     }
 
-    getPlaceColScale() {
+    getPlaceColScale(): number {
         return this instanceof NaturalObject && (this.type === 0 || this.type === 1) ? this.scale * 0.36 : this.scale;
     }
 }
@@ -62,6 +64,8 @@ class PlayerBuilding extends GameObject {
     public meta: PBMetaData;
     public health: number;
 
+    public ownedProjectiles: SidArray<Projectile>;
+
     constructor(sid: number, position: Vector, dir: number, scale: number, type: number, owner: number, placementSighted: boolean) {
         super(sid, type, position, dir, scale);
         this.stats = items.list[type];
@@ -72,6 +76,8 @@ class PlayerBuilding extends GameObject {
             shouldUpdate: this.stats.group.id === 3 // group 3 is windmills
         }
         this.health = this.stats.health ?? 1;
+
+        this.ownedProjectiles = new SidArray();
     }
 
     update(delta: number) {

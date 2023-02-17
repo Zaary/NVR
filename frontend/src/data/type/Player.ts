@@ -9,6 +9,9 @@ import MathUtil from "../../util/MathUtil";
 import MovementProcessor from "../../util/processor/MovementProcessor";
 import ObjectManager from "../../manager/ObjectManager";
 import { GameObject, NaturalObject, PlayerBuilding } from "./GameObject";
+import { Core } from "../../core/Core";
+import { Projectile } from "./Projectile";
+import { SidArray } from "../../util/type/SidArray";
 
 enum WeaponFinder {
 	BUILDING_BREAK,
@@ -30,6 +33,8 @@ class Inventory {
 	public heldItem: Weapon | Item;
 	public weaponSelected: Weapon;
 
+	public turretGearReload: number;
+
 	constructor(player: Player) {
 		this.player = player;
 		this.weapons = [Weapons.TOOL_HAMMER, null];
@@ -37,6 +42,7 @@ class Inventory {
 		this.items = [0, 3, 6, 10];
 		this.heldItem = Weapons.TOOL_HAMMER;
 		this.weaponSelected = Weapons.TOOL_HAMMER;
+		this.turretGearReload = 0;
 	}
 	
 	reset() {
@@ -67,6 +73,8 @@ class Inventory {
 			this.reloads[id] -= delta;
 			if (this.reloads[id] <= 0) this.reloads[id] = 0;
 		}
+
+		this.turretGearReload -= delta;
 	}
 
 	remainingReloadTime(slot: WeaponSlot) {
@@ -91,6 +99,10 @@ class Inventory {
 	hasWeapon(weapon: number | Weapon) {
 		const wep = typeof weapon === "number" ? weaponList[weapon] : weapon;
 		return this.weapons[0].id === wep.id || (this.weapons[1] && this.weapons[1].id === wep.id);
+	}
+
+	fireTurretGear(pingDelta: number) {
+		this.turretGearReload = 3000 - pingDelta;
 	}
 }
 
@@ -147,9 +159,10 @@ class Player {
 
 	public movementProcessor: MovementProcessor;
 
-	public hitBuildingsLastTick: PlayerBuilding[];
 	public hasAttackedThisTick: boolean;
 	public _attackedThisTickTempVariable: boolean;
+	
+	public hasFiredProjectileThisTick: boolean;
 	
 	/*public zIndex: number = 0;
 	public xVel: number = 0;
@@ -187,6 +200,8 @@ class Player {
     serverDir: any;
 
 	dt: any;
+
+	public ownedProjectiles: SidArray<Projectile>;
     
     constructor(id: string, sid: number, name: string, position: Vector, dir: number, health: number, maxHealth: number, scale: number, skinColor: number) {
         this.id = id;
@@ -216,9 +231,10 @@ class Player {
 
 		this.movementProcessor = new MovementProcessor(this);
 
-		this.hitBuildingsLastTick = [];
 		this.hasAttackedThisTick = false;
 		this._attackedThisTickTempVariable = false;
+
+		this.hasFiredProjectileThisTick = false;
 
 		this.state = {
 			isTrapped: false,
@@ -231,9 +247,11 @@ class Player {
 
 		this.nextAttack = 0;
 		this.swingStreak = 0;
+		
+		this.ownedProjectiles = new SidArray();
     }
 
-	updatePlayer(objectManager: ObjectManager, x: number, y: number, dir: number, buildIndex: number, weaponIndex: number, _weaponVariant: number, _team: string, _isLeader: boolean, _skinIndex: number, _tailIndex: number, _iconIndex: boolean, _zIndex: number) {
+	updatePlayer(core: Core, x: number, y: number, dir: number, buildIndex: number, weaponIndex: number, _weaponVariant: number, _team: string, _isLeader: boolean, _skinIndex: number, _tailIndex: number, _iconIndex: boolean, _zIndex: number) {
 		this.lerpPos = this.renderPos.clone();
 		this.lastTickServerPos = this.serverPos.clone();
 		this.serverPos = new Vector(x, y);
@@ -266,8 +284,41 @@ class Player {
 		this.state.isTrapped = false;
 		this.state.data.trap = undefined;
 
+		// damage objects
+		const weapon = <MeleeWeapon> this.inventory.weaponSelected;
+		const hittableObjects = core.objectManager.getGridArrays(x, y, weapon.stats.range);
+
+		for (let i = 0; i < hittableObjects.length; i++) {
+			const object = hittableObjects[i];
+			// use object.scale because .getScale returns collision box while .scale is hitbox
+			if (MathUtil.getDistance(object.position, this.serverPos) - object.scale <= weapon.stats.range) {
+				for (const wiggle of object.wiggles) {
+					const gatherAngle = MathUtil.getDirection(this.serverPos, object.position);
+
+					if (object instanceof PlayerBuilding && MathUtil.getAngleDist(wiggle[0], MathUtil.roundTo(gatherAngle, 1)) === 0) {
+						// damage the building depending on the player's weapon damage
+
+						if (weapon instanceof MeleeWeapon) {
+							const hatMultiplier = hats.find(x => x.id === this.skinIndex)?.bDmg ?? 1;
+							const damage = weapon.stats.dmg * weapon.stats.buildingDmgMultiplier * hatMultiplier;
+							object.health -= damage;
+							console.log("hit building " + object.stats.name + " new health:", object.health, "angles;", wiggle[0], MathUtil.roundTo(gatherAngle, 1));
+						} else {
+							console.warn("detected hit while holding ranged weapon");
+						}
+						//core.moduleManager.onBuildingHit(player, object, damage);
+
+						// remove the wiggle as its confirmed by player update and gather
+						object.wiggles.splice(object.wiggles.indexOf(wiggle), 1);
+					} else {
+						// this should NOT happen
+					}
+				}
+			}
+		}
+
 		// objects
-		const grids = objectManager.getGridArrays(this.serverPos.x, this.serverPos.y, this.scale + this.velocity.length() * 2);
+		const grids = core.objectManager.getGridArrays(this.serverPos.x, this.serverPos.y, this.scale + this.velocity.length() * 2);
 		for (let i = 0; i < grids.length; i++) {
 			const object = grids[i];
 			if (object instanceof NaturalObject) continue;
@@ -277,21 +328,10 @@ class Player {
 			if (object.type === 15 && isCollision && (<PlayerBuilding> object).owner.sid !== this.sid) this.state.isTrapped = true, this.state.data.trap = <PlayerBuilding> object;
 		}
 
-		// update health of hitted buildings
-		for (let i = 0; i < this.hitBuildingsLastTick.length; i++) {
-			const building = this.hitBuildingsLastTick[i];
-			
-			const weapon = this.inventory.weaponSelected;
-			if (weapon instanceof MeleeWeapon) {
-				const hatMultiplier = hats.find(x => x.id === this.skinIndex)?.bDmg ?? 1;
-				const damage = weapon.stats.dmg * weapon.stats.buildingDmgMultiplier * hatMultiplier;
-        		building.health -= damage;
-				console.log("building " + building.stats.name + " new health:", building.health);
-			} else {
-				console.warn("detected hit while holding ranged weapon");
-			}
+		if (this.skinIndex === 53 && this.inventory.turretGearReload <= 0) {
+			this.inventory.fireTurretGear(core.tickEngine.ping);
+			console.log("just fired turret gear");
 		}
-		this.hitBuildingsLastTick = [];
 	}
 
 	updateData(id: string, sid: number, name: string, position: Vector, dir: number, health: number, maxHealth: number, scale: number, skinColor: number) {

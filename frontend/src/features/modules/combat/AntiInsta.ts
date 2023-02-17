@@ -1,182 +1,133 @@
 import { ActionPriority, ActionType } from "../../../core/ActionType";
 import accessories from "../../../data/moomoo/accessories";
+import config from "../../../data/moomoo/config";
 import hats from "../../../data/moomoo/hats";
 import { items } from "../../../data/moomoo/items";
-import { WeaponSlot } from "../../../data/type/Weapon";
+import { Player } from "../../../data/type/Player";
+import { Projectile, projectileList, Projectiles } from "../../../data/type/Projectile";
+import { MeleeWeapon, RangedWeapon, WeaponSlot } from "../../../data/type/Weapon";
 import EventPacket from "../../../event/EventPacket";
 import { core } from "../../../main";
+import { connection } from "../../../socket/Connection";
+import { Packet } from "../../../socket/packets/Packet";
 import { PacketType } from "../../../socket/packets/PacketType";
 import MathUtil from "../../../util/MathUtil";
 import Module from "../Module";
 
-/*
-use `core.tickEngine.tickIndex` to get index of the last tick that has happened
-
-use `core.tickEngine.ping` to get current ping (roundtrip)
-
-use `core.interactionEngine.heal()` to heal 1 time using your current food
-
-use `core.playerManager.myPlayer` to get the player object we are currently controlling
-use `core.playerManager.playerList` to get list of all players
-
-player is a class with the following properties:
-serverPos: { x: number; y: number } - an object storing the player's current position
-health: number - storing current player health
-maxHealth: number - storing maximum health of the player
-
-inventory: Inventory - an inventory class instance storing data about the player's inventory
-
-Inventory is a class with the following properties and methods:
-reloads: { [key: number]: number } - object mapping weapon ids to current reload state (ms left to fully reload, 0 means reloaded)
-weapons: [Weapon, Weapon | null] - a tuple of two items - two weapon slots - being Weapon class instances
-heldItem: Weapon | Item - thing the player is currently holding in hand - either Weapon instance or item
-weaponSelected: Weapon - last weapon the player had in hand, a Weapon instance
-
-Weapon is a class with the following properties:
-slot: number - 0 or 1 being primary and secondary slots
-type: WeaponType - weapon ids being WeaponType.POLEARM, WeaponType.KATANA, WeaponType.DAGGERS, WeaponType.MUSKET and WeaponType.GREAT_HAMMER
-stats: WeaponStats - statistics of the weapon
-
-WeaponStats is a class with the following properties:
-range: number - how far the weapon can reach
-speedMultiplier: number - how fast the player speed multiplies with the weapon held
-reloadTime: number - how fast the weapon reloads
-dmg: number - how much damage the weapon deals on hit
-*/
-
 export default class AntiInsta extends Module {
+
+    private totalDamageDealt: number;
+    private totalPotentialDamage: number;
 
     constructor() {
         super();
+        this.totalDamageDealt = 0;
+        this.totalPotentialDamage = 0;
     }
 
-    // if you send a packet in this method, it will arrive right before the tick happens serverside
-    onPreTick(tickIndex: number): void {
+    onPlayerUpdate(player: Player): void {
         const myPlayer = core.playerManager.myPlayer;
-        const enemies = core.playerManager.getVisibleEnemies();
+        if (player === myPlayer || core.playerManager.checkTeam(player.sid)) return;
 
-        let totalDamage = 0;
-
-        for (let i = 0; i < enemies.length; i++) {
-            const enemy = enemies[i];
-            const hatMultiplier = hats.find(x => x.id === 7)!.dmgMultO!;
-            //const tailMultiplier = hats.find(x => x.id === 21)!.dmgMultO ?? 1;
-            
-            const primaryWeapon = enemy.inventory.getWeapon(WeaponSlot.PRIMARY)!;
-            const weaponDamage = primaryWeapon.stats.dmg * hatMultiplier/* * tailMultiplier*/;
-
-            const distance = MathUtil.getDistance(myPlayer.serverPos.clone().add(myPlayer.velocity), enemy.serverPos.clone().add(enemy.velocity));
-            let potentialDamage = 0;
-
-            if (distance < primaryWeapon.stats.range + enemy.scale + myPlayer.scale) {
-                if (enemy.inventory.reloads[primaryWeapon.id] === 0 || enemy.inventory.reloads[primaryWeapon.id] <= core.tickEngine.timeToNextTick && enemy.inventory.heldItem === primaryWeapon) {
-                    potentialDamage = weaponDamage;
-                }
-            }
-
-            const secondaryWeapon = enemy.inventory.getWeapon(WeaponSlot.SECONDARY);
-
-            if (secondaryWeapon) {
-                if (enemy.inventory.reloads[secondaryWeapon.id] === 0 || enemy.inventory.reloads[secondaryWeapon.id] <= core.tickEngine.timeToNextTick && enemy.inventory.heldItem === secondaryWeapon) {
-                    potentialDamage = Math.max(potentialDamage, secondaryWeapon.stats.dmg);
-                }
-            }
-
-            totalDamage += potentialDamage;
-        }
-
-        const soldierHat = hats.find(x => x.id === 6)!;
-
-        const survivesWithoutHeal = /*myPlayer.health - totalDamage > 0*/myPlayer.health > 60;
-        const survivesAfterHeal = /*myPlayer.maxHealth - totalDamage > 0*/myPlayer.health < 60;
-
-        const ownsSoldierHat = myPlayer.ownedHats.includes(6);
-        const ownsSpikeGear = myPlayer.ownedHats.includes(11);
-        const ownsCXWings = myPlayer.ownedTails.includes(21);
-        const ownsBarbarian = myPlayer.ownedHats.includes(26);
-
-        const survivesWithSoldierHat = myPlayer.health - totalDamage * soldierHat.dmgMult! > 0;
-        const survivesWithSoldierHatHealed = myPlayer.maxHealth - totalDamage * soldierHat.dmgMult! > 0;
-
-        const hatDamageReflection = totalDamage * hats.find(x => x.id === 1)!.dmg!;
-        const tailDamageReflection = totalDamage * accessories.find(x => x.id === 21)!.dmg!;
-
-        //const damageReflectionIsEnough = (ownsSpikeGear ? hatDamageReflection : 0) + (ownsCXWings ? tailDamageReflection : 0) > 
-
-        /*
-            HEAL = 2
-            SOLDIER = 4
-            KNOCKBACK = 8
-            SPIKY = 16
-        */
-
-        let action = -1;
+        const hat = hats.find(x => x.id === player.skinIndex);
+        const tail = hats.find(x => x.id === player.tailIndex);
+        const weapon = player.inventory.weaponSelected;
         
-        if (survivesWithSoldierHat) {
-            if (survivesWithoutHeal) {
-                action = ownsBarbarian ? 8 : 0;
-            } else if (ownsSoldierHat) {
-                action = 4;
+        const straightAngle = MathUtil.getDirection(myPlayer.serverPos, player.serverPos);
+
+        // current tick damage
+        if (player.inventory.turretGearReload <= core.tickEngine.timeToNextTick) {
+            const projectile = Projectiles.TURRET_BULLET;
+            if (!Projectile.willBeTicked(projectile, myPlayer.serverPos, myPlayer.scale * 2, player.serverPos)) {
+                this.totalDamageDealt += projectile.stats.dmg;
+            }
+        }
+        if (weapon instanceof MeleeWeapon && player.hasAttackedThisTick) {
+            if (MathUtil.getAngleDist(straightAngle, player.serverDir) <= config.gatherAngle) {
+                const damage = weapon.stats.dmg * (hat?.dmgMultO ?? 1) * (tail?.dmgMultO ?? 1);
+                this.totalDamageDealt += damage;
+            }
+        } else if (weapon instanceof RangedWeapon && player.hasFiredProjectileThisTick) {
+            const projectile = weapon.projectile;
+            const damage = projectile.stats.dmg;
+
+            if (!Projectile.willBeTicked(projectile, myPlayer.serverPos, myPlayer.scale * 3, player.serverPos)) {
+                this.totalDamageDealt += damage;
             }
         }
 
-        if (action === -1) {
-            if (survivesWithSoldierHatHealed) {
-                if (survivesAfterHeal) {
-                    action = ownsBarbarian ? 10 : 2;
-                } else if (ownsSoldierHat) {
-                    action = 6;
+        // next tick potential
+        const primary = player.inventory.getWeapon(WeaponSlot.PRIMARY)!;
+        const secondary = player.inventory.getWeapon(WeaponSlot.SECONDARY);
+        
+        if (!player.hasAttackedThisTick && player.reloads[primary.id] <= (weapon === primary ? core.tickEngine.timeToNextTick : 0)) {
+            const damage = primary.stats.dmg * 1.5; // assume bull helmet usage
+            this.totalPotentialDamage += damage;
+        } else if (secondary && !((secondary instanceof MeleeWeapon ? player.hasAttackedThisTick : player.hasFiredProjectileThisTick)) && player.reloads[secondary.id] <= (weapon === secondary ? core.tickEngine.timeToNextTick : 0)) {
+            if (secondary instanceof MeleeWeapon) {
+                const damage = secondary.stats.dmg * 1.5; // assume bull helmet usage
+                this.totalPotentialDamage += damage;
+            } else if (secondary instanceof RangedWeapon) {
+                const projectile = secondary.projectile;
+                const damage = projectile.stats.dmg;
+    
+                if (!Projectile.willBeTicked(projectile, myPlayer.serverPos, myPlayer.scale * 3, player.serverPos)) {
+                    this.totalPotentialDamage += damage;
                 }
             }
-        }
-
-        if ((action & 2) === 2) {
-            const foodType = core.playerManager.myPlayer.inventory.items[0];
-            const healsUp = foodType == 0 ? 20 : 40;
-
-            for (let i = 0; i < Math.ceil((myPlayer.maxHealth - myPlayer.health) / healsUp); i++) {
-                core.interactionEngine.vanillaPlaceItem(items.list[foodType], core.mouseAngle);
-            }
-        }
-
-        //console.log(action);
-
-        let hat = -1;
-        let tail = -1;
-        
-        if ((action & 4) === 4) {
-            hat = 6;
-        }
-
-        if ((action & 8) === 8) {
-            hat = 26;
-        }
-
-        /*if ((action & 16) === 16) {
-            if (ownsSpikeGear) hat = 11;
-            if (ownsCXWings) tail = 21;
-        }*/
-
-        if (hat !== -1) {
-            core.scheduleAction(ActionType.HAT, ActionPriority.ANTIINSTA, tickIndex, [hat]);
         }
     }
 
     onPacketReceive(event: EventPacket): void {
         const packet = event.getPacket();
-        if (packet.type === PacketType.HEALTH_UPDATE) {
-()            const enemies = core.playerManager.getNearby( , 275, true);
-            if (!enemies.length) return;
-, 27.getMeleeThreats();            const myPlayer = core.playerManager.myPlayer;
-            const HealAt = myPlayer.skinIndex === 6 ? 56.25 : 40
-            if (packet.data[0] === myPlayer.sid && packet.data[1] <= HealAt) {
-                const foodType = core.playerManager.myPlayer.inventory.items[0];
-                const healsUp = foodType == 0 ? 20 : 40;
-    
-                for (let i = 0; i < Math.ceil((myPlayer.maxHealth - myPlayer.health) / healsUp); i++) {
-                    core.interactionEngine.vanillaPlaceItem(items.list[foodType], core.mouseAngle);
+
+        if (packet.type === PacketType.PLAYER_UPDATE) {
+            const myPlayer = core.playerManager.myPlayer
+ 
+            const projectiles = core.projectileManager.getDangerousProjectiles(core.tickEngine.tickIndex + 1);
+            const projectileDamage = projectiles.reduce((ac: number, val: Projectile) => ac + projectileList[val.type].stats.dmg, 0);
+            const potentialDamage = this.totalPotentialDamage + projectileDamage;
+
+            const currentDamageReduction = (myPlayer.skinIndex === 6 ? 0.75 : 0) + (0);
+
+            const newHealth = Math.min(myPlayer.health, myPlayer.maxHealth - potentialDamage * currentDamageReduction);
+
+            if (newHealth - potentialDamage <= 0) {
+                const tick = core.tickEngine.tickIndex + 1;
+                if (newHealth - potentialDamage * 0.75 > 0 && myPlayer.ownedHats.includes(6)) {
+                    // soldier will save us
+                    if (core.tickEngine.isTickPredictable(tick)) {
+                        core.scheduleAction(ActionType.HAT, ActionPriority.ANTIINSTA, tick, [6]);
+                    } else {
+                        connection.send(new Packet(PacketType.BUY_AND_EQUIP, [0, 6, 0]), true);
+                        core.lastActionState.hat = 6;
+                    }
+                } else {
+                    // healing to full will save us
+                    const foodType = core.playerManager.myPlayer.inventory.items[0];
+                    const healsUp = foodType == 0 ? 20 : 40;
+
+                    const times = Math.ceil((myPlayer.maxHealth - myPlayer.health) / healsUp);
+
+                    for (let i = 0; i < times; i++) {
+                        core.interactionEngine.vanillaUseFoodItem(items.list[foodType], i === times - 1);
+                    }
+
+                    if (myPlayer.maxHealth - potentialDamage < 0 && myPlayer.ownedHats.includes(6)) {
+                        // equip soldier because even healing to full wont save us
+                        if (core.tickEngine.isTickPredictable(tick)) {
+                            core.scheduleAction(ActionType.HAT, ActionPriority.ANTIINSTA, tick, [6]);
+                        } else {
+                            connection.send(new Packet(PacketType.BUY_AND_EQUIP, [0, 6, 0]), true);
+                            core.lastActionState.hat = 6;
+                        }
+                    }
                 }
             }
+
+            this.totalDamageDealt = 0;
+            this.totalPotentialDamage = 0;
         }
     }
+
 }

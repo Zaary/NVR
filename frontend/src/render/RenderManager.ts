@@ -125,7 +125,7 @@ export default class RenderManager extends EventEmitter<{
                     player.dir = MathHelper.lerpAngle(player.serverDir, player.lastDir, Math.min(1.2, ratio));*/
                 }
             }
-        })
+        });
     }
 
     updateTransformMatrix() {

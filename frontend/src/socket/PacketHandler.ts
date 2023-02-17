@@ -16,6 +16,8 @@ import { ActionPriority, ActionType } from "../core/ActionType";
 import AutoHat from "../features/modules/player/AutoHat";
 import { connection } from "./Connection";
 import EventPacket from "../event/EventPacket";
+import config from "../data/moomoo/config";
+import hats from "../data/moomoo/hats";
 
 const logger = new Logger("packethandler");
 
@@ -31,15 +33,26 @@ function processIn(packet: Packet) {
             for (let i = 0; i < core.playerManager.playerList.length; i++) {
                 core.playerManager.playerList[i].visible = false;
             }
-            
+
+            //console.log("tick");
+
+            let playersUpdated = [];
+
             for (let i = 0; i < packet.data[0].length / 13; i++) {
                 const playerData = packet.data[0].slice(i * 13, i * 13 + 13);
                 const player = core.playerManager.playerList.findBySid(playerData[0]);
                 
                 if (player) {
+                    player.hasFiredProjectileThisTick = false;
+                    
                     if (player._attackedThisTickTempVariable) {
                         player.hasAttackedThisTick = true;
                         player._attackedThisTickTempVariable = false;
+
+                        const weapon = playerData[4] === -1 ? weaponList[playerData[5]] : player.inventory.weaponSelected;
+
+                        player.inventory.resetReload(weapon);
+                        player.inventory.updateReloads(core.tickEngine.ping);
 
                         player.nextAttack = core.tickEngine.getTickIndex(Date.now() - core.tickEngine.ping * 2 + player.inventory.weaponSelected.stats.reloadTime)/* + 1*/;
                         player.swingStreak++;
@@ -55,34 +68,7 @@ function processIn(packet: Packet) {
                         //if (window[core.tickEngine.tickIndex] !== playerData[9]) console.log("fail");
                     }
 
-                    /*player.dt = 0;
-
-                    player.t1 = (player.t2 === undefined) ? Date.now() : player.t2;
-                    player.t2 = Date.now();
-
-                    player.x1 = player.x;
-                    player.y1 = player.y;
-
-                    player.x2 = playerData[1];
-                    player.y2 = playerData[2];*/
-
-                    //player.lastPositionTimestamp = player.positionTimestamp; // t1
-                    //player.positionTimestamp = Date.now(); // t2
-                    //player.clientPosX = player.x; // x1
-                    //player.clientPosY = player.y; // y1
-                    //player.lastDir = player.serverDir; // d1
-
-                    //player.lastTickPosX = player.serverPosX;
-                    //player.lastTickPosY = player.serverPosY;
-
-                    /*player.clientPosition.set(player.renderPosition);
-
-                    player.serverPosition.set(
-                        playerData[1],
-                        playerData[2]
-                    );*/
-
-                    player.updatePlayer(core.objectManager, playerData[1], playerData[2], playerData[3], playerData[4], playerData[5], playerData[6], playerData[7], playerData[8], playerData[9], playerData[10], playerData[11], playerData[12]);
+                    player.updatePlayer(core, playerData[1], playerData[2], playerData[3], playerData[4], playerData[5], playerData[6], playerData[7], playerData[8], playerData[9], playerData[10], playerData[11], playerData[12]);
 
                     //player.lerpPos = new Vector(player.renderPos.x, player.renderPos.y) // clientPos
                     //player.lastDir = player.serverDir; // d1
@@ -109,7 +95,13 @@ function processIn(packet: Packet) {
                     player.iconIndex = playerData[11];
                     player.zIndex = playerData[12];*/
                     player.visible = true;
+
+                    playersUpdated.push(player);
                 }
+            }
+
+            for (let i = 0; i < playersUpdated.length; i++) {
+                core.moduleManager.onPlayerUpdate(playersUpdated[i]);
             }
 
             /*setTarget(playerUtil.findTarget(players));
@@ -172,39 +164,6 @@ function processIn(packet: Packet) {
 
             player._attackedThisTickTempVariable = true;
 
-            // set reload
-            player.inventory.resetReload(player.inventory.heldItem instanceof MeleeWeapon ? player.inventory.heldItem : player.inventory.weapons[0]);
-            player.inventory.updateReloads(core.tickEngine.ping);
-
-            // damage objects
-            const weapon = <MeleeWeapon> player.inventory.weaponSelected;
-            const grids = core.objectManager.getGridArrays(player.serverPos.x, player.serverPos.y, weapon.stats.range + player.velocity.length() * 2);
-
-            for (let i = 0; i < grids.length; i++) {
-                const object = grids[i];
-                // use object.scale because .getScale returns collision box while .scale is hitbox
-                if (MathUtil.getDistance(object.position, player.lastTickServerPos) - object.scale <= weapon.stats.range + player.velocity.length() * 2) {
-                    for (const wiggle of object.wiggles) {
-                        const gatherAngle = MathUtil.roundTo(MathUtil.getDirection(player.serverPos, object.position), 1);
-                        const safeSpan = MathUtil.lineSpan(object.position.clone(), player.lastTickServerPos.clone(), player.serverPos.clone().add(player.velocity));
-
-                        if (true/*MathUtil.getAngleDist(wiggle[0], gatherAngle) <= safeSpan + Number.EPSILON*/) {
-                            if (object instanceof PlayerBuilding) {
-                                // damage the building depending on the player's weapon damage
-                                player.hitBuildingsLastTick.push(object);
-                                //core.moduleManager.onBuildingHit(player, object, damage);
-                            }
-
-                            // remove the wiggle as its confirmed by gather packet
-                            object.wiggles.splice(object.wiggles.indexOf(wiggle), 1);
-                        } else {
-                            // this should NOT happen and if it does, there is a 99% chance it is a bug
-                        }
-                    }
-                }
-            }
-
-            
             if (player === core.playerManager.myPlayer) (<ClientPlayer> player).justStartedAttacking = false;
             break;
         }
@@ -244,10 +203,20 @@ function processIn(packet: Packet) {
             }
             break;
         }
+        case PacketType.ADD_PROJECTILE: {
+            const data = packet.data;
+            // 2 ticks because:
+            // first tick is incremented on tick (projectiles are sent before players)
+            // second tick is because projectile will actually spawn on the next tick
+            core.projectileManager.scheduleSpawn(new Vector(data[0], data[1]), data[2], data[3], data[4], data[5], data[6], data[7]);
+            break;
+        }
+        case PacketType.REMOVE_PROJECTILE: {
+            core.projectileManager.remove(packet.data[0], packet.data[1]);
+            break;
+        }
     }
 }
-
-let isAttackScheduled = -1;
 
 function processOut(event: EventPacket, meta?: any) {
     const packet = event.getPacket();
@@ -258,6 +227,7 @@ function processOut(event: EventPacket, meta?: any) {
             let wasPlace = false;
 
             if (packet.data[0] === 1) {
+                console.log("attack");
                 const heldItem = myPlayer.inventory.heldItem;
                 if (!(heldItem instanceof Weapon)) {
                     wasPlace = true;

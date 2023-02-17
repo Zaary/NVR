@@ -70,7 +70,7 @@ export default class InteractionEngine extends EventEmitter {
         this.autoHatModule.isPlacing = true;
 
         if (lastHeldWasWeapon || lastHeld !== item.id) {
-            console.log(lastHeld, lastHeldWasWeapon);
+            //console.log(lastHeld, lastHeldWasWeapon);
             connection.send(new Packet(PacketType.SELECT_ITEM, [item.id, false]));
         }
 

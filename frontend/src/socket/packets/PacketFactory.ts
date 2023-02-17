@@ -72,7 +72,7 @@ packetTypeMapping[PacketType.JOIN_REQUEST] = { value: "an", side: Side.ClientBou
 packetTypeMapping[PacketType.REMOVE_GAME_OBJ] = { value: "12", side: Side.ClientBound };
 packetTypeMapping[PacketType.REMOVE_ALL_OBJ] = { value: "13", side: Side.ClientBound }
 packetTypeMapping[PacketType.ADD_PROJECTILE] = { value: "18", side: Side.ClientBound };
-packetTypeMapping[PacketType.UPDATE_PROJECTILES] = { value: "19", side: Side.ClientBound };
+packetTypeMapping[PacketType.REMOVE_PROJECTILE] = { value: "19", side: Side.ClientBound };
 packetTypeMapping[PacketType.TURRET_SHOOT] = { value: "sp", side: Side.ClientBound };
 packetTypeMapping[PacketType.ANIMAL_ANIMATION] = { value: "aa", side: Side.ClientBound };
 

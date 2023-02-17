@@ -27,7 +27,7 @@ export default class ModuleManager {
         AutoPlacer,
         AutoReplace,
         ItemPlacer,
-        //AntiInsta,
+        AntiInsta,
         Autoheal,
         
         NoToxic,
@@ -115,6 +115,12 @@ export default class ModuleManager {
     onBuildingBreak(building: PlayerBuilding) {
         for (const module of this.modules) {
             module.onBuildingBreak(building);
+        }
+    }
+
+    onPlayerUpdate(player: Player) {
+        for (const module of this.modules) {
+            module.onPlayerUpdate(player);
         }
     }
 
