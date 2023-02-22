@@ -44,6 +44,7 @@ function processIn(packet: Packet) {
                 
                 if (player) {
                     player.hasFiredProjectileThisTick = false;
+                    player.hasAttackedThisTick = false;
                     
                     if (player._attackedThisTickTempVariable) {
                         player.hasAttackedThisTick = true;
@@ -56,7 +57,12 @@ function processIn(packet: Packet) {
 
                         player.nextAttack = core.tickEngine.getTickIndex(Date.now() - core.tickEngine.ping * 2 + player.inventory.weaponSelected.stats.reloadTime)/* + 1*/;
                         player.swingStreak++;
-                        //console.log("current tick:", core.tickEngine.tickIndex, "scheduled next:", player.nextAttack);
+                        console.log("swing at tick:", core.tickEngine.tickIndex, "scheduled next:", player.nextAttack);
+                    }
+
+                    if (player._firedThisTickTempVariable) {
+                        player.hasFiredProjectileThisTick = true;
+                        player._firedThisTickTempVariable = false;
                     }
 
                     if (player === core.playerManager.myPlayer) {
@@ -227,7 +233,7 @@ function processOut(event: EventPacket, meta?: any) {
             let wasPlace = false;
 
             if (packet.data[0] === 1) {
-                console.log("attack");
+                //console.log("attack");
                 const heldItem = myPlayer.inventory.heldItem;
                 if (!(heldItem instanceof Weapon)) {
                     wasPlace = true;

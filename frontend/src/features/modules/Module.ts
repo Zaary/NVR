@@ -1,7 +1,9 @@
 import { Action } from "../../core/Action";
 import { PlayerBuilding } from "../../data/type/GameObject";
 import { Player } from "../../data/type/Player";
+import { ProjectileItem } from "../../data/type/Projectile";
 import EventPacket from "../../event/EventPacket";
+import Vector from "../../util/type/Vector";
 
 export default abstract class Module {
     onUpdate(delta: number): void {};
@@ -14,7 +16,8 @@ export default abstract class Module {
     onPacketSend(event: EventPacket) {};
     onRender(delta: number) {};
     onActionRun(action: Action) {};
-    onBuildingHit(player: Player, building: PlayerBuilding, damage: number) {};
+    onPreBuildingHit(player: Player, building: PlayerBuilding, tickIndex: number, potentialBreak: boolean) {};
     onBuildingBreak(building: PlayerBuilding) {};
     onPlayerUpdate(player: Player) {};
+    onProjectileEarlyDespawn(projectileItem: ProjectileItem, spawnPosition: Vector, direction: number) {};
 }

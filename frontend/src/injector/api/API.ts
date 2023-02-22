@@ -1,4 +1,5 @@
 import { EventEmitter } from "tsee";
+import { Core } from "../../core/Core";
 import Logger from "../../util/Logger";
 import IContextAPI from "../IContextAPI";
 
@@ -11,13 +12,19 @@ export default class API extends EventEmitter<{
 
     public references: Record<string, any>;
     public functions: Record<string, Function>;
+    public values: Map<string, any>;
+    private core: Core;
 
-    constructor() {
+    constructor(core: Core) {
         super();
+        this.core = core;
         // @ts-ignore
-        window.nvrapi = this;//hloo
         this.references = {};
         this.functions = {};
+
+        this.values = new Map();
+
+        Object.defineProperty(window, "nvrapi", { value: this });
     }
 
     registerFunction(name: string, value: Function): void {
@@ -40,6 +47,18 @@ export default class API extends EventEmitter<{
         let object = [initialValue];
         object.toString = () => object[0];
         return object;
+    }
+
+    callbackIntercept(name: string, data: any, callback: () => void) {
+        this.core.onApiCallback(name, data, callback);
+    }
+
+    getValue(name: string, defaultValue: any) {
+        if (this.values.has(name)) {
+            return this.values.get(name);
+        } else {
+            return defaultValue;
+        }
     }
 
     private createProxyFor(name: string, object: any): any {

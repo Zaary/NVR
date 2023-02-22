@@ -1,7 +1,7 @@
 import StringUtil from "../../util/StringUtil";
 import Transformation from "../Transformation";
 
-export default class TObjectSpriteLoader extends Transformation {
+export default class ObjectSpriteLoaderTransformer extends Transformation {
     constructor() {
         super();
     }

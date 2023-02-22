@@ -35,6 +35,7 @@ interface MeleeWeaponStats extends WeaponStats {
     dmg: number;
 	buildingDmgMultiplier: number;
     range: number;
+	knockback: number;
 }
 
 interface RangedWeaponStats extends WeaponStats {
@@ -77,22 +78,41 @@ class RangedWeapon extends Weapon {
     }
 }
 
+const weaponPreMap = new Map([
+	[0, null],
+	[1, null],
+	[2, null],
+	[3, null],
+	[4, 3], // sword => katana
+	[5, null],
+	[6, null],
+	[7, null],
+	[8, null],
+	[9, null],
+	[10, null],
+	[11, null],
+	[12, 9], // bow => crossbow
+	[13, 12], // crossbow => repeater crossbow
+	[14, null],
+	[15, 12] // crossbow => musket
+]);
+
 const Weapons = { // important: keep the order to access weapon objects using their IDs
-    TOOL_HAMMER: new MeleeWeapon(0, WeaponSlot.PRIMARY, WeaponType.TOOL_HAMMER, { dmg: 25, buildingDmgMultiplier: 1, range: 65, reloadTime: 300, speedMultiplier: 1 }),
-    HAND_AXE: new MeleeWeapon(1, WeaponSlot.PRIMARY, WeaponType.HAND_AXE, { dmg: 30, buildingDmgMultiplier: 1, range: 70, reloadTime: 400, speedMultiplier: 1 }),
-    GREAT_AXE: new MeleeWeapon(2, WeaponSlot.PRIMARY, WeaponType.GREAT_AXE, { dmg: 35, buildingDmgMultiplier: 1, range: 75, reloadTime: 400, speedMultiplier: 1 }),
-    SHORT_SWORD: new MeleeWeapon(3, WeaponSlot.PRIMARY, WeaponType.SHORT_SWORD, { dmg: 35, buildingDmgMultiplier: 1, range: 110, reloadTime: 300, speedMultiplier: 0.85 }),
-    KATANA: new MeleeWeapon(4, WeaponSlot.PRIMARY, WeaponType.KATANA, { dmg: 40, buildingDmgMultiplier: 1, range: 118, reloadTime: 300, speedMultiplier: 0.8 }),
-    POLEARM: new MeleeWeapon(5, WeaponSlot.PRIMARY, WeaponType.POLEARM, { dmg: 45, buildingDmgMultiplier: 1, range: 142, reloadTime: 700, speedMultiplier: 0.82 }),
-    BAT: new MeleeWeapon(6, WeaponSlot.PRIMARY, WeaponType.BAT, { dmg: 20, buildingDmgMultiplier: 1, range: 110, reloadTime: 300, speedMultiplier: 1 }),
-    DAGGERS: new MeleeWeapon(7, WeaponSlot.PRIMARY, WeaponType.DAGGERS, { dmg: 20, buildingDmgMultiplier: 1, range: 65, reloadTime: 100, speedMultiplier: 1.13 }),
-    STICK: new MeleeWeapon(8, WeaponSlot.PRIMARY, WeaponType.STICK, { dmg: 1, buildingDmgMultiplier: 1, range: 70, reloadTime: 400, speedMultiplier: 1 }),
+    TOOL_HAMMER: new MeleeWeapon(0, WeaponSlot.PRIMARY, WeaponType.TOOL_HAMMER, { dmg: 25, buildingDmgMultiplier: 1, range: 65, reloadTime: 300, speedMultiplier: 1, knockback: 0}),
+    HAND_AXE: new MeleeWeapon(1, WeaponSlot.PRIMARY, WeaponType.HAND_AXE, { dmg: 30, buildingDmgMultiplier: 1, range: 70, reloadTime: 400, speedMultiplier: 1, knockback: 0 }),
+    GREAT_AXE: new MeleeWeapon(2, WeaponSlot.PRIMARY, WeaponType.GREAT_AXE, { dmg: 35, buildingDmgMultiplier: 1, range: 75, reloadTime: 400, speedMultiplier: 1, knockback: 0 }),
+    SHORT_SWORD: new MeleeWeapon(3, WeaponSlot.PRIMARY, WeaponType.SHORT_SWORD, { dmg: 35, buildingDmgMultiplier: 1, range: 110, reloadTime: 300, speedMultiplier: 0.85, knockback: 0 }),
+    KATANA: new MeleeWeapon(4, WeaponSlot.PRIMARY, WeaponType.KATANA, { dmg: 40, buildingDmgMultiplier: 1, range: 118, reloadTime: 300, speedMultiplier: 0.8, knockback: 0 }),
+    POLEARM: new MeleeWeapon(5, WeaponSlot.PRIMARY, WeaponType.POLEARM, { dmg: 45, buildingDmgMultiplier: 1, range: 142, reloadTime: 700, speedMultiplier: 0.82, knockback: 0.2 }),
+    BAT: new MeleeWeapon(6, WeaponSlot.PRIMARY, WeaponType.BAT, { dmg: 20, buildingDmgMultiplier: 1, range: 110, reloadTime: 300, speedMultiplier: 1, knockback: 0.7 }),
+    DAGGERS: new MeleeWeapon(7, WeaponSlot.PRIMARY, WeaponType.DAGGERS, { dmg: 20, buildingDmgMultiplier: 1, range: 65, reloadTime: 100, speedMultiplier: 1.13, knockback: 0.1 }),
+    STICK: new MeleeWeapon(8, WeaponSlot.PRIMARY, WeaponType.STICK, { dmg: 1, buildingDmgMultiplier: 1, range: 70, reloadTime: 400, speedMultiplier: 1, knockback: 0 }),
     HUNTING_BOW: new RangedWeapon(9, WeaponSlot.SECONDARY, WeaponType.HUNTING_BOW, Projectiles.BOW_ARROW, { range: 1000, speedMultiplier: 0.75, reloadTime: 600, dmg: 25 }),
-    GREAT_HAMMER: new MeleeWeapon(10, WeaponSlot.SECONDARY, WeaponType.GREAT_HAMMER, { dmg: 10, buildingDmgMultiplier: 7.5, range: 75, reloadTime: 400, speedMultiplier: 1 }),
-    SHIELD: new MeleeWeapon(11, WeaponSlot.SECONDARY, WeaponType.SHIELD, { dmg: 0, buildingDmgMultiplier: 1, range: 0, reloadTime: 0, speedMultiplier: 0.7 }),
+    GREAT_HAMMER: new MeleeWeapon(10, WeaponSlot.SECONDARY, WeaponType.GREAT_HAMMER, { dmg: 10, buildingDmgMultiplier: 7.5, range: 75, reloadTime: 400, speedMultiplier: 1, knockback: 0 }),
+    SHIELD: new MeleeWeapon(11, WeaponSlot.SECONDARY, WeaponType.SHIELD, { dmg: 0, buildingDmgMultiplier: 1, range: 0, reloadTime: 0, speedMultiplier: 0.7, knockback: 0 }),
     CROSSBOW: new RangedWeapon(12, WeaponSlot.SECONDARY, WeaponType.CROSSBOW, Projectiles.CROSSBOW_ARROW, { range: 1200, speedMultiplier: 0.7, reloadTime: 700, dmg: 30 }),
     REPEATER_CROSSBOW: new RangedWeapon(13, WeaponSlot.SECONDARY, WeaponType.REPEATER_CROSSBOW, Projectiles.REPEATER_CROSSBOW_ARROW, { range: 1200, speedMultiplier: 0.7, reloadTime: 230, dmg: 25 }),
-    MC_GRABBY: new MeleeWeapon(14, WeaponSlot.SECONDARY, WeaponType.MC_GRABBY, { dmg: 0, buildingDmgMultiplier: 1, range: 125, reloadTime: 700, speedMultiplier: 1.05 }),
+    MC_GRABBY: new MeleeWeapon(14, WeaponSlot.SECONDARY, WeaponType.MC_GRABBY, { dmg: 0, buildingDmgMultiplier: 1, range: 125, reloadTime: 700, speedMultiplier: 1.05, knockback: 0.2 }),
     MUSKET: new RangedWeapon(15, WeaponSlot.SECONDARY, WeaponType.MUSKET, Projectiles.MUSKET_BULLET, { range: 1400, speedMultiplier: 0.6, reloadTime: 1500, dmg: 50 })
 }
 
@@ -375,6 +395,7 @@ const wpdata = [{
 
 export {
     weaponList,
+	weaponPreMap,
     Weapon,
 	Weapons,
     MeleeWeapon,

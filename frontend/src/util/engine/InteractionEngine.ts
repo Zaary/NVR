@@ -80,7 +80,7 @@ export default class InteractionEngine extends EventEmitter {
                 this.autoHatModule.isPlacing = false;
             //}
 
-            console.log(wasAttacking, this.core.mstate.mouseHeld);
+            //console.log(wasAttacking, this.core.mstate.mouseHeld);
             if (wasAttacking || this.core.mstate.mouseHeld || this.antiTrapModule.isBreaking) {
                 connection.send(new Packet(PacketType.ATTACK, [1, oldAngle]));
             } else if (this.core.lastActionState.attack === 1) {

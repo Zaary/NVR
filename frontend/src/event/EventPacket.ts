@@ -5,11 +5,13 @@ export default class EventPacket extends Event {
 
     private packet: Packet;
     public callback: (() => void) | undefined;
+    public isBundle: boolean;
 
-    constructor(packet: Packet) {
+    constructor(packet: Packet, isBundle: boolean) {
         super();
         this.packet = packet;
         this.callback = undefined;
+        this.isBundle = isBundle;
     }
 
     getPacket() {

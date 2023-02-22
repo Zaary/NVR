@@ -17,10 +17,14 @@ export default class AutoHat extends Module {
     private skipNextTick: boolean;
     public isPlacing: boolean;
 
+    private bundleAttackState: boolean;
+
     constructor() {
         super();
         this.skipNextTick = false;
         this.isPlacing = false;
+
+        this.bundleAttackState = false;
     }
 
     private getHat(shouldAutobull: boolean) {
@@ -61,7 +65,7 @@ export default class AutoHat extends Module {
                 if (MathUtil.getDistance(player.serverPos.clone().add(player.velocity.clone().multiply(1.1)), myPlayer.serverPos.clone().add(myPlayer.velocity.clone().multiply(1.1))) - player.scale <= weapon.stats.range + myPlayer.scale) {
                     const gatherAngle = MathUtil.roundTo(MathUtil.getDirection(myPlayer.serverPos, player.serverPos), 1);
 
-                    console.log(MathUtil.getAngleDist(core.mouseAngle, gatherAngle), config.gatherAngle + Number.EPSILON);
+                    //console.log(MathUtil.getAngleDist(core.mouseAngle, gatherAngle), config.gatherAngle + Number.EPSILON);
                     if (MathUtil.getAngleDist(core.mouseAngle, gatherAngle) <= config.gatherAngle + Number.EPSILON) {
                         playersHit++;
                     }
@@ -72,7 +76,7 @@ export default class AutoHat extends Module {
                 hat = 7;
                 tail = 0;
             } else if (antiTrap.isBreaking || objectsHit > 0) {
-                console.log("autohat: TANK");
+                //console.log("autohat: TANK");
                 hat = 40;
             }
 
@@ -128,7 +132,7 @@ export default class AutoHat extends Module {
 
         const myPlayer = core.playerManager.myPlayer;
 
-        const shouldAutobull = !this.isPlacing && (myPlayer.isAutoAttacking || myPlayer.isAttacking) && myPlayer.inventory.heldItem instanceof MeleeWeapon && myPlayer.nextAttack === tickIndex - 1;
+        const shouldAutobull = !this.isPlacing && this.bundleAttackState && (myPlayer.isAutoAttacking || myPlayer.isAttacking) && myPlayer.inventory.heldItem instanceof MeleeWeapon && myPlayer.nextAttack === tickIndex - 1;
 
         const [hat, tail] = this.getHat(shouldAutobull);
 
@@ -140,12 +144,13 @@ export default class AutoHat extends Module {
         const packet = event.getPacket();
         const myPlayer = core.playerManager.myPlayer;
 
-        if (packet.type === PacketType.ATTACK) {
+        if (event.isBundle && packet.type === PacketType.ATTACK) {
+            this.bundleAttackState = packet.data[0] === 1;
             if (!this.isPlacing && myPlayer.inventory.heldItem instanceof MeleeWeapon) {
                 if (packet.data[0] && myPlayer.justStartedAttacking) {
                     const [hat, tail] = this.getHat(true);
                     const attackArriveTick = core.tickEngine.tickIndex + 1;
-                    console.log("first hit autohat activated");
+                    //console.log("first hit autohat activated");
                     if (core.tickEngine.isTickPredictable(attackArriveTick)) {
                         core.scheduleAction(ActionType.HAT, ActionPriority.BIOMEHAT, attackArriveTick, [hat]);
                         core.scheduleAction(ActionType.TAIL, ActionPriority.BIOMEHAT, attackArriveTick, [tail]);

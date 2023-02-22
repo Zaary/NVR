@@ -1,15 +1,19 @@
 import { Action } from "../core/Action";
 import { PlayerBuilding } from "../data/type/GameObject";
 import { Player } from "../data/type/Player";
+import { Projectile, ProjectileItem } from "../data/type/Projectile";
 import EventPacket from "../event/EventPacket";
 import Logger from "../util/Logger";
 import { Class } from "../util/type/Definitions";
+import Vector from "../util/type/Vector";
 import AntiTrap from "./modules/building/AntiTrap";
 import AutoPlacer from "./modules/building/AutoPlacer";
 import AutoReplace from "./modules/building/AutoReplace";
 import ItemPlacer from "./modules/building/ItemPlacer";
+import AntiBull from "./modules/combat/AntiBull";
 import AntiInsta from "./modules/combat/AntiInsta";
 import Autoheal from "./modules/combat/Autoheal";
+import SpikeSync from "./modules/combat/SpikeSync";
 import NoToxic from "./modules/misc/NoToxic";
 import Module from "./modules/Module";
 import AutoHat from "./modules/player/AutoHat";
@@ -28,11 +32,16 @@ export default class ModuleManager {
         AutoReplace,
         ItemPlacer,
         AntiInsta,
-        Autoheal,
+        Autoheal, // activate autoheal after anti insta in case the player is already fully healed
         
         NoToxic,
 
+        SpikeSync, // run before autotrap since autotrap also checks if it has highest priority in tick
+
         AntiTrap,
+
+        AntiBull,
+
         AutoHat,
         
     ];
@@ -106,9 +115,9 @@ export default class ModuleManager {
         }
     }
 
-    onBuildingHit(player: Player, building: PlayerBuilding, damage: number) {
+    onPreBuildingHit(player: Player, building: PlayerBuilding, tickIndex: number, potentialBreak: boolean) {
         for (const module of this.modules) {
-            module.onBuildingHit(player, building, damage);
+            module.onPreBuildingHit(player, building, tickIndex, potentialBreak);
         }
     }
 
@@ -121,6 +130,12 @@ export default class ModuleManager {
     onPlayerUpdate(player: Player) {
         for (const module of this.modules) {
             module.onPlayerUpdate(player);
+        }
+    }
+
+    onProjectileEarlyDespawn(projectileItem: ProjectileItem, spawnPosition: Vector, direction: number) {
+        for (const module of this.modules) {
+            module.onProjectileEarlyDespawn(projectileItem, spawnPosition, direction);
         }
     }
 

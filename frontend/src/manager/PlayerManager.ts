@@ -58,7 +58,7 @@ export default class PlayerManager {
         }
     }
 
-    checkTeam(sid: number) {
+    checkTeam(sid: number, forSid?: number) {
         return false;
     }
 

@@ -3,6 +3,7 @@ import { items } from "../data/moomoo/items";
 import { PlayerBuilding } from "../data/type/GameObject";
 import { Player } from "../data/type/Player";
 import { Projectile, projectileList, Projectiles } from "../data/type/Projectile";
+import { RangedWeapon, Weapon, WeaponSlot } from "../data/type/Weapon";
 import { SidArray } from "../util/type/SidArray";
 import Vector from "../util/type/Vector";
 
@@ -10,7 +11,7 @@ export default class ProjectileManager {
 
     private core: Core;
     private projectileList: SidArray<Projectile>;
-    private scheduledSpawns: [position: Vector, direction: number, range: number, speed: number, type: number, layer: number, sid: number][];
+    private scheduledSpawns: [position: Vector, direction: number, range: number, speed: number, type: number, layer: number, sid: number, despawned: boolean][];
 
     constructor(core: Core) {
         this.core = core;
@@ -19,7 +20,7 @@ export default class ProjectileManager {
     }
 
     scheduleSpawn(position: Vector, direction: number, range: number, speed: number, type: number, layer: number, sid: number) {
-        this.scheduledSpawns.push([position, direction, range, speed, type, layer, sid]);
+        this.scheduledSpawns.push([position, direction, range, speed, type, layer, sid, false]);
     }
 
     tickSpawnAllScheduled(tick: number) {
@@ -32,7 +33,7 @@ export default class ProjectileManager {
         }
     }
 
-    add(spawnTick: number, position: Vector, direction: number, range: number, speed: number, type: number, layer: number, sid: number) {
+    add(spawnTick: number, position: Vector, direction: number, range: number, speed: number, type: number, layer: number, sid: number, despawned: boolean) {
         let tmpObj;
         
         if ((tmpObj = this.projectileList.findBySid(sid)) !== null) {
@@ -76,11 +77,31 @@ export default class ProjectileManager {
             }
 
             tmpObj = new Projectile(type, sid, position, spawnTick, direction, range, speed, layer, item.stats.scale, owner);
-            this.projectileList.push(tmpObj);
+            if (!despawned) this.projectileList.push(tmpObj);
 
             if (owner) {
-                owner.ownedProjectiles.push(tmpObj);
-                if (owner instanceof Player) owner.hasFiredProjectileThisTick = true;
+                if (!despawned) {
+                    owner.ownedProjectiles.push(tmpObj);
+                } else {
+                    this.core.moduleManager.onProjectileEarlyDespawn(projectileList[type], position, direction);
+                }
+
+                if (owner instanceof Player) {
+                    if (tmpObj.type === Projectiles.TURRET_BULLET.type) {
+                        owner.inventory.fireTurretGear(this.core.tickEngine.ping);
+                    } else {
+                        const weapon = <Weapon | null> owner.inventory.getWeapon(WeaponSlot.SECONDARY) ?? owner.inventory.heldItem instanceof RangedWeapon ? owner.inventory.heldItem : null;
+                        if (weapon instanceof RangedWeapon && weapon !== null) {
+                            owner.inventory.resetReload(weapon);
+                        } else {
+                            owner.inventory.resetAllRangedReloads();
+                        }
+                    }
+
+                    owner.hasFiredProjectileThisTick = true;
+                    owner._firedThisTickTempVariable = true;
+                    owner.lastProjectileFired = tmpObj;
+                }
             }
             //const enemy = this.core.playerManager.getVisibleEnemies()[0];
             //console.log("projectile spawned, will hit enemy in " + tmpObj.getTimeToHitTarget(enemy.serverPos, enemy.scale));
@@ -89,18 +110,18 @@ export default class ProjectileManager {
 
     remove(sid: number, range: number) {
         if (this.projectileList.hasSid(sid)) {
-            console.log("projectile removed naturally");
+            //console.log("projectile removed naturally");
             const projectile = this.projectileList.findBySid(sid)!;
             if (projectile.owner) projectile.owner.ownedProjectiles.remove(projectile);
             this.projectileList.remove(projectile);
         } else {
-            console.log("projectile removed after spawning");
+            //console.log("projectile removed after spawning");
             let i = this.scheduledSpawns.length - 1;
             while (i >= 0) {
                 const projectile = this.scheduledSpawns[i];
                 if (projectile[6] === sid) {
-                    
-                    this.scheduledSpawns.splice(i, 1);
+                    projectile[7] = true;
+                    //this.scheduledSpawns.splice(i, 1);
                     break;
                 }
                 i--;
@@ -119,7 +140,7 @@ export default class ProjectileManager {
             
             const hitTime = projectile.getTicksToHitTarget(myPlayer.serverPos, myPlayer.scale);
             
-            if (hitTime - projectile.getTicksExisted(tickIndex) === 0) {
+            if (projectile.canHit(myPlayer.serverPos, myPlayer.scale) && hitTime - projectile.getTicksExisted(tickIndex) === 0) {
                 projectiles.push(/*[hitTime, */projectile/*]*/);
             }
         }

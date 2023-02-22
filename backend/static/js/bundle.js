@@ -5,7 +5,7 @@
  * // @version      0.1
  * // @description  try to take over the world!
  * // @author       You
- * // @match        *://*.moomoo.io/*
+ * // @include      /^http[s]?:\/\/((sandbox|dev)\.)?moomoo\.io\/?(\?server=\d+:\d+:\d+)?$/
  * // @icon         https://media.discordapp.net/attachments/1026024421925855302/1058027305764667452/UMrA0xrKmPkAAAAASUVORK5CYII.png
  * // @grant        none
  * // @run-at       document-start
@@ -56,12 +56,14 @@ __webpack_require__.r(__webpack_exports__);
 // (because enums starts indexing from 0 and for us, higher index = higher priority)
 var ActionPriority;
 (function (ActionPriority) {
-  ActionPriority[ActionPriority["BIOMEHAT"] = 0] = "BIOMEHAT";
-  ActionPriority[ActionPriority["ANTITRAP"] = 1] = "ANTITRAP";
-  ActionPriority[ActionPriority["AUTOBREAK"] = 2] = "AUTOBREAK";
-  ActionPriority[ActionPriority["ANTIBULL"] = 3] = "ANTIBULL";
-  ActionPriority[ActionPriority["ANTIINSTA"] = 4] = "ANTIINSTA";
-  ActionPriority[ActionPriority["FORCED"] = 5] = "FORCED";
+  ActionPriority[ActionPriority["COMPATIBILITY"] = 0] = "COMPATIBILITY";
+  ActionPriority[ActionPriority["BIOMEHAT"] = 1] = "BIOMEHAT";
+  ActionPriority[ActionPriority["ANTITRAP"] = 2] = "ANTITRAP";
+  ActionPriority[ActionPriority["AUTOBREAK"] = 3] = "AUTOBREAK";
+  ActionPriority[ActionPriority["ANTIBULL"] = 4] = "ANTIBULL";
+  ActionPriority[ActionPriority["SPIKESYNC"] = 5] = "SPIKESYNC";
+  ActionPriority[ActionPriority["ANTIINSTA"] = 6] = "ANTIINSTA";
+  ActionPriority[ActionPriority["FORCED"] = 7] = "FORCED";
 })(ActionPriority || (ActionPriority = {}));
 var ActionType;
 (function (ActionType) {
@@ -112,10 +114,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
 /* harmony import */ var _util_type_Vector__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ../util/type/Vector */ "./frontend/src/util/type/Vector.ts");
 /* harmony import */ var _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ../loader/NVRLoader */ "./frontend/src/loader/NVRLoader.ts");
-var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__, _features_ModuleManager__WEBPACK_IMPORTED_MODULE_13__, _injector_BundleProxy__WEBPACK_IMPORTED_MODULE_15__, _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_21__]);
-([_socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__, _features_ModuleManager__WEBPACK_IMPORTED_MODULE_13__, _injector_BundleProxy__WEBPACK_IMPORTED_MODULE_15__, _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_21__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+/* harmony import */ var _render_BuildingVisualisationModule__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ../render/BuildingVisualisationModule */ "./frontend/src/render/BuildingVisualisationModule.ts");
+/* harmony import */ var _data_moomoo_items__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ../data/moomoo/items */ "./frontend/src/data/moomoo/items.ts");
+/* harmony import */ var _manager_ProjectileManager__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ../manager/ProjectileManager */ "./frontend/src/manager/ProjectileManager.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__, _manager_ObjectManager__WEBPACK_IMPORTED_MODULE_10__, _features_ModuleManager__WEBPACK_IMPORTED_MODULE_13__, _util_engine_InteractionEngine__WEBPACK_IMPORTED_MODULE_14__, _injector_BundleProxy__WEBPACK_IMPORTED_MODULE_15__, _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_21__, _render_BuildingVisualisationModule__WEBPACK_IMPORTED_MODULE_22__]);
+([_socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__, _manager_ObjectManager__WEBPACK_IMPORTED_MODULE_10__, _features_ModuleManager__WEBPACK_IMPORTED_MODULE_13__, _util_engine_InteractionEngine__WEBPACK_IMPORTED_MODULE_14__, _injector_BundleProxy__WEBPACK_IMPORTED_MODULE_15__, _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_21__, _render_BuildingVisualisationModule__WEBPACK_IMPORTED_MODULE_22__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
 
 //import { Pathfinder } from "../pathfinding/Pathfinder";
+
+
+
 
 
 
@@ -171,8 +179,11 @@ class Core extends (events__WEBPACK_IMPORTED_MODULE_0___default()) {
   packetBlockIdCounter = 0;
   constructor() {
     super();
+    Object.defineProperty(window, "core", {
+      value: this
+    });
     logger.info(`launched StarLit core version ${Core.VER} by ${Core.AUTHORS.join(", ")}`);
-    this.bundleAPI = new _injector_api_API__WEBPACK_IMPORTED_MODULE_16__["default"]();
+    this.bundleAPI = new _injector_api_API__WEBPACK_IMPORTED_MODULE_16__["default"](this);
     this.loaded = false;
     this.mstate = {
       mouseHeld: false
@@ -184,17 +195,41 @@ class Core extends (events__WEBPACK_IMPORTED_MODULE_0___default()) {
       tail: 0,
       attack: 0,
       aim: 0,
-      weapon: 0
+      weapon: [0, true]
     };
     this.packetBlocks = {};
+    this.moduleManager = new _features_ModuleManager__WEBPACK_IMPORTED_MODULE_13__["default"](); // initialize modules first so engines can hook into them
+
     this.objectManager = new _manager_ObjectManager__WEBPACK_IMPORTED_MODULE_10__["default"](this);
     this.playerManager = new _manager_PlayerManager__WEBPACK_IMPORTED_MODULE_18__["default"]();
+    this.projectileManager = new _manager_ProjectileManager__WEBPACK_IMPORTED_MODULE_24__["default"](this);
     this.renderManager = null;
-    this.moduleManager = new _features_ModuleManager__WEBPACK_IMPORTED_MODULE_13__["default"]();
     this.tickEngine = new _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_6__.TickEngine(this);
     this.packetEngine = new _util_engine_PacketCountEngine__WEBPACK_IMPORTED_MODULE_9__.PacketCountEngine(this);
     this.interactionEngine = new _util_engine_InteractionEngine__WEBPACK_IMPORTED_MODULE_14__["default"](this);
     this.mouseAngle = 0;
+    this.bundleDir = null;
+  }
+  lockBundleDirection(priority, dir) {
+    if (this.bundleDir === null || priority >= this.bundleDir[0]) {
+      this.bundleDir = [priority, dir];
+      this.bundleAPI.values.set("attackdir", dir);
+    }
+  }
+  unlockBundleDirection(priority) {
+    if (this.bundleDir !== null && priority >= this.bundleDir[0]) {
+      this.bundleDir = null;
+      this.bundleAPI.values.delete("attackdir");
+    }
+  }
+  onApiCallback(name, args, callback) {
+    switch (name) {
+      case "iosend":
+        {
+          _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.bundleSend(args[0], args[1]);
+          break;
+        }
+    }
   }
   removePacketInterceptor489() {
     _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_21__["default"].stop();
@@ -223,14 +258,15 @@ class Core extends (events__WEBPACK_IMPORTED_MODULE_0___default()) {
 
     this.tickEngine.once("ping", this.packetEngine.handlePing.bind(this.packetEngine));
     this.tickEngine.on("pretick", tick => {
+      this.scheduledActions = []; // since modules use actions, we can clear right before calling them
+
       this.moduleManager.onPreTick(tick);
 
       // run actions based on priority
-      this.runUppermostAction(_ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.HAT, tick);
-      this.runUppermostAction(_ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.TAIL, tick);
-      this.runUppermostAction(_ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.WEAPON, tick); // important to switch weapon before attack
-      this.runUppermostAction(_ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.ATTACK, tick);
-      this.scheduledActions = [];
+      this.runUppermostActions(_ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.HAT, tick);
+      this.runUppermostActions(_ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.TAIL, tick);
+      this.runUppermostActions(_ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.WEAPON, tick); // important to switch weapon before attack
+      this.runUppermostActions(_ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.ATTACK, tick);
     });
     this.tickEngine.on("posttick", tick => {
       this.moduleManager.onPostTick(tick);
@@ -258,13 +294,11 @@ class Core extends (events__WEBPACK_IMPORTED_MODULE_0___default()) {
         }
       } else if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.ATTACK) {
         this.lastActionState.attack = packet.data[0];
-        this.lastActionState.aim = packet.data[1];
+        if (typeof packet.data[1] === "number") this.lastActionState.aim = packet.data[1];
       } else if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.SET_ANGLE) {
         this.lastActionState.aim = packet.data[0];
       } else if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.SELECT_ITEM) {
-        if (packet.data[1]) {
-          this.lastActionState.weapon = packet.data[0];
-        }
+        this.lastActionState.weapon = [packet.data[0], packet.data[1]];
       }
     });
 
@@ -272,7 +306,7 @@ class Core extends (events__WEBPACK_IMPORTED_MODULE_0___default()) {
     // and messes up autobreak aim (kinda lazy solution)
     // should be fixed explicitly in the future and
     // remove the packet cancelling
-    _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.on("packetsend", event => {
+    _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.on("packetsend", (event, meta) => {
       const packet = event.getPacket();
       //console.log(packet);
       if (this.packetBlocks.hasOwnProperty(packet.type)) {
@@ -281,9 +315,8 @@ class Core extends (events__WEBPACK_IMPORTED_MODULE_0___default()) {
           return;
         }
       }
-      if (_socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__.PacketHandler.processOut(event.getPacket())) {
-        this.moduleManager.onPacketSend(event);
-      }
+      _socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__.PacketHandler.processOut(event, meta);
+      this.moduleManager.onPacketSend(event);
     });
 
     // listen for received packets (always process the packet before passing it to modules)
@@ -302,6 +335,7 @@ class Core extends (events__WEBPACK_IMPORTED_MODULE_0___default()) {
     this.renderManager = new _render_RenderManager__WEBPACK_IMPORTED_MODULE_11__["default"](this, canvas, 1920, 1080);
 
     //await this.renderManager.createRenderer("background", HoverInfoModule, this);
+    await this.renderManager.createRenderer("buildingVisualisation", _render_BuildingVisualisationModule__WEBPACK_IMPORTED_MODULE_22__["default"], this);
     await this.renderManager.createInterfaceRenderer("packetCount", _render_interface_PacketCountModule__WEBPACK_IMPORTED_MODULE_12__["default"], this);
     await this.renderManager.createInterfaceRenderer("packetGraph", _render_interface_PacketGraphModule__WEBPACK_IMPORTED_MODULE_17__["default"], this);
     this.renderManager.createRenderHook();
@@ -338,43 +372,60 @@ class Core extends (events__WEBPACK_IMPORTED_MODULE_0___default()) {
     const index = this.packetBlocks[type].indexOf(id);
     if (index > -1) this.packetBlocks[type].splice(index, 1);
   }
-  runUppermostAction(action, tick) {
+  runUppermostActions(action, tick) {
     // filter and sort by highest priority
-    const sorted = this.scheduledActions.filter(a => a.type == action && a.executeTick == tick && (() => {
+    const filtered = this.scheduledActions.filter(a => a.type == action && a.executeTick == tick && (() => {
       if (a.type === _ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.HAT && !this.playerManager.myPlayer.ownedHats.includes(a.data[0])) return false;
       if (a.type === _ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.TAIL && !this.playerManager.myPlayer.ownedTails.includes(a.data[0])) return false;
-      if (a.type === _ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.WEAPON && !this.playerManager.myPlayer.inventory.hasWeapon(a.data[0])) return false;
+      if (a.type === _ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.WEAPON && (a.data[1] ? !this.playerManager.myPlayer.inventory.hasWeapon(a.data[0]) : this.playerManager.myPlayer.inventory.items[_data_moomoo_items__WEBPACK_IMPORTED_MODULE_23__.items.list[a.data[0]].group.id] !== a.data[0])) return false;
       return true;
-    })()).sort((a, b) => b.priority - a.priority);
-    if (sorted.length > 0) {
-      // run action
-      const action = sorted[0];
-      this.runAction(action);
+    })());
+    const maxPriority = Math.max(...filtered.map(x => x.priority));
 
-      // remove action from the list
-      const index = this.scheduledActions.indexOf(action);
-      if (index > -1) {
-        this.scheduledActions.splice(index, 1);
+    //const sorted = filtered.sort((a, b) => b.priority - a.priority);
+
+    const final = filtered.filter(x => x.priority === maxPriority);
+
+    //console.log(final);
+
+    if (final.length > 0 /*sorted.length > 0*/) {
+      // run action
+
+      //const action = final[0];
+      for (let i = 0; i < final.length; i++) {
+        this.runAction(final[i] /*sorted[0]*/);
       }
+
+      // remove action from the list (not needed since we clear all actions on tick begin)
+      /*const index = this.scheduledActions.indexOf(action);
+      if (index > -1) {
+          this.scheduledActions.splice(index, 1);
+      }*/
     }
   }
+
   runAction(action) {
     switch (action.type) {
       case _ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.HAT:
         if (action.data[0] === this.lastActionState.hat) return;
         _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.BUY_AND_EQUIP, [0, action.data[0], 0]));
+        this.lastActionState.hat = action.data[0];
         break;
       case _ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.TAIL:
         if (action.data[0] === this.lastActionState.tail) return;
         _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.BUY_AND_EQUIP, [0, action.data[0], 1]));
+        this.lastActionState.tail = action.data[0];
         break;
       case _ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.ATTACK:
         if (action.data[0] === this.lastActionState.attack && action.data[1] === this.lastActionState.aim) return;
         _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.ATTACK, action.data), action.force);
+        this.lastActionState.attack = action.data[0];
+        this.lastActionState.aim = action.data[1];
         break;
       case _ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.WEAPON:
-        if (action.data[0] === this.lastActionState.weapon) return;
-        _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.SELECT_ITEM, [action.data[0], true]));
+        if (action.data[0] === this.lastActionState.weapon[0] && action.data[1] === this.lastActionState.weapon[1]) return;
+        _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.SELECT_ITEM, [action.data[0], action.data[1]]));
+        this.lastActionState.weapon = [action.data[0], action.data[1]];
       default:
         return;
     }
@@ -384,6 +435,9 @@ class Core extends (events__WEBPACK_IMPORTED_MODULE_0___default()) {
     const ac = new _Action__WEBPACK_IMPORTED_MODULE_7__.Action(this.actionIdCounter++, action, priority, tick, data, force ? true : false);
     this.scheduledActions.push(ac);
     return ac.id;
+  }
+  cleanActions(priority, action, tick) {
+    this.scheduledActions = this.scheduledActions.filter(x => x.priority === priority && (action === undefined || x.type === action) && (tick === undefined || tick === x.executeTick));
   }
   isHighestPriority(priority, tick) {
     return this.scheduledActions.filter(x => x.priority > priority && x.executeTick === tick).length === 0;
@@ -1474,8 +1528,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "NaturalObject": () => (/* binding */ NaturalObject),
 /* harmony export */   "PlayerBuilding": () => (/* binding */ PlayerBuilding)
 /* harmony export */ });
-/* harmony import */ var _util_type_Vector__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../util/type/Vector */ "./frontend/src/util/type/Vector.ts");
-/* harmony import */ var _moomoo_items__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../moomoo/items */ "./frontend/src/data/moomoo/items.ts");
+/* harmony import */ var _util_type_SidArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../util/type/SidArray */ "./frontend/src/util/type/SidArray.ts");
+/* harmony import */ var _util_type_Vector__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../util/type/Vector */ "./frontend/src/util/type/Vector.ts");
+/* harmony import */ var _moomoo_items__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../moomoo/items */ "./frontend/src/data/moomoo/items.ts");
+
 
 
 class GameObject {
@@ -1492,7 +1548,7 @@ class GameObject {
     this.position = position;
     this.dir = dir;
     this.scale = scale;
-    this.wiggle = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_0__["default"](0, 0);
+    this.wiggle = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_1__["default"](0, 0);
   }
   update(delta) {
     if (!this.wiggle.isNull()) {
@@ -1500,7 +1556,10 @@ class GameObject {
     }
   }
   getScale(fullScale = false) {
-    return this instanceof NaturalObject ? this.type === 0 ? this.scale * 0.6 : this.scale : this.scale * (fullScale ? 1 : _moomoo_items__WEBPACK_IMPORTED_MODULE_1__.items.list[this.type].colDiv ?? 1);
+    return this instanceof NaturalObject ? this.type === 0 || this.type === 1 ? this.scale * 0.36 : this.scale : this.scale * (fullScale ? 1 : _moomoo_items__WEBPACK_IMPORTED_MODULE_2__.items.list[this.type].colDiv ?? 1);
+  }
+  getPlaceColScale() {
+    return this instanceof NaturalObject && (this.type === 0 || this.type === 1) ? this.scale * 0.36 : this.scale;
   }
 }
 class NaturalObject extends GameObject {
@@ -1510,17 +1569,19 @@ class NaturalObject extends GameObject {
   }
 }
 class PlayerBuilding extends GameObject {
-  constructor(sid, position, dir, scale, type, owner) {
+  constructor(sid, position, dir, scale, type, owner, placementSighted) {
     super(sid, type, position, dir, scale);
-    this.stats = _moomoo_items__WEBPACK_IMPORTED_MODULE_1__.items.list[type];
+    this.stats = _moomoo_items__WEBPACK_IMPORTED_MODULE_2__.items.list[type];
     this.owner = {
       sid: owner
     };
     this.meta = {
+      wasPlacementSighted: placementSighted,
       shouldUpdate: this.stats.group.id === 3 // group 3 is windmills
     };
 
     this.health = this.stats.health ?? 1;
+    this.ownedProjectiles = new _util_type_SidArray__WEBPACK_IMPORTED_MODULE_0__.SidArray();
   }
   update(delta) {
     super.update(delta);
@@ -1763,6 +1824,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
 /* harmony import */ var _util_processor_MovementProcessor__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../util/processor/MovementProcessor */ "./frontend/src/util/processor/MovementProcessor.ts");
 /* harmony import */ var _GameObject__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./GameObject */ "./frontend/src/data/type/GameObject.ts");
+/* harmony import */ var _util_type_SidArray__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../util/type/SidArray */ "./frontend/src/util/type/SidArray.ts");
+
 
 
 
@@ -1776,19 +1839,23 @@ var WeaponFinder;
 (function (WeaponFinder) {
   WeaponFinder[WeaponFinder["BUILDING_BREAK"] = 0] = "BUILDING_BREAK";
   WeaponFinder[WeaponFinder["MOVEMENT_SPEED"] = 1] = "MOVEMENT_SPEED";
+  WeaponFinder[WeaponFinder["DAMAGE"] = 2] = "DAMAGE";
 })(WeaponFinder || (WeaponFinder = {}));
 class Inventory {
   static WeaponFinders = WeaponFinder;
   constructor(player) {
     this.player = player;
     this.weapons = [_Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapons.TOOL_HAMMER, null];
+    this.weaponVariants = [0, null];
     this.reloads = Object.fromEntries(new Array(_Weapon__WEBPACK_IMPORTED_MODULE_5__.weaponList.length).fill(undefined).map((_x, i) => [i, 0]));
     this.items = [0, 3, 6, 10];
     this.heldItem = _Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapons.TOOL_HAMMER;
     this.weaponSelected = _Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapons.TOOL_HAMMER;
+    this.turretGearReload = 0;
   }
   reset() {
     this.weapons = [_Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapons.TOOL_HAMMER, null];
+    this.weaponVariants = [0, null];
     this.reloads = Object.fromEntries(new Array(_Weapon__WEBPACK_IMPORTED_MODULE_5__.weaponList.length).fill(undefined).map((_x, i) => [i, 0]));
     ;
     this.items = [0, 3, 6, 10];
@@ -1804,6 +1871,12 @@ class Inventory {
   resetReload(item) {
     this.reloads[item.id] = item.stats.reloadTime;
   }
+  resetAllRangedReloads() {
+    this.reloads[_Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapons.HUNTING_BOW.id] = _Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapons.HUNTING_BOW.stats.reloadTime;
+    this.reloads[_Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapons.CROSSBOW.id] = _Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapons.CROSSBOW.stats.reloadTime;
+    this.reloads[_Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapons.REPEATER_CROSSBOW.id] = _Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapons.REPEATER_CROSSBOW.stats.reloadTime;
+    this.reloads[_Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapons.MUSKET.id] = _Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapons.MUSKET.stats.reloadTime;
+  }
   updateReloads(delta) {
     if (!(this.heldItem instanceof _Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapon)) return;
     const id = this.heldItem.id;
@@ -1811,8 +1884,8 @@ class Inventory {
       this.reloads[id] -= delta;
       if (this.reloads[id] <= 0) this.reloads[id] = 0;
     }
+    this.turretGearReload -= delta;
   }
-  isReloaded(weaponSlot) {}
   remainingReloadTime(slot) {
     return this.reloads[this.weapons[slot]?.id];
   }
@@ -1822,14 +1895,22 @@ class Inventory {
         return this.weapons.flat(1).filter(x => x !== null && x instanceof _Weapon__WEBPACK_IMPORTED_MODULE_5__.MeleeWeapon).sort((a, b) => b.stats.dmg * b.stats.buildingDmgMultiplier - a.stats.dmg * a.stats.buildingDmgMultiplier)[0];
       case WeaponFinder.MOVEMENT_SPEED:
         return this.weapons.flat(1).filter(x => x !== null).sort((a, b) => b.stats.speedMultiplier - a.stats.speedMultiplier)[0];
+      case WeaponFinder.DAMAGE:
+        return this.weapons[0];
     }
   }
   getWeapon(slot) {
     return this.weapons[slot];
   }
+  getWeaponVariant(slot) {
+    return this.weaponVariants[slot];
+  }
   hasWeapon(weapon) {
     const wep = typeof weapon === "number" ? _Weapon__WEBPACK_IMPORTED_MODULE_5__.weaponList[weapon] : weapon;
     return this.weapons[0].id === wep.id || this.weapons[1] && this.weapons[1].id === wep.id;
+  }
+  fireTurretGear(pingDelta) {
+    this.turretGearReload = 3000 - pingDelta;
   }
 }
 class ShameTracker {
@@ -1841,6 +1922,9 @@ class ShameTracker {
   }
   isSafeHeal(ping) {
     return Date.now() + ping - this.lastDamage > 120;
+  }
+  whenSafeHeal(ping) {
+    return 120 - (Date.now() + ping - this.lastDamage);
   }
 }
 class Player {
@@ -1862,7 +1946,6 @@ class Player {
   health = this.maxHealth;
   scale = _moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].playerScale;
   speed = _moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].playerSpeed;
-  reloads = {};
   visible = false;
   constructor(id, sid, name, position, dir, health, maxHealth, scale, skinColor) {
     this.id = id;
@@ -1873,17 +1956,25 @@ class Player {
     this.renderPos = position;
     this.lerpPos = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__["default"]();
     this.velocity = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__["default"]();
+    this.serverDir = dir;
     this.dir = dir;
     this.health = health;
     this.maxHealth = maxHealth;
     this.shame = new ShameTracker();
     this.scale = scale;
     this.skinColor = skinColor;
+    this.skinIndex = 0;
+    this.tailIndex = 0;
     this.team = null;
     this.lastTickPosX = 0;
     this.lastTickPosY = 0;
     this.inventory = new Inventory(this);
     this.movementProcessor = new _util_processor_MovementProcessor__WEBPACK_IMPORTED_MODULE_7__["default"](this);
+    this.hasAttackedThisTick = false;
+    this._attackedThisTickTempVariable = false;
+    this.hasFiredProjectileThisTick = false;
+    this._firedThisTickTempVariable = false;
+    this.lastProjectileFired = null;
     this.state = {
       isTrapped: false,
       buildIndex: -1,
@@ -1893,17 +1984,40 @@ class Player {
     };
     this.nextAttack = 0;
     this.swingStreak = 0;
+    this.seenHats = new Set();
+    this.seenTails = new Set();
+    this.ownedProjectiles = new _util_type_SidArray__WEBPACK_IMPORTED_MODULE_9__.SidArray();
+    this.lastUpdate = 0;
   }
-  updatePlayer(objectManager, x, y, dir, buildIndex, weaponIndex, _weaponVariant, _team, _isLeader, _skinIndex, _tailIndex, _iconIndex, _zIndex) {
+  updatePlayer(core, x, y, dir, buildIndex, weaponIndex, _weaponVariant, _team, _isLeader, _skinIndex, _tailIndex, _iconIndex, _zIndex) {
     this.lerpPos = this.renderPos.clone();
     this.lastTickServerPos = this.serverPos.clone();
     this.serverPos = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__["default"](x, y);
     this.velocity = this.serverPos.clone().subtract(this.lastTickServerPos);
-    this.dir = dir;
+    //this.dir = dir;
+    this.serverDir = this.dir = dir;
     this.state.buildIndex = buildIndex;
+    this.skinIndex = _skinIndex;
+    this.tailIndex = _tailIndex;
+    this.seenHats.add(_skinIndex);
+    this.seenTails.add(_tailIndex);
     const holdsWeapon = buildIndex === -1;
-    this.inventory.heldItem = holdsWeapon ? _Weapon__WEBPACK_IMPORTED_MODULE_5__.weaponList[weaponIndex] : _moomoo_items__WEBPACK_IMPORTED_MODULE_3__.items.list[buildIndex];
     this.inventory.weaponSelected = _Weapon__WEBPACK_IMPORTED_MODULE_5__.weaponList[weaponIndex];
+    if (this.sid !== core.playerManager.myPlayer.sid) {
+      this.inventory.heldItem = holdsWeapon ? _Weapon__WEBPACK_IMPORTED_MODULE_5__.weaponList[weaponIndex] : _moomoo_items__WEBPACK_IMPORTED_MODULE_3__.items.list[buildIndex];
+      if (holdsWeapon) {
+        this.inventory.weapons[this.inventory.weaponSelected.id < 9 ? _Weapon__WEBPACK_IMPORTED_MODULE_5__.WeaponSlot.PRIMARY : _Weapon__WEBPACK_IMPORTED_MODULE_5__.WeaponSlot.SECONDARY] = this.inventory.weaponSelected;
+      }
+    }
+    if (holdsWeapon) {
+      this.inventory.weaponVariants[this.inventory.weaponSelected.id < 9 ? _Weapon__WEBPACK_IMPORTED_MODULE_5__.WeaponSlot.PRIMARY : _Weapon__WEBPACK_IMPORTED_MODULE_5__.WeaponSlot.SECONDARY] = _weaponVariant;
+    }
+
+    /*if (this.lastUpdate > 0) {
+    	const now = Date.now();
+    	this.inventory.updateReloads(now - this.lastUpdate);
+    	this.lastUpdate = now;
+    }*/
 
     /*player.buildIndex = playerData[4];
     player.weaponIndex = playerData[5];
@@ -1921,8 +2035,39 @@ class Player {
     this.state.isTrapped = false;
     this.state.data.trap = undefined;
 
+    // damage objects
+    const weapon = this.inventory.weaponSelected;
+    const hittableObjects = core.objectManager.getGridArrays(x, y, weapon.stats.range);
+    for (let i = 0; i < hittableObjects.length; i++) {
+      const object = hittableObjects[i];
+      // use object.scale because .getScale returns collision box while .scale is hitbox
+      if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getDistance(object.position, this.serverPos) - object.scale <= weapon.stats.range) {
+        for (const wiggle of object.wiggles) {
+          const gatherAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getDirection(this.serverPos, object.position);
+          if (object instanceof _GameObject__WEBPACK_IMPORTED_MODULE_8__.PlayerBuilding && _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getAngleDist(wiggle[0], _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].roundTo(gatherAngle, 1)) === 0) {
+            // damage the building depending on the player's weapon damage
+
+            if (weapon instanceof _Weapon__WEBPACK_IMPORTED_MODULE_5__.MeleeWeapon) {
+              const hatMultiplier = _moomoo_hats__WEBPACK_IMPORTED_MODULE_2__["default"].find(x => x.id === this.skinIndex)?.bDmg ?? 1;
+              const damage = weapon.stats.dmg * weapon.stats.buildingDmgMultiplier * hatMultiplier;
+              object.health -= damage;
+              //console.log("hit building " + object.stats.name + " new health:", object.health, "angles;", wiggle[0], MathUtil.roundTo(gatherAngle, 1));
+            } else {
+              //console.warn("detected hit while holding ranged weapon");
+            }
+            //core.moduleManager.onBuildingHit(player, object, damage);
+
+            // remove the wiggle as its confirmed by player update and gather
+            object.wiggles.splice(object.wiggles.indexOf(wiggle), 1);
+          } else {
+            // this should NOT happen
+          }
+        }
+      }
+    }
+
     // objects
-    const grids = objectManager.getGridArrays(this.serverPos.x, this.serverPos.y, this.scale + this.velocity.length() * 2).flat(1);
+    const grids = core.objectManager.getGridArrays(this.serverPos.x, this.serverPos.y, this.scale + this.velocity.length() * 2);
     for (let i = 0; i < grids.length; i++) {
       const object = grids[i];
       if (object instanceof _GameObject__WEBPACK_IMPORTED_MODULE_8__.NaturalObject) continue;
@@ -1935,7 +2080,8 @@ class Player {
     this.sid = sid;
     this.name = name;
     this.serverPos = position;
-    this.dir = dir;
+    //this.dir = dir;
+    this.serverDir = this.dir = dir;
     this.health = health;
     this.maxHealth = maxHealth;
     this.scale = scale;
@@ -1966,6 +2112,116 @@ class ClientPlayer extends Player {
 
 /***/ }),
 
+/***/ "./frontend/src/data/type/Projectile.ts":
+/*!**********************************************!*\
+  !*** ./frontend/src/data/type/Projectile.ts ***!
+  \**********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Projectile": () => (/* binding */ Projectile),
+/* harmony export */   "ProjectileItem": () => (/* binding */ ProjectileItem),
+/* harmony export */   "Projectiles": () => (/* binding */ Projectiles),
+/* harmony export */   "projectileList": () => (/* binding */ projectileList)
+/* harmony export */ });
+/* harmony import */ var _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../util/engine/TickEngine */ "./frontend/src/util/engine/TickEngine.ts");
+/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
+
+
+class ProjectileItem {
+  constructor(type, stats) {
+    this.type = type;
+    this.stats = stats;
+  }
+}
+const Projectiles = {
+  BOW_ARROW: new ProjectileItem(0, {
+    scale: 103,
+    range: 1000,
+    speed: 1.6,
+    dmg: 25
+  }),
+  TURRET_BULLET: new ProjectileItem(1, {
+    scale: 20,
+    range: 700,
+    speed: 2,
+    dmg: 25
+  }),
+  CROSSBOW_ARROW: new ProjectileItem(2, {
+    scale: 103,
+    range: 1200,
+    speed: 2.5,
+    dmg: 35
+  }),
+  REPEATER_CROSSBOW_ARROW: new ProjectileItem(3, {
+    scale: 103,
+    range: 1200,
+    speed: 2,
+    dmg: 30
+  }),
+  UNKNOWN_PROJECTILE: new ProjectileItem(4, {
+    scale: 20,
+    range: 700,
+    speed: 2,
+    dmg: 16
+  }),
+  MUSKET_BULLET: new ProjectileItem(5, {
+    scale: 160,
+    range: 1400,
+    speed: 3.6,
+    dmg: 50
+  })
+};
+const projectileList = Object.values(Projectiles);
+class Projectile {
+  constructor(type, sid, spawnPosition, spawnTick, dir, range, speed, layer, scale, owner) {
+    this.type = type;
+    this.sid = sid;
+    this.spawnPos = spawnPosition;
+    this.spawnTick = spawnTick;
+    this.dir = dir;
+    this.range = range;
+    this.speed = speed;
+    this.layer = layer;
+    this.scale = scale;
+    this.owner = owner;
+
+    //console.log("a projectile spawned:", projectileList[type], "owner:", this.owner);
+  }
+
+  static willBeTicked(projectileItem, source, sourceScale, destination) {
+    const dist = Math.max(0, _util_MathUtil__WEBPACK_IMPORTED_MODULE_1__["default"].getDistance(source, destination) - sourceScale);
+    if (dist > projectileItem.stats.range) return true;
+    return dist !== 0 && dist / projectileItem.stats.speed > _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_0__.TickEngine.TICK_DELTA;
+  }
+  static canHit(item, spawnPos, dir, targetPos, targetScale) {
+    return _util_MathUtil__WEBPACK_IMPORTED_MODULE_1__["default"].lineInRectMooMoo(targetPos.x - targetScale, targetPos.y - targetScale, targetPos.x + targetScale, targetPos.y + targetScale, spawnPos.x + 70 * Math.cos(dir), spawnPos.y + 70 * Math.sin(dir), spawnPos.x + Math.cos(dir) * (item.stats.range + item.stats.speed), spawnPos.y + Math.sin(dir) * (item.stats.range + item.stats.speed));
+  }
+  getTicksExisted(currentTick) {
+    return currentTick - this.spawnTick;
+  }
+  getDistanceTraveled(ticksFromSpawn) {
+    return this.spawnPos.clone().directionMove(this.dir, this.speed * ticksFromSpawn * _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_0__.TickEngine.TICK_DELTA);
+  }
+  canHit(targetPos, targetScale) {
+    return _util_MathUtil__WEBPACK_IMPORTED_MODULE_1__["default"].lineInRectMooMoo(targetPos.x - targetScale, targetPos.y - targetScale, targetPos.x + targetScale, targetPos.y + targetScale, this.spawnPos.x, this.spawnPos.y, this.spawnPos.x + Math.cos(this.dir) * (this.range + this.speed), this.spawnPos.y + Math.sin(this.dir) * (this.range + this.speed));
+  }
+  getTimeToHitTarget(targetPos, targetScale) {
+    const distanceToTarget = this.spawnPos.clone().subtract(targetPos).length();
+    if (!this.canHit(targetPos, targetScale)) return -1;
+    return distanceToTarget / this.speed;
+  }
+  getTicksToHitTarget(targetPos, targetScale) {
+    const ms = this.getTimeToHitTarget(targetPos, targetScale);
+    return ms > -1 ? Math.ceil(ms / _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_0__.TickEngine.TICK_DELTA) : -1;
+  }
+}
+
+
+/***/ }),
+
 /***/ "./frontend/src/data/type/Weapon.ts":
 /*!******************************************!*\
   !*** ./frontend/src/data/type/Weapon.ts ***!
@@ -1980,8 +2236,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "Weapon": () => (/* binding */ Weapon),
 /* harmony export */   "WeaponSlot": () => (/* binding */ WeaponSlot),
 /* harmony export */   "Weapons": () => (/* binding */ Weapons),
-/* harmony export */   "weaponList": () => (/* binding */ weaponList)
+/* harmony export */   "weaponList": () => (/* binding */ weaponList),
+/* harmony export */   "weaponPreMap": () => (/* binding */ weaponPreMap)
 /* harmony export */ });
+/* harmony import */ var _Projectile__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Projectile */ "./frontend/src/data/type/Projectile.ts");
+
 var WeaponType;
 (function (WeaponType) {
   WeaponType[WeaponType["TOOL_HAMMER"] = 0] = "TOOL_HAMMER";
@@ -2021,159 +2280,142 @@ class MeleeWeapon extends Weapon {
   }
 }
 class RangedWeapon extends Weapon {
-  constructor(id, slot, type, stats) {
+  constructor(id, slot, type, projectile, stats) {
     super(id, slot, type, stats);
+    this.projectile = projectile;
     this.stats = stats;
   }
 }
-const projectiles = [{
-  indx: 0,
-  layer: 0,
-  src: "arrow_1",
-  dmg: 25,
-  speed: 1.6,
-  scale: 103,
-  range: 1000
-}, {
-  indx: 1,
-  layer: 1,
-  dmg: 25,
-  scale: 20
-}, {
-  indx: 0,
-  layer: 0,
-  src: "arrow_1",
-  dmg: 35,
-  speed: 2.5,
-  scale: 103,
-  range: 1200
-}, {
-  indx: 0,
-  layer: 0,
-  src: "arrow_1",
-  dmg: 30,
-  speed: 2,
-  scale: 103,
-  range: 1200
-}, {
-  indx: 1,
-  layer: 1,
-  dmg: 16,
-  scale: 20
-}, {
-  indx: 0,
-  layer: 0,
-  src: "bullet_1",
-  dmg: 50,
-  speed: 3.6,
-  scale: 160,
-  range: 1400
-}];
+const weaponPreMap = new Map([[0, null], [1, null], [2, null], [3, null], [4, 3],
+// sword => katana
+[5, null], [6, null], [7, null], [8, null], [9, null], [10, null], [11, null], [12, 9],
+// bow => crossbow
+[13, 12],
+// crossbow => repeater crossbow
+[14, null], [15, 12] // crossbow => musket
+]);
+
 const Weapons = {
-  // it does, i want to add more things, im just adjusting something here
+  // important: keep the order to access weapon objects using their IDs
   TOOL_HAMMER: new MeleeWeapon(0, WeaponSlot.PRIMARY, WeaponType.TOOL_HAMMER, {
     dmg: 25,
     buildingDmgMultiplier: 1,
     range: 65,
     reloadTime: 300,
-    speedMultiplier: 1
+    speedMultiplier: 1,
+    knockback: 0
   }),
   HAND_AXE: new MeleeWeapon(1, WeaponSlot.PRIMARY, WeaponType.HAND_AXE, {
     dmg: 30,
     buildingDmgMultiplier: 1,
     range: 70,
     reloadTime: 400,
-    speedMultiplier: 1
+    speedMultiplier: 1,
+    knockback: 0
   }),
   GREAT_AXE: new MeleeWeapon(2, WeaponSlot.PRIMARY, WeaponType.GREAT_AXE, {
     dmg: 35,
     buildingDmgMultiplier: 1,
     range: 75,
     reloadTime: 400,
-    speedMultiplier: 1
+    speedMultiplier: 1,
+    knockback: 0
   }),
   SHORT_SWORD: new MeleeWeapon(3, WeaponSlot.PRIMARY, WeaponType.SHORT_SWORD, {
     dmg: 35,
     buildingDmgMultiplier: 1,
     range: 110,
     reloadTime: 300,
-    speedMultiplier: 0.85
+    speedMultiplier: 0.85,
+    knockback: 0
   }),
   KATANA: new MeleeWeapon(4, WeaponSlot.PRIMARY, WeaponType.KATANA, {
     dmg: 40,
     buildingDmgMultiplier: 1,
     range: 118,
     reloadTime: 300,
-    speedMultiplier: 0.8
+    speedMultiplier: 0.8,
+    knockback: 0
   }),
   POLEARM: new MeleeWeapon(5, WeaponSlot.PRIMARY, WeaponType.POLEARM, {
     dmg: 45,
     buildingDmgMultiplier: 1,
     range: 142,
     reloadTime: 700,
-    speedMultiplier: 0.82
+    speedMultiplier: 0.82,
+    knockback: 0.2
   }),
   BAT: new MeleeWeapon(6, WeaponSlot.PRIMARY, WeaponType.BAT, {
     dmg: 20,
     buildingDmgMultiplier: 1,
     range: 110,
     reloadTime: 300,
-    speedMultiplier: 1
+    speedMultiplier: 1,
+    knockback: 0.7
   }),
   DAGGERS: new MeleeWeapon(7, WeaponSlot.PRIMARY, WeaponType.DAGGERS, {
     dmg: 20,
     buildingDmgMultiplier: 1,
     range: 65,
     reloadTime: 100,
-    speedMultiplier: 1.13
+    speedMultiplier: 1.13,
+    knockback: 0.1
   }),
   STICK: new MeleeWeapon(8, WeaponSlot.PRIMARY, WeaponType.STICK, {
     dmg: 1,
     buildingDmgMultiplier: 1,
     range: 70,
     reloadTime: 400,
-    speedMultiplier: 1
+    speedMultiplier: 1,
+    knockback: 0
   }),
-  HUNTING_BOW: new RangedWeapon(9, WeaponSlot.SECONDARY, WeaponType.HUNTING_BOW, {
+  HUNTING_BOW: new RangedWeapon(9, WeaponSlot.SECONDARY, WeaponType.HUNTING_BOW, _Projectile__WEBPACK_IMPORTED_MODULE_0__.Projectiles.BOW_ARROW, {
     range: 1000,
     speedMultiplier: 0.75,
-    reloadTime: 600
+    reloadTime: 600,
+    dmg: 25
   }),
   GREAT_HAMMER: new MeleeWeapon(10, WeaponSlot.SECONDARY, WeaponType.GREAT_HAMMER, {
     dmg: 10,
     buildingDmgMultiplier: 7.5,
     range: 75,
     reloadTime: 400,
-    speedMultiplier: 1
+    speedMultiplier: 1,
+    knockback: 0
   }),
   SHIELD: new MeleeWeapon(11, WeaponSlot.SECONDARY, WeaponType.SHIELD, {
     dmg: 0,
     buildingDmgMultiplier: 1,
     range: 0,
     reloadTime: 0,
-    speedMultiplier: 0.7
+    speedMultiplier: 0.7,
+    knockback: 0
   }),
-  CROSSBOW: new RangedWeapon(12, WeaponSlot.SECONDARY, WeaponType.CROSSBOW, {
+  CROSSBOW: new RangedWeapon(12, WeaponSlot.SECONDARY, WeaponType.CROSSBOW, _Projectile__WEBPACK_IMPORTED_MODULE_0__.Projectiles.CROSSBOW_ARROW, {
     range: 1200,
     speedMultiplier: 0.7,
-    reloadTime: 700
+    reloadTime: 700,
+    dmg: 30
   }),
-  REPEATER_CROSSBOW: new RangedWeapon(13, WeaponSlot.SECONDARY, WeaponType.REPEATER_CROSSBOW, {
+  REPEATER_CROSSBOW: new RangedWeapon(13, WeaponSlot.SECONDARY, WeaponType.REPEATER_CROSSBOW, _Projectile__WEBPACK_IMPORTED_MODULE_0__.Projectiles.REPEATER_CROSSBOW_ARROW, {
     range: 1200,
     speedMultiplier: 0.7,
-    reloadTime: 230
+    reloadTime: 230,
+    dmg: 25
   }),
   MC_GRABBY: new MeleeWeapon(14, WeaponSlot.SECONDARY, WeaponType.MC_GRABBY, {
     dmg: 0,
     buildingDmgMultiplier: 1,
     range: 125,
     reloadTime: 700,
-    speedMultiplier: 1.05
+    speedMultiplier: 1.05,
+    knockback: 0.2
   }),
-  MUSKET: new RangedWeapon(15, WeaponSlot.SECONDARY, WeaponType.MUSKET, {
+  MUSKET: new RangedWeapon(15, WeaponSlot.SECONDARY, WeaponType.MUSKET, _Projectile__WEBPACK_IMPORTED_MODULE_0__.Projectiles.MUSKET_BULLET, {
     range: 1400,
     speedMultiplier: 0.6,
-    reloadTime: 1500
+    reloadTime: 1500,
+    dmg: 50
   })
 };
 const weaponList = Object.values(Weapons);
@@ -2494,9 +2736,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _Event__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Event */ "./frontend/src/event/Event.ts");
 
 class EventPacket extends _Event__WEBPACK_IMPORTED_MODULE_0__["default"] {
-  constructor(packet) {
+  constructor(packet, isBundle) {
     super();
     this.packet = packet;
+    this.callback = undefined;
+    this.isBundle = isBundle;
   }
   getPacket() {
     return this.packet;
@@ -2528,10 +2772,18 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _modules_building_AutoPlacer__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./modules/building/AutoPlacer */ "./frontend/src/features/modules/building/AutoPlacer.ts");
 /* harmony import */ var _modules_building_AutoReplace__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./modules/building/AutoReplace */ "./frontend/src/features/modules/building/AutoReplace.ts");
 /* harmony import */ var _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./modules/building/ItemPlacer */ "./frontend/src/features/modules/building/ItemPlacer.ts");
-/* harmony import */ var _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./modules/combat/Autoheal */ "./frontend/src/features/modules/combat/Autoheal.ts");
-/* harmony import */ var _modules_player_AutoHat__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./modules/player/AutoHat */ "./frontend/src/features/modules/player/AutoHat.ts");
-var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_modules_building_AntiTrap__WEBPACK_IMPORTED_MODULE_1__, _modules_building_AutoPlacer__WEBPACK_IMPORTED_MODULE_2__, _modules_building_AutoReplace__WEBPACK_IMPORTED_MODULE_3__, _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_4__, _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_5__, _modules_player_AutoHat__WEBPACK_IMPORTED_MODULE_6__]);
-([_modules_building_AntiTrap__WEBPACK_IMPORTED_MODULE_1__, _modules_building_AutoPlacer__WEBPACK_IMPORTED_MODULE_2__, _modules_building_AutoReplace__WEBPACK_IMPORTED_MODULE_3__, _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_4__, _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_5__, _modules_player_AutoHat__WEBPACK_IMPORTED_MODULE_6__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+/* harmony import */ var _modules_combat_AntiBull__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./modules/combat/AntiBull */ "./frontend/src/features/modules/combat/AntiBull.ts");
+/* harmony import */ var _modules_combat_AntiInsta__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./modules/combat/AntiInsta */ "./frontend/src/features/modules/combat/AntiInsta.ts");
+/* harmony import */ var _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./modules/combat/Autoheal */ "./frontend/src/features/modules/combat/Autoheal.ts");
+/* harmony import */ var _modules_combat_SpikeSync__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./modules/combat/SpikeSync */ "./frontend/src/features/modules/combat/SpikeSync.ts");
+/* harmony import */ var _modules_misc_NoToxic__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./modules/misc/NoToxic */ "./frontend/src/features/modules/misc/NoToxic.ts");
+/* harmony import */ var _modules_player_AutoHat__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./modules/player/AutoHat */ "./frontend/src/features/modules/player/AutoHat.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_modules_building_AntiTrap__WEBPACK_IMPORTED_MODULE_1__, _modules_building_AutoPlacer__WEBPACK_IMPORTED_MODULE_2__, _modules_building_AutoReplace__WEBPACK_IMPORTED_MODULE_3__, _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_4__, _modules_combat_AntiBull__WEBPACK_IMPORTED_MODULE_5__, _modules_combat_AntiInsta__WEBPACK_IMPORTED_MODULE_6__, _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_7__, _modules_combat_SpikeSync__WEBPACK_IMPORTED_MODULE_8__, _modules_misc_NoToxic__WEBPACK_IMPORTED_MODULE_9__, _modules_player_AutoHat__WEBPACK_IMPORTED_MODULE_10__]);
+([_modules_building_AntiTrap__WEBPACK_IMPORTED_MODULE_1__, _modules_building_AutoPlacer__WEBPACK_IMPORTED_MODULE_2__, _modules_building_AutoReplace__WEBPACK_IMPORTED_MODULE_3__, _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_4__, _modules_combat_AntiBull__WEBPACK_IMPORTED_MODULE_5__, _modules_combat_AntiInsta__WEBPACK_IMPORTED_MODULE_6__, _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_7__, _modules_combat_SpikeSync__WEBPACK_IMPORTED_MODULE_8__, _modules_misc_NoToxic__WEBPACK_IMPORTED_MODULE_9__, _modules_player_AutoHat__WEBPACK_IMPORTED_MODULE_10__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+
+
+
+
 
 
 
@@ -2541,9 +2793,19 @@ var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_mod
 
 const logger = new _util_Logger__WEBPACK_IMPORTED_MODULE_0__["default"]("module-manager");
 class ModuleManager {
-  static classes = [_modules_building_AntiTrap__WEBPACK_IMPORTED_MODULE_1__["default"], _modules_building_AutoPlacer__WEBPACK_IMPORTED_MODULE_2__["default"], _modules_building_AutoReplace__WEBPACK_IMPORTED_MODULE_3__["default"], _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_4__["default"],
-  //AntiInsta,
-  _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_5__["default"], _modules_player_AutoHat__WEBPACK_IMPORTED_MODULE_6__["default"]];
+  /**
+   * ORDER IS VERY IMPORTANT!!!
+   * 
+   * AntiTrap runs after placing it would mess it up
+   * AutoHat runs last because of all the attacks from placements that could confuse it
+   */
+  static classes = [_modules_building_AutoPlacer__WEBPACK_IMPORTED_MODULE_2__["default"], _modules_building_AutoReplace__WEBPACK_IMPORTED_MODULE_3__["default"], _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_4__["default"], _modules_combat_AntiInsta__WEBPACK_IMPORTED_MODULE_6__["default"], _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_7__["default"],
+  // activate autoheal after anti insta in case the player is already fully healed
+
+  _modules_misc_NoToxic__WEBPACK_IMPORTED_MODULE_9__["default"], _modules_combat_SpikeSync__WEBPACK_IMPORTED_MODULE_8__["default"],
+  // run before autotrap since autotrap also checks if it has highest priority in tick
+
+  _modules_building_AntiTrap__WEBPACK_IMPORTED_MODULE_1__["default"], _modules_combat_AntiBull__WEBPACK_IMPORTED_MODULE_5__["default"], _modules_player_AutoHat__WEBPACK_IMPORTED_MODULE_10__["default"]];
   modules = [];
   constructor() {
     for (const clazz of ModuleManager.classes) {
@@ -2601,14 +2863,24 @@ class ModuleManager {
       module.onActionRun(action);
     }
   }
-  onBuildingHit(player, building, damage) {
+  onPreBuildingHit(player, building, tickIndex, potentialBreak) {
     for (const module of this.modules) {
-      module.onBuildingHit(player, building, damage);
+      module.onPreBuildingHit(player, building, tickIndex, potentialBreak);
     }
   }
   onBuildingBreak(building) {
     for (const module of this.modules) {
       module.onBuildingBreak(building);
+    }
+  }
+  onPlayerUpdate(player) {
+    for (const module of this.modules) {
+      module.onPlayerUpdate(player);
+    }
+  }
+  onProjectileEarlyDespawn(projectileItem, spawnPosition, direction) {
+    for (const module of this.modules) {
+      module.onProjectileEarlyDespawn(projectileItem, spawnPosition, direction);
     }
   }
   getModule(clazz) {
@@ -2644,8 +2916,10 @@ class Module {
   onPacketSend(event) {}
   onRender(delta) {}
   onActionRun(action) {}
-  onBuildingHit(player, building, damage) {}
+  onPreBuildingHit(player, building, tickIndex, potentialBreak) {}
   onBuildingBreak(building) {}
+  onPlayerUpdate(player) {}
+  onProjectileEarlyDespawn(projectileItem, spawnPosition, direction) {}
 }
 
 /***/ }),
@@ -2663,64 +2937,180 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (/* binding */ AntiTrap)
 /* harmony export */ });
 /* harmony import */ var _core_ActionType__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../core/ActionType */ "./frontend/src/core/ActionType.ts");
-/* harmony import */ var _data_type_Player__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../data/type/Player */ "./frontend/src/data/type/Player.ts");
-/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../main */ "./frontend/src/main.ts");
-/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
-/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
-/* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
-var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_2__]);
-_main__WEBPACK_IMPORTED_MODULE_2__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+/* harmony import */ var _data_moomoo_hats__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../data/moomoo/hats */ "./frontend/src/data/moomoo/hats.ts");
+/* harmony import */ var _data_moomoo_items__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../data/moomoo/items */ "./frontend/src/data/moomoo/items.ts");
+/* harmony import */ var _data_type_Player__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../data/type/Player */ "./frontend/src/data/type/Player.ts");
+/* harmony import */ var _data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../../data/type/Weapon */ "./frontend/src/data/type/Weapon.ts");
+/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../../main */ "./frontend/src/main.ts");
+/* harmony import */ var _socket_Connection__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../../socket/Connection */ "./frontend/src/socket/Connection.ts");
+/* harmony import */ var _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../../socket/packets/Packet */ "./frontend/src/socket/packets/Packet.ts");
+/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
+/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
+/* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_5__]);
+_main__WEBPACK_IMPORTED_MODULE_5__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
 
 
 
 
 
 
-class AntiTrap extends _Module__WEBPACK_IMPORTED_MODULE_5__["default"] {
+
+
+
+
+
+class AntiTrap extends _Module__WEBPACK_IMPORTED_MODULE_10__["default"] {
   constructor() {
     super();
-    this.wasBreaking = false;
-    this.stopAttackActionId = undefined;
-    this.packetBlockerId = undefined;
     this.currentTrap = null;
+    this.willTrapBreakNextTick = false;
+    this.aimPacketsBlocker = -1;
+    this.lastWeapon = null;
   }
-  onPreTick(tickIndex) {
-    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer;
-    if (!myPlayer.alive) return;
-    if (myPlayer.state.isTrapped) {
-      if (!this.currentTrap) {
-        this.currentTrap = myPlayer.state.data.trap;
+
+  /*activate(tickIndex = core.tickEngine.getNextPredictableTick(), isNotSync?: boolean) {
+      const myPlayer = core.playerManager.myPlayer;
+      if (!myPlayer.alive) return;
+        if (!this.currentTrap) {
+          this.currentTrap = myPlayer.state.data.trap!;
+          const antiAngle = MathUtil.getDirection(this.currentTrap.position, myPlayer.serverPos);
+          const item = items.list[myPlayer.inventory.items[2]];
+            const splitPlacement = core.objectManager.tryToSplitPlacement([myPlayer.serverPos, myPlayer.scale], antiAngle, item);
+          if (splitPlacement !== null) {
+              core.interactionEngine.safePlacement(item, splitPlacement[0]);
+              core.interactionEngine.safePlacement(item, splitPlacement[1]);
+          } else {
+              core.interactionEngine.safePlacement(item, antiAngle);
+          }
       }
-      if (this.currentTrap) {
-        if (this.packetBlockerId === undefined) this.packetBlockerId = _main__WEBPACK_IMPORTED_MODULE_2__.core.createPacketBlock(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.SET_ANGLE);
-        const weapon = myPlayer.inventory.findBestWeapon(_data_type_Player__WEBPACK_IMPORTED_MODULE_1__.Inventory.WeaponFinders.BUILDING_BREAK);
-        const reload = myPlayer.inventory.reloads[weapon.id];
-        if (reload === 0) {
-          const trapAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDirection(myPlayer.serverPos, this.currentTrap.position);
-          _main__WEBPACK_IMPORTED_MODULE_2__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.WEAPON, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTITRAP, tickIndex, [weapon?.id]);
-          _main__WEBPACK_IMPORTED_MODULE_2__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.ATTACK, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTITRAP, tickIndex, [1, trapAngle]);
-          _main__WEBPACK_IMPORTED_MODULE_2__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTITRAP, tickIndex, [40]);
-        } else {
-          // else reload the weapon
-          _main__WEBPACK_IMPORTED_MODULE_2__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.WEAPON, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTITRAP, tickIndex, [weapon?.id]);
-          _main__WEBPACK_IMPORTED_MODULE_2__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTITRAP, tickIndex, [20]);
-        }
-        this.wasBreaking = true;
-      }
-    } else if (this.wasBreaking) {
-      this.stopAttackActionId = _main__WEBPACK_IMPORTED_MODULE_2__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.ATTACK, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTITRAP, tickIndex, [+_main__WEBPACK_IMPORTED_MODULE_2__.core.mstate.mouseHeld]);
+        if (this.packetBlockerId === undefined) this.packetBlockerId = core.createPacketBlock(PacketType.SET_ANGLE);
+            let weapon = <MeleeWeapon> myPlayer.inventory.findBestWeapon(Inventory.WeaponFinders.BUILDING_BREAK);
+          const primary = <MeleeWeapon> myPlayer.inventory.getWeapon(WeaponSlot.PRIMARY);
+          const reload = myPlayer.inventory.reloads[weapon!.id];
+            if (tickIndex === myPlayer.nextAttack - 1 || reload <= core.tickEngine.timeToNextTick) {
+              if (weapon !== primary && myPlayer.inventory.reloads[primary!.id] <= core.tickEngine.timeToNextTick && this.currentTrap.health > 0 && this.currentTrap.health - primary.stats.dmg * primary.stats.buildingDmgMultiplier * (myPlayer.ownedHats.includes(40) ? hats.find(x => x.id === 40)!.bDmg! : 1) <= 0) {
+                  weapon = primary;
+              }
+              const trapAngle = MathUtil.getDirection(myPlayer.serverPos, this.currentTrap!.position);
+              if (!isNotSync && myPlayer.ownedHats.includes(40)) core.scheduleAction(ActionType.HAT, ActionPriority.ANTITRAP, tickIndex, [40]);
+              core.scheduleAction(ActionType.WEAPON, ActionPriority.ANTITRAP, tickIndex, [weapon?.id]);
+              if (!myPlayer.isAttacking || core.lastActionState.attack === 0 || MathUtil.getAngleDist(core.lastActionState.aim, trapAngle) > Number.EPSILON) core.scheduleAction(ActionType.ATTACK, ActionPriority.ANTITRAP, tickIndex, [1, trapAngle]);
+              //core.scheduleAction(ActionType.HAT, ActionPriority.ANTITRAP, tickIndex, [40]);
+          } else {
+              // else reload the weapon
+              core.scheduleAction(ActionType.WEAPON, ActionPriority.ANTITRAP, tickIndex, [weapon?.id]);
+              core.scheduleAction(ActionType.HAT, ActionPriority.ANTITRAP, tickIndex, [20]);
+          }
+          this.wasBreaking = true;
+  }
+    deactivate() {
+      core.cleanActions(ActionPriority.ANTITRAP);
+      this.stopAttackActionId = core.scheduleAction(ActionType.ATTACK, ActionPriority.ANTITRAP, core.tickEngine.getNextPredictableTick(), [+core.mstate.mouseHeld]);
       this.currentTrap = null;
+      core.scheduleAction(ActionType.WEAPON, ActionPriority.ANTITRAP, core.tickEngine.getNextPredictableTick(), [core.playerManager.myPlayer.inventory.getWeapon(WeaponSlot.PRIMARY)!.id]);
       if (this.packetBlockerId !== undefined) {
-        _main__WEBPACK_IMPORTED_MODULE_2__.core.removePacketBlock(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.SET_ANGLE, this.packetBlockerId);
-        this.packetBlockerId = undefined;
+          core.removePacketBlock(PacketType.SET_ANGLE, this.packetBlockerId);
+          this.packetBlockerId = undefined;
+      }
+  }
+    onActionRun(action: Action): void {
+      if (action.id === this.stopAttackActionId) {
+          this.stopAttackActionId = undefined;
+          this.wasBreaking = false;
+      }
+  }*/
+
+  onPreTick(tickIndex) {
+    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_5__.core.playerManager.myPlayer;
+    if (!myPlayer.alive) return;
+    if (myPlayer.state.isTrapped && this.trap === null) {
+      this.initializeTrap(myPlayer.state.data.trap);
+    } else if (!myPlayer.state.isTrapped && this.trap !== null || this.willTrapBreakNextTick) {
+      this.setTrapBroken();
+    } else if (this.currentTrap !== null) {
+      const tankGear = _data_moomoo_hats__WEBPACK_IMPORTED_MODULE_1__["default"].find(x => x.id === 40);
+      const angle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_9__["default"].getDirection(myPlayer.serverPos, this.currentTrap.position);
+      const primaryWeapon = myPlayer.inventory.getWeapon(_data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__.WeaponSlot.PRIMARY);
+      let bestWeapon = myPlayer.inventory.findBestWeapon(_data_type_Player__WEBPACK_IMPORTED_MODULE_3__.Inventory.WeaponFinders.BUILDING_BREAK);
+      let usePrimaryAttack = false;
+      if (!this.willTrapBreakNextTick && this.currentTrap.health > 0 && myPlayer.inventory.reloads[primaryWeapon.id] === 0 && this.currentTrap.health <= primaryWeapon.stats.dmg * primaryWeapon.stats.buildingDmgMultiplier * (myPlayer.ownedHats.includes(40) ? tankGear.bDmg : 1)) {
+        bestWeapon = primaryWeapon;
+        usePrimaryAttack = true;
+        this.willTrapBreakNextTick = true;
+        //console.log("hitting with retarded wep!!");
+      }
+
+      if (myPlayer.nextAttack === tickIndex - 1 || myPlayer.inventory.reloads[bestWeapon.id] <= _main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.timeToNextTick || usePrimaryAttack) {
+        _main__WEBPACK_IMPORTED_MODULE_5__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOBREAK, tickIndex, [40]);
+        _main__WEBPACK_IMPORTED_MODULE_5__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.WEAPON, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOBREAK, tickIndex, [bestWeapon.id, true]);
+        _main__WEBPACK_IMPORTED_MODULE_5__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.ATTACK, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOBREAK, tickIndex, [1, angle]);
+        _main__WEBPACK_IMPORTED_MODULE_5__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.ATTACK, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOBREAK, tickIndex, [0, null]);
+        //core.scheduleAction(ActionType.ATTACK, ActionPriority.AUTOBREAK, tickIndex + 1, [0, null]);
+
+        //console.log("anti trap check", this.currentTrap!.health, bestWeapon.stats.dmg * bestWeapon.stats.buildingDmgMultiplier * (myPlayer.ownedHats.includes(40) ? tankGear.bDmg! : 1))
+        if (this.currentTrap.health <= bestWeapon.stats.dmg * bestWeapon.stats.buildingDmgMultiplier * (myPlayer.ownedHats.includes(40) ? tankGear.bDmg : 1)) {
+          this.willTrapBreakNextTick = true;
+        }
+      } else {
+        _main__WEBPACK_IMPORTED_MODULE_5__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.WEAPON, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOBREAK, tickIndex, [bestWeapon.id, true]);
+      }
+
+      /*if (myPlayer.nextAttack === tickIndex - 1) {
+          core.scheduleAction(ActionType.WEAPON, ActionPriority.AUTOBREAK, tickIndex, [bestWeapon.id, true]);
+          core.scheduleAction(ActionType.ATTACK, ActionPriority.AUTOBREAK, tickIndex, [1, angle]);
+      }*/
+    }
+  }
+
+  initializeTrap(trap) {
+    this.currentTrap = trap;
+    this.willTrapBreakNextTick = false;
+    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_5__.core.playerManager.myPlayer;
+    this.lastWeapon = myPlayer.inventory.heldItem.id;
+    const tankGear = _data_moomoo_hats__WEBPACK_IMPORTED_MODULE_1__["default"].find(x => x.id === 40);
+    const angle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_9__["default"].getDirection(myPlayer.serverPos, trap.position);
+    const antiAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_9__["default"].getDirection(this.currentTrap.position, myPlayer.serverPos);
+    const cartAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_9__["default"].polarToCartesian(antiAngle);
+    const spikeItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_2__.items.list[myPlayer.inventory.items[2]];
+    const arcs = _main__WEBPACK_IMPORTED_MODULE_5__.core.objectManager.findPlacementArcs([myPlayer.serverPos, myPlayer.scale], spikeItem);
+    if (arcs.length > 0) {
+      const closestAllowArc = arcs.sort((a, b) => Math.min(_util_MathUtil__WEBPACK_IMPORTED_MODULE_9__["default"].getAngleDist(a[0], antiAngle), _util_MathUtil__WEBPACK_IMPORTED_MODULE_9__["default"].getAngleDist(a[1], antiAngle)) - Math.min(_util_MathUtil__WEBPACK_IMPORTED_MODULE_9__["default"].getAngleDist(b[0], antiAngle), _util_MathUtil__WEBPACK_IMPORTED_MODULE_9__["default"].getAngleDist(b[1], antiAngle)))[0];
+      const [arcStart, arcEnd] = [_util_MathUtil__WEBPACK_IMPORTED_MODULE_9__["default"].polarToCartesian(closestAllowArc[0]), _util_MathUtil__WEBPACK_IMPORTED_MODULE_9__["default"].polarToCartesian(closestAllowArc[1])];
+      if (cartAngle > arcStart && cartAngle < arcEnd) {
+        _main__WEBPACK_IMPORTED_MODULE_5__.core.interactionEngine.safePlacement(spikeItem, antiAngle);
+      } else {
+        _main__WEBPACK_IMPORTED_MODULE_5__.core.interactionEngine.safePlacement(spikeItem, _util_MathUtil__WEBPACK_IMPORTED_MODULE_9__["default"].cartesianToPolar(_util_MathUtil__WEBPACK_IMPORTED_MODULE_9__["default"].middleOfCartesianArc([arcStart, arcEnd])));
+      }
+    }
+    const bestWeapon = myPlayer.inventory.findBestWeapon(_data_type_Player__WEBPACK_IMPORTED_MODULE_3__.Inventory.WeaponFinders.BUILDING_BREAK);
+    const currentWeapon = myPlayer.inventory.heldItem;
+    const lastHeldItemId = currentWeapon.id;
+    if (this.aimPacketsBlocker === -1) this.aimPacketsBlocker = _main__WEBPACK_IMPORTED_MODULE_5__.core.createPacketBlock(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_8__.PacketType.SET_ANGLE);
+    if (myPlayer.inventory.reloads[bestWeapon.id] <= (currentWeapon === bestWeapon ? _main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.timeToNextTick : 0)) {
+      if (_main__WEBPACK_IMPORTED_MODULE_5__.core.isHighestPriority(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOBREAK, _main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.tickIndex + 1)) {
+        if (!(myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__.Weapon) || bestWeapon.id !== myPlayer.inventory.heldItem.id) _socket_Connection__WEBPACK_IMPORTED_MODULE_6__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_7__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_8__.PacketType.SELECT_ITEM, [bestWeapon.id, true]));
+        if (myPlayer.ownedHats.includes(40) && _main__WEBPACK_IMPORTED_MODULE_5__.core.lastActionState.hat !== 40) _socket_Connection__WEBPACK_IMPORTED_MODULE_6__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_7__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_8__.PacketType.BUY_AND_EQUIP, [0, 40, 0]));
+        if (!myPlayer.isAttacking) _socket_Connection__WEBPACK_IMPORTED_MODULE_6__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_7__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_8__.PacketType.ATTACK, [1, angle]));
       }
     }
   }
-  onActionRun(action) {
-    if (action.id === this.stopAttackActionId) {
-      this.stopAttackActionId = undefined;
-      this.wasBreaking = false;
+  setTrapBroken() {
+    if (this.currentTrap === null) return;
+    this.currentTrap = null;
+    this.willTrapBreakNextTick = false;
+    if (this.aimPacketsBlocker > -1) _main__WEBPACK_IMPORTED_MODULE_5__.core.removePacketBlock(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_8__.PacketType.SET_ANGLE, this.aimPacketsBlocker);
+    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_5__.core.playerManager.myPlayer;
+    if (!_main__WEBPACK_IMPORTED_MODULE_5__.core.mstate.mouseHeld) _socket_Connection__WEBPACK_IMPORTED_MODULE_6__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_7__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_8__.PacketType.ATTACK, [0, null]));
+    if (_main__WEBPACK_IMPORTED_MODULE_5__.core.isHighestPriority(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOBREAK, _main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.tickIndex + 1)) {
+      if (this.lastWeapon && (!(myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__.Weapon) || this.lastWeapon !== myPlayer.inventory.heldItem.id)) _socket_Connection__WEBPACK_IMPORTED_MODULE_6__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_7__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_8__.PacketType.SELECT_ITEM, [this.lastWeapon, true]));
     }
+  }
+  get isBreaking() {
+    return this.currentTrap != null;
+  }
+  get trap() {
+    return this.currentTrap;
   }
 }
 __webpack_async_result__();
@@ -2745,8 +3135,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../main */ "./frontend/src/main.ts");
 /* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
 /* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
-var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_2__]);
-_main__WEBPACK_IMPORTED_MODULE_2__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+/* harmony import */ var _AntiTrap__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./AntiTrap */ "./frontend/src/features/modules/building/AntiTrap.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_2__, _AntiTrap__WEBPACK_IMPORTED_MODULE_5__]);
+([_main__WEBPACK_IMPORTED_MODULE_2__, _AntiTrap__WEBPACK_IMPORTED_MODULE_5__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+
 
 
 
@@ -2826,15 +3218,16 @@ class AutoPlacer extends _Module__WEBPACK_IMPORTED_MODULE_4__["default"] {
   }
   onUpdate(tickIndex) {
     if (!this.toggled) return;
+    const antiTrap = _main__WEBPACK_IMPORTED_MODULE_2__.core.moduleManager.getModule(_AntiTrap__WEBPACK_IMPORTED_MODULE_5__["default"]);
     const myPlayer = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer;
-    if (!myPlayer.alive) return;
+    if (!myPlayer.alive /* || antiTrap.isBreaking*/) return;
     this.calcState();
     switch (this.state) {
       case State.WINDMILLS:
         {
           return;
           const windmillItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.inventory.items[3]];
-          const placeableangles = _main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.findPlacementAngles([_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.serverPos, _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.scale], windmillItem);
+          const placeableangles = _main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.findPlacementArcs([_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.serverPos, _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.scale], windmillItem);
           const backdir = (_util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getDirection(_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.lerpPos, _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.serverPos) + Math.PI) % (Math.PI * 2);
           const singleAngles = translateAllowAngles(placeableangles, 3);
           const angles = singleAngles.filter(angle => _data_type_MoomooUtil__WEBPACK_IMPORTED_MODULE_1__.util.getAngleDist(backdir, angle) <= Math.PI / 2.8);
@@ -2853,7 +3246,7 @@ class AutoPlacer extends _Module__WEBPACK_IMPORTED_MODULE_4__["default"] {
             const target = value;
             const targetDir = _util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getDirection(myPlayer.serverPos, target.serverPos);
             const trappingDistance = myPlayer.scale + target.scale + trapItem.scale + trapItem.scale * trapItem.colDiv + trapItem.placeOffset;
-            const angles = translateAllowAngles(_main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.findPlacementAngles([_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.serverPos, _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.scale], trapItem), 3);
+            const angles = translateAllowAngles(_main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.findPlacementArcs([_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.serverPos, _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.scale], trapItem), 3);
             const placeAngles = angles.filter(angle => _util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getAngleDist(angle, targetDir) <= Math.sin(trappingDistance / (target.scale + trapItem.scale * trapItem.colDiv)));
             _main__WEBPACK_IMPORTED_MODULE_2__.core.interactionEngine.safePlacement(trapItem, targetDir);
             for (let i = 0; i < placeAngles.length; i++) {
@@ -2921,14 +3314,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (/* binding */ AutoReplace)
 /* harmony export */ });
-/* harmony import */ var _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../data/moomoo/items */ "./frontend/src/data/moomoo/items.ts");
-/* harmony import */ var _data_type_GameObject__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../data/type/GameObject */ "./frontend/src/data/type/GameObject.ts");
-/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../main */ "./frontend/src/main.ts");
-/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
+/* harmony import */ var _data_moomoo_hats__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../data/moomoo/hats */ "./frontend/src/data/moomoo/hats.ts");
+/* harmony import */ var _data_moomoo_items__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../data/moomoo/items */ "./frontend/src/data/moomoo/items.ts");
+/* harmony import */ var _data_type_GameObject__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../data/type/GameObject */ "./frontend/src/data/type/GameObject.ts");
+/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../main */ "./frontend/src/main.ts");
 /* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
 /* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
-var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_2__]);
-_main__WEBPACK_IMPORTED_MODULE_2__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_3__]);
+_main__WEBPACK_IMPORTED_MODULE_3__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
 
 
 
@@ -2938,122 +3331,112 @@ _main__WEBPACK_IMPORTED_MODULE_2__ = (__webpack_async_dependencies__.then ? (awa
 class AutoReplace extends _Module__WEBPACK_IMPORTED_MODULE_5__["default"] {
   constructor() {
     super();
-    this.predictedBreaks = new Map();
-    this.spamming = false;
-    this.buildData = null;
-    this.placeLimiter = 0;
-    this.lastBreak = -1;
+    this.shouldReplace = [];
   }
-  tryToPlace() {
-    if (this.placeLimiter % 4 == 0) {
-      _main__WEBPACK_IMPORTED_MODULE_2__.core.interactionEngine.vanillaPlaceItem(this.buildData.item, this.buildData.angle);
-    }
-  }
-  onUpdate(delta) {
-    if (this.buildData !== null && this.buildData.isPost) {
-      this.tryToPlace();
-    }
-  }
-  onPreTick(tickIndex) {
-    if (this.buildData !== null && this.buildData.tick + 1 === tickIndex) {
-      this.buildData = null;
-      this.placeLimiter = 0;
-      console.log("deleting build data");
-    }
-    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer;
-    const spikeItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[myPlayer.inventory.items[2]];
-    const trapItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[15];
+  replace(building, forceSingle) {
+    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer;
+    const buildingAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDirection(myPlayer.serverPos, building.position);
+    const spikeItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_1__.items.list[myPlayer.inventory.items[2]];
+    const trapItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_1__.items.list[15];
 
-    // check for players which weapon will attack at the next tick
-    const players = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.getNearby(myPlayer.serverPos, 500, false);
-    for (let i = 0; i < players.length; i++) {
-      const player = players[i];
-      if (player.swingStreak > 1 && player.nextAttack === tickIndex) {
-        const weapon = player.inventory.weaponSelected;
-        const grids = _main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.getGridArrays(player.serverPos.x, player.serverPos.y, weapon.stats.range + player.velocity.length() * 2).flat(1);
-        for (let i = 0; i < grids.length; i++) {
-          const object = grids[i];
-          if (object instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_1__.PlayerBuilding && object.health - weapon.stats.dmg * 2 <= 0) {
-            if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDistance(object.position, player.serverPos) - object.scale <= weapon.stats.range + player.velocity.length() * 2) {
-              const buildingAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDirection(player.serverPos, object.position);
-              const gatherAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].roundTo(_util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDirection(player.serverPos, object.position), 1);
-              const safeSpan = _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].lineSpan(object.position.clone(), player.lastTickServerPos.clone(), player.serverPos.clone().add(player.velocity));
-              if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getAngleDist(buildingAngle, gatherAngle) <= safeSpan + Number.EPSILON) {
-                if (!this.predictedBreaks.has(tickIndex)) this.predictedBreaks.set(tickIndex, []);
-                this.predictedBreaks.get(tickIndex).push([player, object]);
-              }
-            }
+    // find target player and item to place
+    const enemyPlayer = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.getVisibleEnemies().sort((a, b) => _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDistance(a.serverPos, building.position) - _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDistance(b.serverPos, building.position))[0];
+    if (enemyPlayer && _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDistance(enemyPlayer.serverPos, myPlayer.serverPos) <= 850 && _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDistance(myPlayer.serverPos, building.position) <= building.getScale() + myPlayer.scale + 220) {
+      const playerToBuilding = _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDistance(enemyPlayer.serverPos.clone().add(enemyPlayer.velocity), building.position);
+      const item = playerToBuilding < enemyPlayer.scale + spikeItem.scale * 1.3 + myPlayer.scale + (spikeItem.placeOffset ?? 0) ? spikeItem : trapItem;
+
+      // calculate angle
+      const arcs = _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager.findPlacementArcs([myPlayer.serverPos, myPlayer.scale], item, [building]);
+      if (arcs.length === 0) return;
+      const closestAllowArc = arcs.sort((a, b) => Math.min(_util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getAngleDist(a[0], buildingAngle), _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getAngleDist(a[1], buildingAngle)) - Math.min(_util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getAngleDist(b[0], buildingAngle), _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getAngleDist(b[1], buildingAngle)))[0];
+      const splitTangent = _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager.findSplitTangent(myPlayer.scale, item) + 0.25;
+      const start = _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].polarToCartesian(closestAllowArc[0]);
+      const end = _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].polarToCartesian(closestAllowArc[1]);
+      const arcSpan = start > end ? end + Math.PI * 2 - start : end - start;
+      const buildingCount = Math.min(Math.floor((arcSpan + splitTangent) / splitTangent), 3);
+      const enemyAngleCart = _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].polarToCartesian(_util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDirection(myPlayer.serverPos, enemyPlayer.serverPos));
+      if (buildingCount === 1 || start + end === Math.PI * 2 || forceSingle) {
+        _main__WEBPACK_IMPORTED_MODULE_3__.core.interactionEngine.safePlacementIgnoring(item, enemyAngleCart >= start && enemyAngleCart <= end ? _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].cartesianToPolar(enemyAngleCart) : buildingAngle, building);
+      } else {
+        const middle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].middleOfCartesianArc([start, end]);
+        if (buildingCount % 2 === 0) {
+          for (let i = 0; i < buildingCount / 2; i++) {
+            _main__WEBPACK_IMPORTED_MODULE_3__.core.interactionEngine.safePlacementIgnoring(item, _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].cartesianToPolar(_util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].clampCartesian(middle + splitTangent / 2 + splitTangent * i)), building);
+            _main__WEBPACK_IMPORTED_MODULE_3__.core.interactionEngine.safePlacementIgnoring(item, _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].cartesianToPolar(_util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].clampCartesian(middle - splitTangent / 2 - splitTangent * i)), building);
+          }
+        } else {
+          _main__WEBPACK_IMPORTED_MODULE_3__.core.interactionEngine.safePlacementIgnoring(item, _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].cartesianToPolar(middle), building);
+          for (let i = 0; i < (buildingCount - 1) / 2; i++) {
+            _main__WEBPACK_IMPORTED_MODULE_3__.core.interactionEngine.safePlacementIgnoring(item, _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].cartesianToPolar(_util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].clampCartesian(middle + splitTangent * (i + 1))), building);
+            _main__WEBPACK_IMPORTED_MODULE_3__.core.interactionEngine.safePlacementIgnoring(item, _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].cartesianToPolar(_util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].clampCartesian(middle - splitTangent * (i + 1))), building);
           }
         }
       }
     }
-    const predictedBreaks = this.predictedBreaks.get(tickIndex);
-    if (!predictedBreaks || predictedBreaks.length === 0 || this.buildData !== null) return;
-    for (let i = 0; i < predictedBreaks.length; i++) {
-      const [breaker, building] = predictedBreaks[i];
-      const buildingAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDirection(myPlayer.serverPos, building.position);
-      const nearbyPlayer = breaker === myPlayer ? _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.getNearby(myPlayer.serverPos, 500, false)[0] : breaker;
-      if (nearbyPlayer && _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.isAnyoneInRadius(500)) {
-        const playerToBuilding = _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDistance(nearbyPlayer.serverPos.clone().add(breaker.velocity), building.position);
-        console.log(nearbyPlayer);
-        if (playerToBuilding < nearbyPlayer.scale + building.scale + spikeItem.scale * 2 + myPlayer.scale + (spikeItem.placeOffset ?? 0)) {
-          const angles = _main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.findPlacementAngles([myPlayer.serverPos, myPlayer.scale], spikeItem, [building]);
-          const bestangle = angles.sort((a, b) => Math.min(_util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getAngleDist(a[0], buildingAngle), _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getAngleDist(a[1], buildingAngle)) - Math.min(_util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getAngleDist(b[0], buildingAngle), _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getAngleDist(b[1], buildingAngle)))[0];
-          this.buildData = {
-            item: spikeItem,
-            angle: buildingAngle > bestangle[0] && buildingAngle < bestangle[1] ? buildingAngle : _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getAngleDist(bestangle[0], buildingAngle) > _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getAngleDist(bestangle[1], buildingAngle) ? bestangle[1] : bestangle[0],
-            tick: tickIndex,
-            isPost: false
-          };
-        } else {
-          const angles = _main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.findPlacementAngles([myPlayer.serverPos, myPlayer.scale], trapItem, [building]);
-          const bestangle = angles.sort((a, b) => Math.min(_util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getAngleDist(a[0], buildingAngle), _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getAngleDist(a[1], buildingAngle)) - Math.min(_util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getAngleDist(b[0], buildingAngle), _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getAngleDist(b[1], buildingAngle)))[0];
-          this.buildData = {
-            item: trapItem,
-            angle: buildingAngle > bestangle[0] && buildingAngle < bestangle[1] ? buildingAngle : _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getAngleDist(bestangle[0], buildingAngle) > _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getAngleDist(bestangle[1], buildingAngle) ? bestangle[1] : bestangle[0],
-            tick: tickIndex,
-            isPost: false
-          };
-        }
-        this.lastBreak = building.sid;
-        this.tryToPlace();
-      }
-    }
-    this.predictedBreaks.delete(tickIndex);
   }
   onPostTick(tickIndex) {
-    if (this.buildData !== null) {
-      this.buildData.isPost = true;
-      this.tryToPlace();
+    let i = this.shouldReplace.length;
+    while (i-- > 0) {
+      const [building, timestamp, tick] = this.shouldReplace[i];
+      if (tick + 1 === tickIndex) {
+        this.replace(building, false);
+        this.shouldReplace.splice(i, 1);
+      }
     }
   }
-  onBuildingHit(player, building, damage) {
-    if (building.health <= damage) {
-      // +1 because after the weapon is reloaded in one tick, it only can gather in the tick after it
-      const tick = _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.tickIn(player.inventory.reloads[player.inventory.weaponSelected.id]) + 1;
-      if (!this.predictedBreaks.has(tick)) this.predictedBreaks.set(tick, []);
-      this.predictedBreaks.get(tick).push([player, building]);
+  onPlayerUpdate(player) {
+    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer;
+    const tickIndex = _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.tickIndex + 1;
+
+    // check for players which weapon will attack at the next tick
+    //const players = core.playerManager.getNearby(myPlayer.serverPos, 800, false);
+
+    if (player.nextAttack === tickIndex) {
+      const weapon = player.inventory.weaponSelected;
+      const hatBuildingDmgBoost = _data_moomoo_hats__WEBPACK_IMPORTED_MODULE_0__["default"].find(x => x.id === player.skinIndex)?.bDmg ?? 1;
+      const grids = _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager.getGridArrays(player.serverPos.x + player.velocity.x, player.serverPos.y + player.velocity.y, weapon.stats.range);
+      for (let i = 0; i < grids.length; i++) {
+        const object = grids[i];
+        if (object instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_2__.PlayerBuilding && object.meta.wasPlacementSighted && object.health - weapon.stats.dmg * weapon.stats.buildingDmgMultiplier * hatBuildingDmgBoost <= 0) {
+          if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDistance(object.position, player.serverPos.clone().add(player.velocity)) - object.scale <= weapon.stats.range + player.scale) {
+            this.shouldReplace.push([object, Date.now() + _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.timeToNextTick - _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.ping, tickIndex]);
+            _main__WEBPACK_IMPORTED_MODULE_3__.core.moduleManager.onPreBuildingHit(player, object, tickIndex, !object.meta.wasPlacementSighted || object.health - weapon.stats.dmg * weapon.stats.buildingDmgMultiplier * hatBuildingDmgBoost <= 0);
+          }
+        }
+      }
     }
   }
-  onPacketSend(event) {
-    const packet = event.getPacket();
-    if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.ATTACK && packet.data[0] === 1) {
-      const myPlayer = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer;
-    }
-  }
+
+  /*onPreTick(tickIndex: number): void {
+      const myPlayer = core.playerManager.myPlayer;
+      const spikeItem = items.list[myPlayer.inventory.items[2]];
+      const trapItem = items.list[15];
+        // check for players which weapon will attack at the next tick
+      const players = core.playerManager.getNearby(myPlayer.serverPos, 800, false);
+        for (let i = 0; i < players.length; i++) {
+          const player = players[i];
+          if (player.nextAttack === tickIndex) {
+              const weapon = <MeleeWeapon> player.inventory.weaponSelected;
+              const hatBuildingDmgBoost = hats.find(x => x.id === player.skinIndex)?.bDmg ?? 1;
+              const grids = core.objectManager.getGridArrays(player.serverPos.x + player.velocity.x, player.serverPos.y + player.velocity.y, weapon.stats.range);
+                for (let i = 0; i < grids.length; i++) {
+                  const object = grids[i];
+                  if (object instanceof PlayerBuilding && object.meta.wasPlacementSighted && object.health - (weapon.stats.dmg * weapon.stats.buildingDmgMultiplier * hatBuildingDmgBoost) <= 0) {
+                      if (MathUtil.getDistance(object.position, player.serverPos.clone().add(player.velocity)) - object.scale <= weapon.stats.range + player.scale) {
+                          this.shouldReplace.push([object, Date.now() + core.tickEngine.timeToNextTick - core.tickEngine.ping, tickIndex]);
+                          core.moduleManager.onPreBuildingHit(player, object, tickIndex, !object.meta.wasPlacementSighted || (object.health - (weapon.stats.dmg * weapon.stats.buildingDmgMultiplier * hatBuildingDmgBoost) <= 0));
+                      }
+                  }
+              }
+          }
+      }
+  }*/
+
   onBuildingBreak(building) {
-    const angle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDirection(_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.serverPos, building.position);
-    const trapItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[15];
-    if (this.buildData === null && this.lastBreak !== building.sid && _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDistance(_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.serverPos, building.position) < 180 && _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.isAnyoneInRadius(500)) {
-      this.buildData = {
-        item: trapItem,
-        angle: angle,
-        tick: -1,
-        isPost: true
-      };
-      this.placeLimiter = 0;
-      this.tryToPlace();
-      this.buildData = null;
+    if (!building.meta.wasPlacementSighted) {
+      this.replace(building, true);
+    } else {
+      this.replace(building, false);
     }
   }
 }
@@ -3151,6 +3534,323 @@ __webpack_async_result__();
 
 /***/ }),
 
+/***/ "./frontend/src/features/modules/combat/AntiBull.ts":
+/*!**********************************************************!*\
+  !*** ./frontend/src/features/modules/combat/AntiBull.ts ***!
+  \**********************************************************/
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.a(module, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ AntiBull)
+/* harmony export */ });
+/* harmony import */ var _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../data/moomoo/config */ "./frontend/src/data/moomoo/config.ts");
+/* harmony import */ var _data_moomoo_hats__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../data/moomoo/hats */ "./frontend/src/data/moomoo/hats.ts");
+/* harmony import */ var _data_moomoo_accessories__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../data/moomoo/accessories */ "./frontend/src/data/moomoo/accessories.ts");
+/* harmony import */ var _data_type_Player__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../data/type/Player */ "./frontend/src/data/type/Player.ts");
+/* harmony import */ var _data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../../data/type/Weapon */ "./frontend/src/data/type/Weapon.ts");
+/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../../main */ "./frontend/src/main.ts");
+/* harmony import */ var _core_ActionType__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../../core/ActionType */ "./frontend/src/core/ActionType.ts");
+/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
+/* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
+/* harmony import */ var _socket_Connection__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../../socket/Connection */ "./frontend/src/socket/Connection.ts");
+/* harmony import */ var _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../../../socket/packets/Packet */ "./frontend/src/socket/packets/Packet.ts");
+/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_5__]);
+_main__WEBPACK_IMPORTED_MODULE_5__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+
+
+
+
+
+
+
+
+
+
+
+
+class AntiBull extends _Module__WEBPACK_IMPORTED_MODULE_8__["default"] {
+  constructor() {
+    super();
+  }
+  onPlayerUpdate(player) {
+    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_5__.core.playerManager.myPlayer;
+    if (player === myPlayer || _main__WEBPACK_IMPORTED_MODULE_5__.core.playerManager.checkTeam(player.sid)) return;
+    const hat = _data_moomoo_hats__WEBPACK_IMPORTED_MODULE_1__["default"].find(x => x.id === player.skinIndex);
+    const tail = _data_moomoo_hats__WEBPACK_IMPORTED_MODULE_1__["default"].find(x => x.id === player.tailIndex);
+    const weapon = player.inventory.weaponSelected;
+    const hatReflectionMultiplier = myPlayer.skinIndex === 11 ? _data_moomoo_hats__WEBPACK_IMPORTED_MODULE_1__["default"][37].dmg : 0;
+    const tailReflectionMultiplier = myPlayer.tailIndex === 21 ? _data_moomoo_accessories__WEBPACK_IMPORTED_MODULE_2__["default"][20].dmg : 0;
+    const incommingDamage = weapon.stats.dmg * (hat?.dmgMultO ?? 1) * (tail?.dmgMultO ?? 1);
+    const reflectedDamage = incommingDamage * hatReflectionMultiplier + incommingDamage * tailReflectionMultiplier;
+    const myHatMultiplier = myPlayer.ownedHats.includes(7) ? _data_moomoo_hats__WEBPACK_IMPORTED_MODULE_1__["default"][30].dmgMultO : 1;
+    const myWeapon = myPlayer.inventory.findBestWeapon(_data_type_Player__WEBPACK_IMPORTED_MODULE_3__.Inventory.WeaponFinders.DAMAGE);
+    const straightAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_7__["default"].getDirection(player.serverPos, myPlayer.serverPos);
+    const angleToEnemy = _util_MathUtil__WEBPACK_IMPORTED_MODULE_7__["default"].getDirection(myPlayer.serverPos, player.serverPos);
+
+    // attack back if enemy attacked with us having spike gear on
+    if (weapon instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__.MeleeWeapon && player.hasAttackedThisTick && _util_MathUtil__WEBPACK_IMPORTED_MODULE_7__["default"].getDistance(myPlayer.serverPos.clone().add(myPlayer.velocity), player.serverPos.clone().add(player.velocity)) <= myWeapon.stats.range + 35 * 2 && myPlayer.inventory.reloads[myWeapon.id] <= (myPlayer.inventory.heldItem === myWeapon ? _main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.timeToNextTick : 0)) {
+      if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_7__["default"].getAngleDist(straightAngle, player.serverDir) <= _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].gatherAngle) {
+        if (reflectedDamage + myWeapon.stats.dmg * myHatMultiplier >= 100) {
+          const attackTick = _main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.tickIndex - 1;
+          if (_main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.isTickPredictable(attackTick)) {
+            if (myPlayer.inventory.heldItem !== myWeapon) _main__WEBPACK_IMPORTED_MODULE_5__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_6__.ActionType.WEAPON, _core_ActionType__WEBPACK_IMPORTED_MODULE_6__.ActionPriority.ANTIBULL, attackTick, [myWeapon.id, true]);
+            if (myPlayer.ownedHats.includes(7)) _main__WEBPACK_IMPORTED_MODULE_5__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_6__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_6__.ActionPriority.ANTIBULL, attackTick, [7]);
+            _main__WEBPACK_IMPORTED_MODULE_5__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_6__.ActionType.TAIL, _core_ActionType__WEBPACK_IMPORTED_MODULE_6__.ActionPriority.ANTIBULL, attackTick, [0]);
+            _main__WEBPACK_IMPORTED_MODULE_5__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_6__.ActionType.ATTACK, _core_ActionType__WEBPACK_IMPORTED_MODULE_6__.ActionPriority.ANTIBULL, attackTick, [1, angleToEnemy]);
+          } else if (_main__WEBPACK_IMPORTED_MODULE_5__.core.isHighestPriority(_core_ActionType__WEBPACK_IMPORTED_MODULE_6__.ActionPriority.ANTIBULL, attackTick)) {
+            if (myPlayer.inventory.heldItem !== myWeapon) _socket_Connection__WEBPACK_IMPORTED_MODULE_9__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_10__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_11__.PacketType.SELECT_ITEM, [myWeapon.id, true]));
+            if (myPlayer.ownedHats.includes(7)) _socket_Connection__WEBPACK_IMPORTED_MODULE_9__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_10__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_11__.PacketType.BUY_AND_EQUIP, [0, 7, 0]));
+            _socket_Connection__WEBPACK_IMPORTED_MODULE_9__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_10__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_11__.PacketType.BUY_AND_EQUIP, [0, 0, 1]));
+            _socket_Connection__WEBPACK_IMPORTED_MODULE_9__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_10__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_11__.PacketType.ATTACK, [1, angleToEnemy]));
+          }
+        }
+      }
+    }
+
+    // equip spike gear + cx if player will attack next tick
+    if (player.nextAttack === _main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.tickIndex - 1 && _util_MathUtil__WEBPACK_IMPORTED_MODULE_7__["default"].getDistance(myPlayer.serverPos.clone().add(myPlayer.velocity), player.serverPos.clone().add(player.velocity)) <= weapon.stats.range + 35 * 2 && _main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.tickIn(myPlayer.inventory.reloads[myWeapon.id] - (myPlayer.inventory.heldItem === myWeapon ? _main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.timeToNextTick : 0)) <= player.nextAttack) {
+      const attackTick = player.nextAttack;
+      if (_main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.isTickPredictable(attackTick)) {
+        if (myPlayer.ownedHats.includes(11)) _main__WEBPACK_IMPORTED_MODULE_5__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_6__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_6__.ActionPriority.ANTIBULL, attackTick, [11]);
+        if (myPlayer.ownedTails.includes(21)) _main__WEBPACK_IMPORTED_MODULE_5__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_6__.ActionType.TAIL, _core_ActionType__WEBPACK_IMPORTED_MODULE_6__.ActionPriority.ANTIBULL, attackTick, [21]);
+        _main__WEBPACK_IMPORTED_MODULE_5__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_6__.ActionType.ATTACK, _core_ActionType__WEBPACK_IMPORTED_MODULE_6__.ActionPriority.ANTIBULL, attackTick, [0, null]);
+      } else if (_main__WEBPACK_IMPORTED_MODULE_5__.core.isHighestPriority(_core_ActionType__WEBPACK_IMPORTED_MODULE_6__.ActionPriority.ANTIBULL, attackTick)) {
+        if (myPlayer.ownedHats.includes(11)) _socket_Connection__WEBPACK_IMPORTED_MODULE_9__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_10__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_11__.PacketType.BUY_AND_EQUIP, [0, 11, 0]));
+        if (myPlayer.ownedTails.includes(21)) _socket_Connection__WEBPACK_IMPORTED_MODULE_9__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_10__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_11__.PacketType.BUY_AND_EQUIP, [0, 21, 1]));
+      }
+    }
+  }
+}
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
+
+/***/ }),
+
+/***/ "./frontend/src/features/modules/combat/AntiInsta.ts":
+/*!***********************************************************!*\
+  !*** ./frontend/src/features/modules/combat/AntiInsta.ts ***!
+  \***********************************************************/
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.a(module, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ AntiInsta)
+/* harmony export */ });
+/* harmony import */ var _core_ActionType__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../core/ActionType */ "./frontend/src/core/ActionType.ts");
+/* harmony import */ var _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../data/moomoo/config */ "./frontend/src/data/moomoo/config.ts");
+/* harmony import */ var _data_moomoo_hats__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../data/moomoo/hats */ "./frontend/src/data/moomoo/hats.ts");
+/* harmony import */ var _data_moomoo_items__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../data/moomoo/items */ "./frontend/src/data/moomoo/items.ts");
+/* harmony import */ var _data_type_GameObject__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../../data/type/GameObject */ "./frontend/src/data/type/GameObject.ts");
+/* harmony import */ var _data_type_Projectile__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../../data/type/Projectile */ "./frontend/src/data/type/Projectile.ts");
+/* harmony import */ var _data_type_Weapon__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../../data/type/Weapon */ "./frontend/src/data/type/Weapon.ts");
+/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../../main */ "./frontend/src/main.ts");
+/* harmony import */ var _socket_Connection__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../../socket/Connection */ "./frontend/src/socket/Connection.ts");
+/* harmony import */ var _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../../socket/packets/Packet */ "./frontend/src/socket/packets/Packet.ts");
+/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
+/* harmony import */ var _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../../../util/engine/TickEngine */ "./frontend/src/util/engine/TickEngine.ts");
+/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../../../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
+/* harmony import */ var _util_RecognitionUtil__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../../../util/RecognitionUtil */ "./frontend/src/util/RecognitionUtil.ts");
+/* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_7__]);
+_main__WEBPACK_IMPORTED_MODULE_7__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class AntiInsta extends _Module__WEBPACK_IMPORTED_MODULE_14__["default"] {
+  constructor() {
+    super();
+    this.meleePlayersCount = 0;
+    this.totalDamageDealt = 0;
+    this.totalPotentialDamage = 0;
+    this.totalPotentialRangedDamage = 0;
+    this.totalPotentialTurretGearDamage = 0;
+    this.hasCountedTurretGear = false;
+    this.hasCountedRanged = false;
+  }
+  onPlayerUpdate(player) {
+    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_7__.core.playerManager.myPlayer;
+    if (player === myPlayer || _main__WEBPACK_IMPORTED_MODULE_7__.core.playerManager.checkTeam(player.sid)) return;
+
+    //console.log("ticking update:", player.name);
+
+    const hat = _data_moomoo_hats__WEBPACK_IMPORTED_MODULE_2__["default"].find(x => x.id === player.skinIndex);
+    const tail = _data_moomoo_hats__WEBPACK_IMPORTED_MODULE_2__["default"].find(x => x.id === player.tailIndex);
+    const weapon = player.inventory.weaponSelected;
+    const variant = player.inventory.getWeaponVariant(weapon.id < 9 ? _data_type_Weapon__WEBPACK_IMPORTED_MODULE_6__.WeaponSlot.PRIMARY : _data_type_Weapon__WEBPACK_IMPORTED_MODULE_6__.WeaponSlot.SECONDARY);
+    const straightAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_12__["default"].getDirection(player.serverPos, myPlayer.serverPos);
+    const autohealWouldHealIn = Math.max(0, myPlayer.shame.whenSafeHeal(0)) + _main__WEBPACK_IMPORTED_MODULE_7__.core.tickEngine.timeToNextTick + _main__WEBPACK_IMPORTED_MODULE_7__.core.tickEngine.pingStd;
+    const autohealTickRounded = _main__WEBPACK_IMPORTED_MODULE_7__.core.tickEngine.roundToTick(autohealWouldHealIn, _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_11__.TickRoundType.FLOOR);
+
+    // current tick damage
+    if (player.inventory.turretGearReload <= _main__WEBPACK_IMPORTED_MODULE_7__.core.tickEngine.timeToNextTick) {
+      const projectile = _data_type_Projectile__WEBPACK_IMPORTED_MODULE_5__.Projectiles.TURRET_BULLET;
+      if (_data_type_Projectile__WEBPACK_IMPORTED_MODULE_5__.Projectile.canHit(projectile, player.serverPos, straightAngle, myPlayer.serverPos, myPlayer.scale) && !this.hasCountedTurretGear) {
+        this.hasCountedTurretGear = true;
+        if (player.skinIndex === 53 && (_util_MathUtil__WEBPACK_IMPORTED_MODULE_12__["default"].getDistance(myPlayer.serverPos, player.serverPos) - myPlayer.scale) / projectile.stats.speed <= autohealWouldHealIn) {
+          this.totalDamageDealt += projectile.stats.dmg;
+        } else {
+          this.totalPotentialTurretGearDamage += projectile.stats.dmg;
+        }
+      }
+    }
+    if (weapon instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_6__.MeleeWeapon && player.hasAttackedThisTick && _util_MathUtil__WEBPACK_IMPORTED_MODULE_12__["default"].getDistance(myPlayer.serverPos, player.serverPos) <= weapon.stats.range + 35 * 2) {
+      //console.log("melee attacked this tick");
+      if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_12__["default"].getAngleDist(straightAngle, player.serverDir) <= _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].gatherAngle) {
+        const damage = weapon.stats.dmg * _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].weaponVariants[variant].val * (hat?.dmgMultO ?? 1) * (tail?.dmgMultO ?? 1);
+        this.totalDamageDealt += damage;
+        this.meleePlayersCount++;
+        console.log("melee this tick", damage);
+      }
+    } else if (weapon instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_6__.RangedWeapon && player.hasFiredProjectileThisTick) {
+      const projectile = weapon.projectile;
+      const damage = projectile.stats.dmg;
+      if (_data_type_Projectile__WEBPACK_IMPORTED_MODULE_5__.Projectile.canHit(projectile, player.serverPos, player.serverDir, myPlayer.serverPos, myPlayer.scale) && (_util_MathUtil__WEBPACK_IMPORTED_MODULE_12__["default"].getDistance(myPlayer.serverPos, player.serverPos) - player.scale * 2 - myPlayer.scale) / projectile.stats.speed <= autohealWouldHealIn) {
+        this.totalDamageDealt += damage;
+        console.log("ranged this tick");
+      }
+    }
+
+    //if (!RecognitionUtil.canInstakill(player)) return;
+
+    // next tick potential
+    const primary = player.inventory.getWeapon(_data_type_Weapon__WEBPACK_IMPORTED_MODULE_6__.WeaponSlot.PRIMARY) ?? _data_type_Weapon__WEBPACK_IMPORTED_MODULE_6__.Weapons.TOOL_HAMMER; // assume tool hammer
+    const primaryVariant = player.inventory.getWeaponVariant(_data_type_Weapon__WEBPACK_IMPORTED_MODULE_6__.WeaponSlot.PRIMARY) ?? 0;
+    const secondary = player.inventory.getWeapon(_data_type_Weapon__WEBPACK_IMPORTED_MODULE_6__.WeaponSlot.SECONDARY) ?? _util_RecognitionUtil__WEBPACK_IMPORTED_MODULE_13__["default"].assumeSecondary(primary.id);
+    if (!player.hasAttackedThisTick && player.inventory.reloads[primary.id] <= (weapon === primary ? autohealTickRounded : 0) && _util_MathUtil__WEBPACK_IMPORTED_MODULE_12__["default"].getDistance(player.serverPos.clone().add(player.velocity).directionMove(straightAngle, (player.hasFiredProjectileThisTick && player.lastProjectileFired.type === _data_type_Projectile__WEBPACK_IMPORTED_MODULE_5__.Projectiles.MUSKET_BULLET.type ? 0.35 : 0) * -1), myPlayer.serverPos) <= primary.stats.range + 35 * 2) {
+      const damage = primary.stats.dmg * _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].weaponVariants[primaryVariant].val * 1.5; // assume bull helmet usage
+      this.totalPotentialDamage += damage;
+      this.meleePlayersCount++;
+      console.log("melee primary potential", damage);
+    } else if (player.inventory.reloads[secondary.id] <= (weapon === secondary ? autohealTickRounded : 0)) {
+      if (secondary instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_6__.MeleeWeapon && _util_MathUtil__WEBPACK_IMPORTED_MODULE_12__["default"].getDistance(myPlayer.serverPos.clone().add(myPlayer.velocity), player.serverPos.clone().add(player.velocity)) <= secondary.stats.range + 35 * 2) {
+        const damage = secondary.stats.dmg * _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].weaponVariants[primaryVariant].val * 1.5; // assume bull helmet usage
+        this.totalPotentialDamage += damage;
+        this.meleePlayersCount++;
+        console.log("melee secondary potential", damage);
+      } else if (secondary instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_6__.RangedWeapon && !this.hasCountedRanged) {
+        this.hasCountedRanged = true;
+        const projectile = secondary.projectile;
+        const damage = projectile.stats.dmg;
+        if ((_util_MathUtil__WEBPACK_IMPORTED_MODULE_12__["default"].getDistance(myPlayer.serverPos.clone().add(myPlayer.velocity), player.serverPos.clone().add(player.velocity)) - player.scale * 2 - myPlayer.scale) / projectile.stats.speed <= autohealWouldHealIn) {
+          this.totalPotentialRangedDamage += damage;
+          console.log("ranged secondary potential", damage);
+        }
+      }
+    }
+  }
+  onProjectileEarlyDespawn(projectileItem, spawnPosition, direction) {
+    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_7__.core.playerManager.myPlayer;
+    const spawnPos = spawnPosition.clone().subtract(Math.cos(direction) * 35 * 2, Math.sin(direction) * 35 * 2);
+    const expandedHitbox = myPlayer.scale + myPlayer.velocity.length();
+    if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_12__["default"].lineInRectMooMoo(myPlayer.serverPos.x + myPlayer.velocity.x - expandedHitbox, myPlayer.serverPos.y + myPlayer.velocity.y - expandedHitbox, myPlayer.serverPos.x + myPlayer.velocity.x + expandedHitbox, myPlayer.serverPos.y + myPlayer.velocity.y + expandedHitbox, spawnPos.x, spawnPos.y, spawnPos.x + Math.cos(direction) * projectileItem.stats.range, spawnPos.y + Math.sin(direction) * projectileItem.stats.range)) {
+      this.totalDamageDealt += projectileItem.stats.dmg;
+      console.log("early projectile damage caught at 3 am");
+    }
+  }
+  onPreBuildingHit(player, building, tickIndex, potentialBreak) {
+    if (player !== _main__WEBPACK_IMPORTED_MODULE_7__.core.playerManager.myPlayer && !_main__WEBPACK_IMPORTED_MODULE_7__.core.playerManager.checkTeam(player.sid)) {
+      if (building instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_4__.PlayerBuilding && building.type === 15 && _main__WEBPACK_IMPORTED_MODULE_7__.core.playerManager.myPlayer.state.data.trap === building && potentialBreak) {
+        if (_main__WEBPACK_IMPORTED_MODULE_7__.core.tickEngine.isTickPredictable(tickIndex)) {
+          _main__WEBPACK_IMPORTED_MODULE_7__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTIINSTA, tickIndex, [6]);
+        } else {
+          _socket_Connection__WEBPACK_IMPORTED_MODULE_8__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_9__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_10__.PacketType.BUY_AND_EQUIP, [0, 6, 0]));
+        }
+      }
+    }
+  }
+  onPacketReceive(event) {
+    const packet = event.getPacket();
+    if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_10__.PacketType.PLAYER_UPDATE) {
+      const myPlayer = _main__WEBPACK_IMPORTED_MODULE_7__.core.playerManager.myPlayer;
+      const projectiles = _main__WEBPACK_IMPORTED_MODULE_7__.core.projectileManager.getDangerousProjectiles(_main__WEBPACK_IMPORTED_MODULE_7__.core.tickEngine.tickIndex + 1);
+      const projectileDamage = projectiles.length <= 2 ? projectiles.reduce((ac, val) => ac + _data_type_Projectile__WEBPACK_IMPORTED_MODULE_5__.projectileList[val.type].stats.dmg, 0) : 0;
+      const potentialDamage = this.meleePlayersCount > 1 ? this.totalPotentialDamage + this.totalPotentialTurretGearDamage : this.totalPotentialDamage + this.totalPotentialRangedDamage + this.totalPotentialTurretGearDamage + projectileDamage;
+      const currentDamageReduction = (myPlayer.skinIndex === 6 ? 0.75 : 0) + 0;
+
+      //if (this.totalDamageDealt > 0 || potentialDamage > 0) console.log("dealt:", this.totalDamageDealt, "potential:", potentialDamage);
+      const newHealth = Math.min(myPlayer.health, myPlayer.maxHealth - potentialDamage * currentDamageReduction);
+      //console.log("newhealth:", newHealth, "potential damage:", potentialDamage);
+
+      if (newHealth < 100) console.log("new health:", newHealth, "potential:", potentialDamage);
+      if (newHealth - potentialDamage <= 0) {
+        const tick = _main__WEBPACK_IMPORTED_MODULE_7__.core.tickEngine.tickIndex + 1;
+        if (newHealth - potentialDamage + this.totalPotentialTurretGearDamage > 0 && myPlayer.ownedHats.includes(22)) {
+          // emp will save us cuz damage without turret gear isnt killing
+          if (_main__WEBPACK_IMPORTED_MODULE_7__.core.tickEngine.isTickPredictable(tick)) {
+            _main__WEBPACK_IMPORTED_MODULE_7__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTIINSTA, tick, [22]);
+          } else {
+            _socket_Connection__WEBPACK_IMPORTED_MODULE_8__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_9__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_10__.PacketType.BUY_AND_EQUIP, [0, 22, 0]), true);
+            _main__WEBPACK_IMPORTED_MODULE_7__.core.lastActionState.hat = 22;
+          }
+        } else if (newHealth - potentialDamage * 0.75 > 0 && myPlayer.ownedHats.includes(6)) {
+          // soldier will save us
+          if (_main__WEBPACK_IMPORTED_MODULE_7__.core.tickEngine.isTickPredictable(tick)) {
+            _main__WEBPACK_IMPORTED_MODULE_7__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTIINSTA, tick, [6]);
+          } else {
+            _socket_Connection__WEBPACK_IMPORTED_MODULE_8__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_9__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_10__.PacketType.BUY_AND_EQUIP, [0, 6, 0]));
+            //core.lastActionState.hat = 6;
+          }
+        } else {
+          // healing to full will save us
+          const foodType = _main__WEBPACK_IMPORTED_MODULE_7__.core.playerManager.myPlayer.inventory.items[0];
+          const healsUp = foodType == 0 ? 20 : 40;
+          const times = Math.ceil((myPlayer.maxHealth - myPlayer.health) / healsUp);
+          for (let i = 0; i < times; i++) {
+            _main__WEBPACK_IMPORTED_MODULE_7__.core.interactionEngine.vanillaUseFoodItem(_data_moomoo_items__WEBPACK_IMPORTED_MODULE_3__.items.list[foodType], i === times - 1);
+          }
+          if (myPlayer.maxHealth - potentialDamage + this.totalPotentialTurretGearDamage > 0 && myPlayer.ownedHats.includes(22)) {
+            // healing to full and emp helmet will save us
+            if (_main__WEBPACK_IMPORTED_MODULE_7__.core.tickEngine.isTickPredictable(tick)) {
+              _main__WEBPACK_IMPORTED_MODULE_7__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTIINSTA, tick, [22]);
+            } else {
+              _socket_Connection__WEBPACK_IMPORTED_MODULE_8__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_9__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_10__.PacketType.BUY_AND_EQUIP, [0, 22, 0]));
+              //core.lastActionState.hat = 22;
+            }
+          } else if ((this.meleePlayersCount > 1 || myPlayer.maxHealth - potentialDamage < 0) && myPlayer.ownedHats.includes(6)) {
+            // equip soldier because even healing to full wont save us
+            if (_main__WEBPACK_IMPORTED_MODULE_7__.core.tickEngine.isTickPredictable(tick)) {
+              _main__WEBPACK_IMPORTED_MODULE_7__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTIINSTA, tick, [6]);
+            } else {
+              _socket_Connection__WEBPACK_IMPORTED_MODULE_8__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_9__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_10__.PacketType.BUY_AND_EQUIP, [0, 6, 0]));
+              //core.lastActionState.hat = 6;
+            }
+          }
+        }
+      }
+
+      this.meleePlayersCount = 0;
+      this.totalDamageDealt = 0;
+      this.totalPotentialDamage = 0;
+      this.totalPotentialRangedDamage = 0;
+      this.totalPotentialTurretGearDamage = 0;
+      this.hasCountedTurretGear = false;
+      this.hasCountedRanged = false;
+    }
+  }
+}
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
+
+/***/ }),
+
 /***/ "./frontend/src/features/modules/combat/Autoheal.ts":
 /*!**********************************************************!*\
   !*** ./frontend/src/features/modules/combat/Autoheal.ts ***!
@@ -3165,42 +3865,24 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../data/moomoo/items */ "./frontend/src/data/moomoo/items.ts");
 /* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../main */ "./frontend/src/main.ts");
-/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
-/* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
+/* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
 var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_1__]);
 _main__WEBPACK_IMPORTED_MODULE_1__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
 
 
 
-
-class Autoheal extends _Module__WEBPACK_IMPORTED_MODULE_3__["default"] {
+class Autoheal extends _Module__WEBPACK_IMPORTED_MODULE_2__["default"] {
   constructor() {
     super();
-    this.hasFoodInHand = false;
   }
   onUpdate(delta) {
     const myPlayer = _main__WEBPACK_IMPORTED_MODULE_1__.core.playerManager.myPlayer;
-    if (myPlayer.alive && myPlayer.health < 100 && myPlayer.shame.isSafeHeal(_main__WEBPACK_IMPORTED_MODULE_1__.core.tickEngine.ping) && this.hasFoodInHand === false) {
+    if (myPlayer.alive && myPlayer.health < 100 && myPlayer.shame.isSafeHeal(_main__WEBPACK_IMPORTED_MODULE_1__.core.tickEngine.ping)) {
       const foodType = _main__WEBPACK_IMPORTED_MODULE_1__.core.playerManager.myPlayer.inventory.items[0];
       const healsUp = foodType == 0 ? 20 : 40;
-      for (let i = 0; i < Math.ceil((myPlayer.maxHealth - myPlayer.health) / healsUp); i++) {
-        _main__WEBPACK_IMPORTED_MODULE_1__.core.interactionEngine.vanillaPlaceItem(_data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[foodType], _main__WEBPACK_IMPORTED_MODULE_1__.core.mouseAngle);
-      }
-    }
-  }
-  onPacketSend(event) {
-    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_1__.core.playerManager.myPlayer;
-    if (!myPlayer) return;
-    const packet = event.getPacket();
-    if (packet.type == _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.SELECT_ITEM) {
-      if (packet.data[0] === myPlayer.inventory.items[0] && packet.data[1] !== true) {
-        this.hasFoodInHand = !this.hasFoodInHand;
-      } else {
-        this.hasFoodInHand = false;
-      }
-    } else if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.ATTACK) {
-      if (this.hasFoodInHand && myPlayer.health < 100) {
-        this.hasFoodInHand = false;
+      const times = Math.ceil((myPlayer.maxHealth - myPlayer.health) / healsUp);
+      for (let i = 0; i < times; i++) {
+        _main__WEBPACK_IMPORTED_MODULE_1__.core.interactionEngine.vanillaUseFoodItem(_data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[foodType], i === times - 1);
       }
     }
   }
@@ -3222,6 +3904,139 @@ __webpack_async_result__();
 
 /***/ }),
 
+/***/ "./frontend/src/features/modules/combat/SpikeSync.ts":
+/*!***********************************************************!*\
+  !*** ./frontend/src/features/modules/combat/SpikeSync.ts ***!
+  \***********************************************************/
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.a(module, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ SpikeSync)
+/* harmony export */ });
+/* harmony import */ var _core_ActionType__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../core/ActionType */ "./frontend/src/core/ActionType.ts");
+/* harmony import */ var _data_moomoo_hats__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../data/moomoo/hats */ "./frontend/src/data/moomoo/hats.ts");
+/* harmony import */ var _data_type_GameObject__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../data/type/GameObject */ "./frontend/src/data/type/GameObject.ts");
+/* harmony import */ var _data_type_Player__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../data/type/Player */ "./frontend/src/data/type/Player.ts");
+/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../../main */ "./frontend/src/main.ts");
+/* harmony import */ var _socket_Connection__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../../socket/Connection */ "./frontend/src/socket/Connection.ts");
+/* harmony import */ var _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../../socket/packets/Packet */ "./frontend/src/socket/packets/Packet.ts");
+/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
+/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
+/* harmony import */ var _util_type_Vector__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../../util/type/Vector */ "./frontend/src/util/type/Vector.ts");
+/* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_4__]);
+_main__WEBPACK_IMPORTED_MODULE_4__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+
+
+
+
+
+
+
+
+
+
+
+class SpikeSync extends _Module__WEBPACK_IMPORTED_MODULE_10__["default"] {
+  constructor() {
+    super();
+  }
+  onPlayerUpdate(player) {
+    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_4__.core.playerManager.myPlayer;
+    if (player === myPlayer || _main__WEBPACK_IMPORTED_MODULE_4__.core.playerManager.checkTeam(player.sid) || player.state.isTrapped) return;
+    const position = player.serverPos.clone().add(player.velocity);
+    const straightAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_8__["default"].getDirection(myPlayer.serverPos.clone().add(myPlayer.velocity), position);
+    const hat = _data_moomoo_hats__WEBPACK_IMPORTED_MODULE_1__["default"].find(x => x.id === player.skinIndex);
+    const tail = _data_moomoo_hats__WEBPACK_IMPORTED_MODULE_1__["default"].find(x => x.id === player.tailIndex);
+    const bestWeapon = myPlayer.inventory.findBestWeapon(_data_type_Player__WEBPACK_IMPORTED_MODULE_3__.Inventory.WeaponFinders.DAMAGE);
+    if (myPlayer.inventory.reloads[bestWeapon.id] > _main__WEBPACK_IMPORTED_MODULE_4__.core.tickEngine.timeToNextTick) return;
+    const damageReduction = (hat?.dmgMult ?? 1) * (tail?.dmgMult ?? 1);
+    const damageMultiplication = myPlayer.ownedHats.includes(7) ? 1.5 : 1;
+    const outputDamage = bestWeapon.stats.dmg * damageMultiplication * damageReduction;
+    const outputKnockbackStrength = 0.3 * 1 + bestWeapon.stats.knockback;
+    const outputKnockback = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_9__["default"](Math.cos(straightAngle) * outputKnockbackStrength, Math.sin(straightAngle) * outputKnockbackStrength);
+    const attackTick = _main__WEBPACK_IMPORTED_MODULE_4__.core.tickEngine.tickIndex - 1;
+    const buildings = _main__WEBPACK_IMPORTED_MODULE_4__.core.objectManager.getGridArrays(position.x, position.y, player.scale + outputKnockbackStrength);
+    for (let i = 0; i < buildings.length; i++) {
+      const building = buildings[i];
+      if (!(building instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_2__.PlayerBuilding) || _main__WEBPACK_IMPORTED_MODULE_4__.core.playerManager.checkTeam(building.owner.sid) || building.stats.dmg === undefined) continue;
+      const playerDist = _util_MathUtil__WEBPACK_IMPORTED_MODULE_8__["default"].getDistance(position, myPlayer.serverPos.clone().add(myPlayer.velocity));
+      const objectDist = _util_MathUtil__WEBPACK_IMPORTED_MODULE_8__["default"].getDistance(building.position, position.clone().add(outputKnockback));
+      if (playerDist <= bestWeapon.stats.range + 35 * 2 && objectDist <= player.scale + building.getScale()) {
+        const buildingDamage = building.stats.dmg * damageReduction;
+        if (outputDamage + buildingDamage >= player.maxHealth) {
+          _socket_Connection__WEBPACK_IMPORTED_MODULE_5__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_6__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__.PacketType.CHAT, ["spike sync: " + player.name]));
+          if (_main__WEBPACK_IMPORTED_MODULE_4__.core.tickEngine.isTickPredictable(attackTick)) {
+            if (myPlayer.inventory.heldItem !== bestWeapon) _main__WEBPACK_IMPORTED_MODULE_4__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.WEAPON, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.SPIKESYNC, attackTick, [bestWeapon.id, true]);
+            if (myPlayer.ownedHats.includes(7)) _main__WEBPACK_IMPORTED_MODULE_4__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.SPIKESYNC, attackTick, [7]);
+            _main__WEBPACK_IMPORTED_MODULE_4__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.TAIL, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.SPIKESYNC, attackTick, [0]);
+            _main__WEBPACK_IMPORTED_MODULE_4__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.ATTACK, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.SPIKESYNC, attackTick, [1, straightAngle]);
+            _main__WEBPACK_IMPORTED_MODULE_4__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.ATTACK, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.SPIKESYNC, attackTick, [0, straightAngle]);
+          } else if (_main__WEBPACK_IMPORTED_MODULE_4__.core.isHighestPriority(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.SPIKESYNC, attackTick)) {
+            if (myPlayer.inventory.heldItem !== bestWeapon) _socket_Connection__WEBPACK_IMPORTED_MODULE_5__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_6__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__.PacketType.SELECT_ITEM, [bestWeapon.id, true]));
+            if (myPlayer.ownedHats.includes(7)) _socket_Connection__WEBPACK_IMPORTED_MODULE_5__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_6__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__.PacketType.BUY_AND_EQUIP, [0, 7, 0]));
+            _socket_Connection__WEBPACK_IMPORTED_MODULE_5__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_6__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__.PacketType.BUY_AND_EQUIP, [0, 0, 1]));
+            _socket_Connection__WEBPACK_IMPORTED_MODULE_5__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_6__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__.PacketType.ATTACK, [1, straightAngle]));
+            _socket_Connection__WEBPACK_IMPORTED_MODULE_5__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_6__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__.PacketType.ATTACK, [0, straightAngle]));
+          }
+          break;
+        }
+      }
+    }
+  }
+}
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
+
+/***/ }),
+
+/***/ "./frontend/src/features/modules/misc/NoToxic.ts":
+/*!*******************************************************!*\
+  !*** ./frontend/src/features/modules/misc/NoToxic.ts ***!
+  \*******************************************************/
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.a(module, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ NoToxic)
+/* harmony export */ });
+/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../main */ "./frontend/src/main.ts");
+/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
+/* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_0__]);
+_main__WEBPACK_IMPORTED_MODULE_0__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+
+
+
+class NoToxic extends _Module__WEBPACK_IMPORTED_MODULE_2__["default"] {
+  constructor() {
+    super();
+  }
+  onPacketReceive(event) {
+    const packet = event.getPacket();
+    if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.CHAT && packet.data[0] !== _main__WEBPACK_IMPORTED_MODULE_0__.core.playerManager.myPlayer.sid) {
+      const message = packet.data[1];
+      if (/\b[ei]+z+(?:[iy]+)?\b/i.test(message) // ez
+      || /\b(u\s+suck|you\s+suck|so\s+bad|(?:ur)?(?:so|ur)\sbad|noob|loser)\b/i.test(message) // other
+      ) {
+        event.setData([packet.data[0], this.createReplacement()]);
+      }
+    }
+  }
+  createReplacement() {
+    return "I'm very bad in this game.";
+  }
+}
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
+
+/***/ }),
+
 /***/ "./frontend/src/features/modules/player/AutoHat.ts":
 /*!*********************************************************!*\
   !*** ./frontend/src/features/modules/player/AutoHat.ts ***!
@@ -3236,14 +4051,17 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _core_ActionType__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../core/ActionType */ "./frontend/src/core/ActionType.ts");
 /* harmony import */ var _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../data/moomoo/config */ "./frontend/src/data/moomoo/config.ts");
-/* harmony import */ var _data_type_Weapon__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../data/type/Weapon */ "./frontend/src/data/type/Weapon.ts");
-/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../main */ "./frontend/src/main.ts");
-/* harmony import */ var _socket_Connection__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../../socket/Connection */ "./frontend/src/socket/Connection.ts");
-/* harmony import */ var _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../../socket/packets/Packet */ "./frontend/src/socket/packets/Packet.ts");
-/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
-/* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
-var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_3__]);
-_main__WEBPACK_IMPORTED_MODULE_3__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+/* harmony import */ var _data_type_GameObject__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../data/type/GameObject */ "./frontend/src/data/type/GameObject.ts");
+/* harmony import */ var _data_type_Weapon__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../data/type/Weapon */ "./frontend/src/data/type/Weapon.ts");
+/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../../main */ "./frontend/src/main.ts");
+/* harmony import */ var _socket_Connection__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../../socket/Connection */ "./frontend/src/socket/Connection.ts");
+/* harmony import */ var _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../../socket/packets/Packet */ "./frontend/src/socket/packets/Packet.ts");
+/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
+/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
+/* harmony import */ var _building_AntiTrap__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../building/AntiTrap */ "./frontend/src/features/modules/building/AntiTrap.ts");
+/* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_4__, _building_AntiTrap__WEBPACK_IMPORTED_MODULE_9__]);
+([_main__WEBPACK_IMPORTED_MODULE_4__, _building_AntiTrap__WEBPACK_IMPORTED_MODULE_9__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
 
 
 
@@ -3252,22 +4070,66 @@ _main__WEBPACK_IMPORTED_MODULE_3__ = (__webpack_async_dependencies__.then ? (awa
 
 
 
-class AutoHat extends _Module__WEBPACK_IMPORTED_MODULE_7__["default"] {
+
+
+
+class AutoHat extends _Module__WEBPACK_IMPORTED_MODULE_10__["default"] {
   constructor() {
     super();
     this.skipNextTick = false;
+    this.isPlacing = false;
+    this.bundleAttackState = false;
   }
   getHat(shouldAutobull) {
-    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer;
+    const antiTrap = _main__WEBPACK_IMPORTED_MODULE_4__.core.moduleManager.getModule(_building_AntiTrap__WEBPACK_IMPORTED_MODULE_9__["default"]);
+    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_4__.core.playerManager.myPlayer;
     let hat = -1;
     let tail = -1;
 
     //console.log(tickIndex);
 
     if (shouldAutobull) {
-      hat = 7;
-      tail = 0;
-      console.log("autobull");
+      let playersHit = 0;
+      let objectsHit = 0;
+      const weapon = myPlayer.inventory.weaponSelected;
+      const grids = _main__WEBPACK_IMPORTED_MODULE_4__.core.objectManager.getGridArrays(myPlayer.serverPos.x + myPlayer.velocity.x, myPlayer.serverPos.y + myPlayer.velocity.y, weapon.stats.range);
+      for (let i = 0; i < grids.length; i++) {
+        const object = grids[i];
+        // use object.scale because .getScale returns collision box while .scale is hitbox
+        if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_8__["default"].getDistance(object.position, myPlayer.serverPos.clone().add(myPlayer.velocity.clone().multiply(1.1))) - object.scale <= weapon.stats.range + myPlayer.scale) {
+          const gatherAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_8__["default"].roundTo(_util_MathUtil__WEBPACK_IMPORTED_MODULE_8__["default"].getDirection(myPlayer.serverPos.clone().add(myPlayer.velocity.clone().multiply(1.1)), object.position), 1);
+          //const safeSpan = MathUtil.lineSpan(object.position.clone(), myPlayer.serverPos.clone(), myPlayer.serverPos.clone().add(myPlayer.velocity));
+
+          if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_8__["default"].getAngleDist(_main__WEBPACK_IMPORTED_MODULE_4__.core.mouseAngle, gatherAngle) <= _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].gatherAngle + Number.EPSILON) {
+            if (object instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_2__.PlayerBuilding) {
+              objectsHit++;
+            }
+          }
+        }
+      }
+      const players = _main__WEBPACK_IMPORTED_MODULE_4__.core.playerManager.getVisibleEnemies();
+      for (let i = 0; i < players.length; i++) {
+        const player = players[i];
+        if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_8__["default"].getDistance(player.serverPos.clone().add(player.velocity.clone().multiply(1.1)), myPlayer.serverPos.clone().add(myPlayer.velocity.clone().multiply(1.1))) - player.scale <= weapon.stats.range + myPlayer.scale) {
+          const gatherAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_8__["default"].roundTo(_util_MathUtil__WEBPACK_IMPORTED_MODULE_8__["default"].getDirection(myPlayer.serverPos, player.serverPos), 1);
+
+          //console.log(MathUtil.getAngleDist(core.mouseAngle, gatherAngle), config.gatherAngle + Number.EPSILON);
+          if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_8__["default"].getAngleDist(_main__WEBPACK_IMPORTED_MODULE_4__.core.mouseAngle, gatherAngle) <= _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].gatherAngle + Number.EPSILON) {
+            playersHit++;
+          }
+        }
+      }
+      if (weapon !== _data_type_Weapon__WEBPACK_IMPORTED_MODULE_3__.Weapons.GREAT_HAMMER && playersHit > 0) {
+        hat = 7;
+        tail = 0;
+      } else if (antiTrap.isBreaking || objectsHit > 0) {
+        //console.log("autohat: TANK");
+        hat = 40;
+      }
+
+      //hat = 7;
+      //tail = 0;
+      //console.log("autobull" );
     } /* else if (myPlayer.justStartedAttacking) {
          hat = 7;
          tail = 0;
@@ -3304,30 +4166,37 @@ class AutoHat extends _Module__WEBPACK_IMPORTED_MODULE_7__["default"] {
         this.doAttack();
     }*/
 
-    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer;
-    const shouldAutobull = (myPlayer.isAutoAttacking || myPlayer.isAttacking) && myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_2__.MeleeWeapon && myPlayer.nextAttack === tickIndex;
+    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_4__.core.playerManager.myPlayer;
+    const shouldAutobull = !this.isPlacing && this.bundleAttackState && (myPlayer.isAutoAttacking || myPlayer.isAttacking) && myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_3__.MeleeWeapon && myPlayer.nextAttack === tickIndex - 1;
     const [hat, tail] = this.getHat(shouldAutobull);
-    _main__WEBPACK_IMPORTED_MODULE_3__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.BIOMEHAT, tickIndex, [hat]);
-    _main__WEBPACK_IMPORTED_MODULE_3__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.TAIL, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.BIOMEHAT, tickIndex, [tail]);
+    _main__WEBPACK_IMPORTED_MODULE_4__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.BIOMEHAT, tickIndex, [hat]);
+    _main__WEBPACK_IMPORTED_MODULE_4__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.TAIL, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.BIOMEHAT, tickIndex, [tail]);
   }
   onPacketSend(event) {
     const packet = event.getPacket();
-    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer;
-    if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_6__.PacketType.ATTACK) {
-      if (packet.data[0] && myPlayer.justStartedAttacking) {
-        const [hat, tail] = this.getHat(true);
-        const attackArriveTick = _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.tickIndex + 1;
-        if (_main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.isTickPredictable(attackArriveTick)) {
-          _main__WEBPACK_IMPORTED_MODULE_3__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.BIOMEHAT, attackArriveTick, [hat]);
-          _main__WEBPACK_IMPORTED_MODULE_3__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.TAIL, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.BIOMEHAT, attackArriveTick, [tail]);
-        } else if (_main__WEBPACK_IMPORTED_MODULE_3__.core.isHighestPriority(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.BIOMEHAT, attackArriveTick)) {
-          _socket_Connection__WEBPACK_IMPORTED_MODULE_4__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_5__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_6__.PacketType.BUY_AND_EQUIP, [0, hat, 0]), true);
-          _socket_Connection__WEBPACK_IMPORTED_MODULE_4__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_5__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_6__.PacketType.BUY_AND_EQUIP, [0, tail, 1]), true);
-          _main__WEBPACK_IMPORTED_MODULE_3__.core.lastActionState.hat = hat;
-          _main__WEBPACK_IMPORTED_MODULE_3__.core.lastActionState.tail = tail;
-          _socket_Connection__WEBPACK_IMPORTED_MODULE_4__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_5__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_6__.PacketType.ATTACK, [1, packet.data[1]]), true);
-          this.skipNextTick = true;
-          event.cancel();
+    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_4__.core.playerManager.myPlayer;
+    if (event.isBundle && packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__.PacketType.ATTACK) {
+      this.bundleAttackState = packet.data[0] === 1;
+      if (!this.isPlacing && myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_3__.MeleeWeapon) {
+        if (packet.data[0] && myPlayer.justStartedAttacking) {
+          const [hat, tail] = this.getHat(true);
+          const attackArriveTick = _main__WEBPACK_IMPORTED_MODULE_4__.core.tickEngine.tickIndex + 1;
+          //console.log("first hit autohat activated");
+          if (_main__WEBPACK_IMPORTED_MODULE_4__.core.tickEngine.isTickPredictable(attackArriveTick)) {
+            _main__WEBPACK_IMPORTED_MODULE_4__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.BIOMEHAT, attackArriveTick, [hat]);
+            _main__WEBPACK_IMPORTED_MODULE_4__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.TAIL, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.BIOMEHAT, attackArriveTick, [tail]);
+          } else if (_main__WEBPACK_IMPORTED_MODULE_4__.core.isHighestPriority(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.BIOMEHAT, attackArriveTick) /* && !antiTrap.isTrapped()*/) {
+            _socket_Connection__WEBPACK_IMPORTED_MODULE_5__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_6__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__.PacketType.BUY_AND_EQUIP, [0, hat, 0]), true);
+            _socket_Connection__WEBPACK_IMPORTED_MODULE_5__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_6__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__.PacketType.BUY_AND_EQUIP, [0, tail, 1]), true);
+            _main__WEBPACK_IMPORTED_MODULE_4__.core.lastActionState.hat = hat;
+            _main__WEBPACK_IMPORTED_MODULE_4__.core.lastActionState.tail = tail;
+            _main__WEBPACK_IMPORTED_MODULE_4__.core.lastActionState.attack = 1;
+            _main__WEBPACK_IMPORTED_MODULE_4__.core.lastActionState.aim = packet.data[1];
+            _socket_Connection__WEBPACK_IMPORTED_MODULE_5__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_6__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__.PacketType.ATTACK, [1, packet.data[1]]), true);
+            this.skipNextTick = true;
+            //console.log("REWRITING HIT SUYPER OMG SUCK MY DICK");
+            event.cancel();
+          }
         }
       }
     }
@@ -3353,8 +4222,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../loader/NVRLoader */ "./frontend/src/loader/NVRLoader.ts");
 /* harmony import */ var _util_Logger__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../util/Logger */ "./frontend/src/util/Logger.ts");
 /* harmony import */ var _util_StringUtil__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../util/StringUtil */ "./frontend/src/util/StringUtil.ts");
-/* harmony import */ var _transformations_TObjectSpriteLoader__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./transformations/TObjectSpriteLoader */ "./frontend/src/injector/transformations/TObjectSpriteLoader.ts");
-/* harmony import */ var _transformations_TSourceMapping__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./transformations/TSourceMapping */ "./frontend/src/injector/transformations/TSourceMapping.ts");
+/* harmony import */ var _transformations_GetAttackDirTransformer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./transformations/GetAttackDirTransformer */ "./frontend/src/injector/transformations/GetAttackDirTransformer.ts");
+/* harmony import */ var _transformations_IOClientTransformer__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./transformations/IOClientTransformer */ "./frontend/src/injector/transformations/IOClientTransformer.ts");
+/* harmony import */ var _transformations_ObjectSpriteLoaderTransformer__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./transformations/ObjectSpriteLoaderTransformer */ "./frontend/src/injector/transformations/ObjectSpriteLoaderTransformer.ts");
+/* harmony import */ var _transformations_SourceMappingTransformer__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./transformations/SourceMappingTransformer */ "./frontend/src/injector/transformations/SourceMappingTransformer.ts");
 var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_loader_NVRLoader__WEBPACK_IMPORTED_MODULE_0__]);
 _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_0__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
 
@@ -3362,9 +4233,11 @@ _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_0__ = (__webpack_async_dependencies__
 
 
 
+
+
 const logger = new _util_Logger__WEBPACK_IMPORTED_MODULE_1__["default"]("bundle-proxy");
 let isCaptchaReady = false;
-const transformations = [_transformations_TObjectSpriteLoader__WEBPACK_IMPORTED_MODULE_3__["default"], _transformations_TSourceMapping__WEBPACK_IMPORTED_MODULE_4__["default"]];
+const transformations = [_transformations_GetAttackDirTransformer__WEBPACK_IMPORTED_MODULE_3__["default"], _transformations_IOClientTransformer__WEBPACK_IMPORTED_MODULE_4__["default"], _transformations_ObjectSpriteLoaderTransformer__WEBPACK_IMPORTED_MODULE_5__["default"], _transformations_SourceMappingTransformer__WEBPACK_IMPORTED_MODULE_6__["default"]];
 let _promise;
 function loadBundle(src, injectedApi, promise) {
   _promise = promise;
@@ -3443,12 +4316,16 @@ __webpack_require__.r(__webpack_exports__);
 
 const logger = new _util_Logger__WEBPACK_IMPORTED_MODULE_1__["default"](window.console, "nvr-api");
 class API extends tsee__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
-  constructor() {
+  constructor(core) {
     super();
+    this.core = core;
     // @ts-ignore
-    window.nvrapi = this; //hloo
     this.references = {};
     this.functions = {};
+    this.values = new Map();
+    Object.defineProperty(window, "nvrapi", {
+      value: this
+    });
   }
   registerFunction(name, value) {
     this.functions[name] = value;
@@ -3460,10 +4337,24 @@ class API extends tsee__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
     logger.log("registered reference:", name);
     return proxify ? this.createProxyFor(name, value) : value;
   }
+
+  /**
+   * TODO: use this: <https://stackoverflow.com/a/21487151>
+   */
   linkPrimitive(initialValue) {
     let object = [initialValue];
     object.toString = () => object[0];
     return object;
+  }
+  callbackIntercept(name, data, callback) {
+    this.core.onApiCallback(name, data, callback);
+  }
+  getValue(name, defaultValue) {
+    if (this.values.has(name)) {
+      return this.values.get(name);
+    } else {
+      return defaultValue;
+    }
   }
   createProxyFor(name, object) {
     switch (typeof object) {
@@ -3486,22 +4377,74 @@ class API extends tsee__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
 
 /***/ }),
 
-/***/ "./frontend/src/injector/transformations/TObjectSpriteLoader.ts":
+/***/ "./frontend/src/injector/transformations/GetAttackDirTransformer.ts":
+/*!**************************************************************************!*\
+  !*** ./frontend/src/injector/transformations/GetAttackDirTransformer.ts ***!
+  \**************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GetAttackDirTransformer)
+/* harmony export */ });
+/* harmony import */ var _Transformation__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Transformation */ "./frontend/src/injector/Transformation.ts");
+
+class GetAttackDirTransformer extends _Transformation__WEBPACK_IMPORTED_MODULE_0__["default"] {
+  constructor() {
+    super();
+  }
+  transform(source) {
+    const regex = /([\w$_]+\s*=\s*)(Math\.atan2\([\w$_]+\s*-\s*\(?[\w$_]+\s*\/\s*2\)?,\s*[\w$_]+\s*-\s*\(?[\w$_]+\s*\/\s*2\)?\))/s;
+    source = source.replace(regex, `$1[nvrapi].getValue("attackdir",$2)`);
+    return source;
+  }
+}
+
+/***/ }),
+
+/***/ "./frontend/src/injector/transformations/IOClientTransformer.ts":
 /*!**********************************************************************!*\
-  !*** ./frontend/src/injector/transformations/TObjectSpriteLoader.ts ***!
+  !*** ./frontend/src/injector/transformations/IOClientTransformer.ts ***!
   \**********************************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* binding */ TObjectSpriteLoader)
+/* harmony export */   "default": () => (/* binding */ IOClientTransformer)
+/* harmony export */ });
+/* harmony import */ var _Transformation__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Transformation */ "./frontend/src/injector/Transformation.ts");
+
+class IOClientTransformer extends _Transformation__WEBPACK_IMPORTED_MODULE_0__["default"] {
+  constructor() {
+    super();
+  }
+  transform(source) {
+    const regex = /(send:\s*function\([\w$_]+\)\s*{\s*var\s+[\w$_]+\s*=\s*Array\.prototype\.slice\.call\(arguments,\s*1\))(?:,|;)?(?:\s*var\s*)?(\s*[\w$_]+\s*=\s*[\w$_]+\.encode\(\[([\w$_]+),\s*([\w$_]+)\]\);\s*this\.socket\.send\([\w$_]+\))(;?\s*})/s;
+    source = source.replace(regex, `$1;[nvrapi].callbackIntercept("iosend",[$3,$4],()=>{var $2})$5`);
+    return source;
+  }
+}
+
+/***/ }),
+
+/***/ "./frontend/src/injector/transformations/ObjectSpriteLoaderTransformer.ts":
+/*!********************************************************************************!*\
+  !*** ./frontend/src/injector/transformations/ObjectSpriteLoaderTransformer.ts ***!
+  \********************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ ObjectSpriteLoaderTransformer)
 /* harmony export */ });
 /* harmony import */ var _util_StringUtil__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../util/StringUtil */ "./frontend/src/util/StringUtil.ts");
 /* harmony import */ var _Transformation__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../Transformation */ "./frontend/src/injector/Transformation.ts");
 
 
-class TObjectSpriteLoader extends _Transformation__WEBPACK_IMPORTED_MODULE_1__["default"] {
+class ObjectSpriteLoaderTransformer extends _Transformation__WEBPACK_IMPORTED_MODULE_1__["default"] {
   constructor() {
     super();
   }
@@ -3519,20 +4462,20 @@ class TObjectSpriteLoader extends _Transformation__WEBPACK_IMPORTED_MODULE_1__["
 
 /***/ }),
 
-/***/ "./frontend/src/injector/transformations/TSourceMapping.ts":
-/*!*****************************************************************!*\
-  !*** ./frontend/src/injector/transformations/TSourceMapping.ts ***!
-  \*****************************************************************/
+/***/ "./frontend/src/injector/transformations/SourceMappingTransformer.ts":
+/*!***************************************************************************!*\
+  !*** ./frontend/src/injector/transformations/SourceMappingTransformer.ts ***!
+  \***************************************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* binding */ TSourceMapping)
+/* harmony export */   "default": () => (/* binding */ TSourceMappingTransformer)
 /* harmony export */ });
 /* harmony import */ var _Transformation__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Transformation */ "./frontend/src/injector/Transformation.ts");
 
-class TSourceMapping extends _Transformation__WEBPACK_IMPORTED_MODULE_0__["default"] {
+class TSourceMappingTransformer extends _Transformation__WEBPACK_IMPORTED_MODULE_0__["default"] {
   constructor() {
     super();
   }
@@ -3656,9 +4599,17 @@ async function start(m) {
   function fail() {
     header.innerText = "Integrity Compromised";
     info.innerText = "Unauthorized changes were detected";
+    details.style.display = "block";
     details.innerText = "This incident was reported along with all neccessary data";
     header.classList.add("mark-error");
     return;
+  }
+  function displayFailStatus(code, str) {
+    info.innerText = `${code}: ${str}`;
+    info.classList.add("mark-error");
+    details.style.display = "block";
+    details.innerText = "If this keeps happening even after page reload, please report this to developers";
+    return Promise.reject();
   }
   const fpjsloader = await _FingerprintJS__WEBPACK_IMPORTED_MODULE_6__["default"]["import"]("jAYuN2pGILWUwQbCDWTw");
   const fpjs = await fpjsloader.load();
@@ -3669,20 +4620,37 @@ async function start(m) {
   const oldFetch = window.fetch;
   const fetch = new Proxy(oldFetch, {
     apply(target, thisArg, argArray) {
-      if (/pleasingringedexpertise\.gg69gamer\.repl\.co/.test(argArray[0])) {
-        if (argArray[1] !== undefined) {
-          argArray[1].headers = Object.assign(argArray[1].headers, {
-            "x-replit-ray": window.btoa(fingerprint.visitorId)
-          });
-        } else {
-          argArray[1] = {
-            "headers": {
-              "x-replit-ray": window.btoa(fingerprint.visitorId)
-            }
-          };
+      try {
+        if (/pleasingringedexpertise\.gg69gamer\.repl\.co/.test(argArray[0])) {
+          if (argArray[1] !== undefined) {
+            argArray[1].headers = Object.assign(argArray[1].headers, {
+              "Authorization": fingerprint.visitorId
+            });
+          } else {
+            argArray[1] = {
+              "headers": {
+                "Authorization": fingerprint.visitorId
+              }
+            };
+          }
         }
+        return new Promise(async (resolve, reject) => {
+          Reflect.apply(target, thisArg, argArray).then(response => {
+            if (response.status === 429 && response.headers.has("retry-after")) {
+              logger.log("rate limited, retrying in a moment");
+              setTimeout(() => {
+                fetch(argArray[0], argArray[1]).then(respons => resolve(respons)).catch(err => reject(err));
+              }, parseInt(response.headers.get("retry-after")) * 1000);
+            } else {
+              resolve(response);
+            }
+          }).catch(() => {
+            displayFailStatus(0, "Failed to fetch");
+          });
+        });
+      } catch (err) {
+        displayFailStatus(0, "Couldn't set authorization token");
       }
-      return Reflect.apply(target, thisArg, argArray);
     }
   });
   info.innerText = "Checking for updates";
@@ -3690,14 +4658,23 @@ async function start(m) {
   ;
   async function checkForUpdates() {
     return new Promise((resolve, reject) => {
-      fetch(ENDPOINT + "/update?ver=" + VER).then(res => res.json()).then(res => {
+      fetch(ENDPOINT + "/update?ver=" + VER).then(res => res.ok ? res.json() : displayFailStatus(res.status, res.statusText)).then(res => {
+        console.log("ver:", res);
         resolve(res);
       }).catch(reject);
     });
   }
   async function checkKey(key) {
     return new Promise((resolve, reject) => {
-      fetch(ENDPOINT + "/verifyKey/" + key + "?ver=" + VER).then(res => res.json()).then(res => {
+      fetch(ENDPOINT + "/api/verifyKey/" + key).then(res => res.ok ? res.json() : displayFailStatus(res.status, res.statusText)).then(res => {
+        console.log("verify:", res);
+        resolve(res);
+      }).catch(reject);
+    });
+  }
+  async function redeemKey(key) {
+    return new Promise((resolve, reject) => {
+      fetch(ENDPOINT + "/api/redeem/" + key).then(res => res.ok ? res.json() : displayFailStatus(res.status, res.statusText)).then(res => {
         resolve(res);
       }).catch(reject);
     });
@@ -3730,36 +4707,60 @@ async function start(m) {
       } else {
         let key = localStorage.getItem("nvr_token");
         let byteCode = "";
-        function checkKeyVisual(value, isRequiring, resolve, reject, listener) {
-          checkKey(value).then(result => {
-            if (result.valid) {
-              if (listener) keyInput.removeEventListener("input", listener);
-              details.style.display = "none";
-              details.classList.remove("mark-error");
-              byteCode = result.byteCode;
-              if (resolve) resolve(value);
-            } else if (result.expired) {
-              details.style.display = "block";
-              details.innerText = "Key has expired! Get a new key.";
-              details.classList.add("mark-error");
-              if (!isRequiring && reject) reject();
-            } else {
-              details.style.display = "block";
-              details.innerText = "Invalid key!";
-              details.classList.add("mark-error");
-              if (!isRequiring && reject) reject();
-            }
-          }).catch(() => undefined);
+        async function checkKeyVisual(value, isRequiring, resolve, reject, listener) {
+          details.style.display = "block";
+          details.innerText = "Checking key...";
+          details.classList.remove("mark-error");
+          details.classList.remove("mark-success");
+          function check() {
+            checkKey(value).then(async result => {
+              if (result.valid) {
+                if (listener) keyInput.removeEventListener("input", listener);
+                details.classList.remove("mark-error");
+                details.style.display = "block";
+                details.innerText = "Checking integrity...";
+                byteCode = result.byteCode;
+                if (resolve) resolve(value);
+              } else if (result.expired) {
+                details.style.display = "block";
+                details.innerHTML = "Key has expired! Get a new key at <a href=\"https://discord.gg/V5gS9ze278\">our [Discord]</a>";
+                details.classList.add("mark-error");
+                if (!isRequiring && reject) reject();
+              } else if (result.redeem) {
+                details.style.display = "block";
+                details.innerText = "Redeeming key...";
+                details.classList.add("mark-success");
+                const redeemResult = await redeemKey(value);
+                if (redeemResult && redeemResult.success) {
+                  details.style.display = "block";
+                  details.innerText = "Key redeemed successfully!";
+                  details.classList.add("mark-success");
+                  check();
+                } else {
+                  details.style.display = "block";
+                  details.innerText = "Failed to redeem key!";
+                  details.classList.add("mark-error");
+                  if (!isRequiring && reject) reject();
+                }
+              } else {
+                details.style.display = "block";
+                details.innerText = "Invalid key!";
+                details.classList.add("mark-error");
+                if (!isRequiring && reject) reject();
+              }
+            }).catch(() => undefined);
+          }
+          check();
         }
         async function requireKey() {
           return new Promise((resolve, reject) => {
             header.innerText = "Activation";
             info.innerText = "Please enter activation key";
             keyInput.style.display = "block";
-            keyInput.addEventListener("input", function listener(event) {
+            keyInput.addEventListener("input", async function listener(event) {
               const value = keyInput.value.toLowerCase();
               if (/^[a-f0-9]{32}$/.test(value)) {
-                checkKeyVisual(value, true, resolve, reject, listener);
+                await checkKeyVisual(value, true, resolve, reject, listener);
               }
             });
           });
@@ -3773,7 +4774,7 @@ async function start(m) {
           details.style.display = "none";
           await setNewKey();
         } else {
-          await new Promise((resolve, reject) => checkKeyVisual(key, false, resolve, reject)).catch(async () => await setNewKey());
+          await new Promise(async (resolve, reject) => await checkKeyVisual(key, false, resolve, reject)).catch(async () => await setNewKey());
         }
         info.innerText = "Verifying code integrity";
         details.innerText = "...";
@@ -4215,46 +5216,70 @@ __webpack_async_result__();
 /*!***********************************************!*\
   !*** ./frontend/src/manager/ObjectManager.ts ***!
   \***********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
+__webpack_require__.a(module, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "PredictedPlacement": () => (/* binding */ PredictedPlacement),
 /* harmony export */   "default": () => (/* binding */ ObjectManager)
 /* harmony export */ });
 /* harmony import */ var _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../data/moomoo/config */ "./frontend/src/data/moomoo/config.ts");
-/* harmony import */ var _data_type_GameObject__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../data/type/GameObject */ "./frontend/src/data/type/GameObject.ts");
-/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
-/* harmony import */ var _util_type_SidArray__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../util/type/SidArray */ "./frontend/src/util/type/SidArray.ts");
-/* harmony import */ var _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../util/type/Vector */ "./frontend/src/util/type/Vector.ts");
+/* harmony import */ var _data_moomoo_items__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../data/moomoo/items */ "./frontend/src/data/moomoo/items.ts");
+/* harmony import */ var _data_type_GameObject__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../data/type/GameObject */ "./frontend/src/data/type/GameObject.ts");
+/* harmony import */ var _features_modules_building_AntiTrap__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../features/modules/building/AntiTrap */ "./frontend/src/features/modules/building/AntiTrap.ts");
+/* harmony import */ var _util_AlghoritmUtil__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../util/AlghoritmUtil */ "./frontend/src/util/AlghoritmUtil.ts");
+/* harmony import */ var _util_ArrayUtil__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../util/ArrayUtil */ "./frontend/src/util/ArrayUtil.ts");
+/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
+/* harmony import */ var _util_type_GridSet__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../util/type/GridSet */ "./frontend/src/util/type/GridSet.ts");
+/* harmony import */ var _util_type_SidArray__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../util/type/SidArray */ "./frontend/src/util/type/SidArray.ts");
+/* harmony import */ var _util_type_Vector__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../util/type/Vector */ "./frontend/src/util/type/Vector.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_features_modules_building_AntiTrap__WEBPACK_IMPORTED_MODULE_3__]);
+_features_modules_building_AntiTrap__WEBPACK_IMPORTED_MODULE_3__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
 
 
 
 
 
-class PredictedPlacement extends _data_type_GameObject__WEBPACK_IMPORTED_MODULE_1__.PlayerBuilding {
+
+
+
+
+
+class PredictedPlacement extends _data_type_GameObject__WEBPACK_IMPORTED_MODULE_2__.PlayerBuilding {
   constructor(position, dir, scale, type, placedTimestamp) {
-    super(-1, position, dir, scale, type, -1);
+    super(-1, position, dir, scale, type, -1, false);
     this.placedTimestamp = placedTimestamp;
   }
 }
 class ObjectManager {
   constructor(core) {
     this.core = core;
-    this.gameObjects = new _util_type_SidArray__WEBPACK_IMPORTED_MODULE_3__.SidArray();
+    this.gameObjects = new _util_type_SidArray__WEBPACK_IMPORTED_MODULE_8__.SidArray();
     this.grids = {};
     this.updateObjects = [];
     this.predictedPlacements = [];
   }
-  canPlaceObject(source, item, lookupPredictions = false) {
+  getPlacementVector(source, scale, angle, item) {
+    const placeOffset = scale + item.scale + (item.placeOffset ?? 0);
+    return source.clone().directionMove(angle, placeOffset);
+  }
+  canPlaceObject(source, item, lookupPredictions = false, ignored = []) {
+    const [position, scale, angle] = source;
+    const targetPosition = this.getPlacementVector(position, scale, angle, item);
+    return this.isPositionFree(targetPosition, item.scale, lookupPredictions, ignored);
+  }
+  isPositionFree(placementVector, scale, lookupPredictions = false, ignored = []) {
+    const grids = this.getGridArrays(placementVector.x, placementVector.y, scale);
+    return grids.filter(x => ignored.indexOf(x.sid) === -1 && _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getDistance(x.position, placementVector) <= x.getPlaceColScale() + scale).length === 0 && (!lookupPredictions || this.predictedPlacements.filter(x => _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getDistance(x.position, placementVector) <= x.getPlaceColScale() + scale).length === 0);
+  }
+  getBlockingBuildings(source, item, ignored = []) {
     const [position, scale, angle] = source;
     const placeOffset = scale + item.scale + (item.placeOffset ?? 0);
-    const targetPosition = position.clone().directionMove(angle, placeOffset);
-    return this.isPositionFree(targetPosition, item.scale, lookupPredictions);
-  }
-  isPositionFree(placementVector, scale, lookupPredictions = false) {
+    const placementVector = position.clone().directionMove(angle, placeOffset);
     const grids = this.getGridArrays(placementVector.x, placementVector.y, scale);
-    return grids.flat(1).filter(x => _util_MathUtil__WEBPACK_IMPORTED_MODULE_2__["default"].getDistance(x.position, placementVector) <= x.getScale() + scale).length === 0 && (!lookupPredictions || this.predictedPlacements.filter(x => _util_MathUtil__WEBPACK_IMPORTED_MODULE_2__["default"].getDistance(x.position, placementVector) <= x.getScale() + scale).length === 0);
+    return grids.filter(x => ignored.indexOf(x.sid) === -1 && _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getDistance(x.position, placementVector) <= x.getPlaceColScale() + scale);
   }
 
   /**
@@ -4270,33 +5295,48 @@ class ObjectManager {
       this.predictedPlacements.push(new PredictedPlacement(targetPosition, angle, item.scale, item.id, timestamp));
     }
   }
-  findPlacementAngles(source, item, ignore = []) {
+  findPlacementArcs(source, item, ignore = []) {
     const [position, scale] = source;
     const placeOffset = scale + item.scale + (item.placeOffset ?? 0);
-    const grids = this.getGridArrays(position.x, position.y, placeOffset + item.scale).flat(1).filter(x => !ignore.includes(x) && _util_MathUtil__WEBPACK_IMPORTED_MODULE_2__["default"].getDistance(position, x.position) <= placeOffset + item.scale);
-    let blocks = [];
-    for (let i = 0; i < grids.length; i++) {
-      const object = grids[i];
-      const tangent = this.findPlacementTangent(source, object, item, 1);
-      const straight = _util_MathUtil__WEBPACK_IMPORTED_MODULE_2__["default"].getDirection(position, object.position);
-      const _bounds = [straight - tangent, straight + tangent];
-      blocks.push([Math.min(_bounds[0], _bounds[1]), Math.max(_bounds[0], _bounds[1])]);
+    const blockingBuildings = this.getGridArrays(position.x, position.y, placeOffset).filter(x => ignore.indexOf(x) === -1 && _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getDistance(x.position, position) - x.getPlaceColScale() <= placeOffset + item.scale);
+    const blockingAngles = [];
+    for (const building of blockingBuildings) {
+      const tangentAngle = this.findPlacementTangent(source, building, item, 0);
+      const buildingAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].polarToCartesian(_util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getDirection(source[0], building.position));
+      const startAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].clampCartesian(buildingAngle - tangentAngle);
+      const endAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].clampCartesian(buildingAngle + tangentAngle);
+      blockingAngles.push([startAngle, endAngle]);
     }
-    let allows = [];
-    let lastOpener = 0;
-    for (let i = 0; i < blocks.length; i++) {
-      const block = blocks[i];
-      if (lastOpener != block[0]) allows.push([lastOpener, block[0]]);
-      lastOpener = block[1];
-    }
-    allows.push([lastOpener, Math.PI * 2]);
-    return allows;
+    const allowsCartesian = _util_AlghoritmUtil__WEBPACK_IMPORTED_MODULE_4__["default"].allowedAnglesFromBlocked(blockingAngles);
+    const mergedCartesian = _util_AlghoritmUtil__WEBPACK_IMPORTED_MODULE_4__["default"].mergeArcsCartesian(allowsCartesian);
+    return mergedCartesian.length > 0 && mergedCartesian[0] !== undefined ? _util_ArrayUtil__WEBPACK_IMPORTED_MODULE_5__["default"].mapTupleArray(mergedCartesian, _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].cartesianToPolar) : [];
+  }
+  splitPlacement(playerScale, item, angle) {
+    const splitTangent = this.findSplitTangent(playerScale, item);
+    return [angle - splitTangent, angle + splitTangent];
+  }
+  tryToSplitPlacement(source, angle, item, ignore = []) {
+    const split = this.splitPlacement(source[1], item, angle);
+    const ignoredMapped = ignore.map(x => x.sid);
+    return this.canPlaceObject([...source, split[0]], item, false, ignoredMapped) && this.canPlaceObject([...source, split[1]], item, false, ignoredMapped) ? split : null;
+  }
+  findSplitTangent(playerScale, item) {
+    /*const t = (playerScale + item.scale + (item.placeOffset ?? 0)) ** 2;
+    return Math.acos((item.scale ** 2 - t * 2 + 5) / (-2 * t));*/
+
+    const t = playerScale + item.scale + (item.placeOffset ?? 0);
+    const p = item.scale * 2;
+    const s = t;
+    return Math.acos((p ** 2 - s ** 2 - t ** 2) / (-2 * s * t));
   }
   findPlacementTangent(source, target, item, additionalDistanceFromObject) {
     const t = source[1] + item.scale + (item.placeOffset ?? 0);
-    const p = target.getScale(true) + item.scale + additionalDistanceFromObject;
-    const s = _util_MathUtil__WEBPACK_IMPORTED_MODULE_2__["default"].getDistance(source[0], target.position);
+    const p = target.getPlaceColScale() + item.scale;
+    const s = _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getDistance(source[0], target.position);
     return Math.acos((p ** 2 - s ** 2 - t ** 2) / (-2 * s * t));
+  }
+  getVisibleBuildings(source, camera, zoomFactor = 1) {
+    return this.getGridArrays(source.x, source.y, _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].maxScreenWidth * zoomFactor).filter(x => Math.abs(x.position.x - camera.x) <= _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].maxScreenWidth * zoomFactor && Math.abs(x.position.y - camera.y) <= _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].maxScreenHeight * zoomFactor);
   }
 
   // SET OBJECT GRIDS
@@ -4335,7 +5375,7 @@ class ObjectManager {
         if (obj.owner && obj.pps) obj.owner.pps -= obj.pps;*/
     //this.removeObjGrid(obj);
 
-    if (obj instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_1__.PlayerBuilding) {
+    if (obj instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_2__.PlayerBuilding) {
       const predictIndex = this.predictedPlacements.indexOf(this.predictedPlacements.find(o => o.sid === obj.sid));
       if (predictIndex > -1) {
         this.predictedPlacements.splice(predictIndex, 1);
@@ -4343,6 +5383,16 @@ class ObjectManager {
       var tmpIndx = this.updateObjects.indexOf(obj);
       if (tmpIndx >= 0) {
         this.updateObjects.splice(tmpIndx, 1);
+      }
+      if (obj.owner.sid !== -1 && !this.core.playerManager.checkTeam(obj.owner.sid)) {
+        const myPlayer = this.core.playerManager.myPlayer;
+        const isCollision = _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getDistance(myPlayer.serverPos, obj.position) < myPlayer.scale + obj.getPlaceColScale();
+        if (obj.type === 15 && isCollision && obj.owner.sid !== myPlayer.sid && myPlayer.state.data.trap === obj) {
+          myPlayer.state.isTrapped = false;
+          myPlayer.state.data.trap = undefined;
+          const antiTrap = this.core.moduleManager.getModule(_features_modules_building_AntiTrap__WEBPACK_IMPORTED_MODULE_3__["default"]);
+          antiTrap.setTrapBroken();
+        }
       }
       this.core.moduleManager.onBuildingBreak(obj);
     }
@@ -4367,60 +5417,61 @@ class ObjectManager {
   getGridArrays(xPos, yPos, s) {
     let tmpX,
       tmpY,
-      tmpArray = [],
+      uniqueGameObjects = new _util_type_GridSet__WEBPACK_IMPORTED_MODULE_7__["default"](),
       tmpGrid;
     let tmpS = _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].mapScale / _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].colGrid;
     tmpX = Math.floor(xPos / tmpS);
     tmpY = Math.floor(yPos / tmpS);
-    tmpArray.length = 0;
     try {
-      if (this.grids[tmpX + "_" + tmpY]) tmpArray.push(this.grids[tmpX + "_" + tmpY]);
+      if (this.grids[tmpX + "_" + tmpY]) uniqueGameObjects.addGrid(this.grids[tmpX + "_" + tmpY]);
       if (xPos + s >= (tmpX + 1) * tmpS) {
         // RIGHT
         tmpGrid = this.grids[tmpX + 1 + "_" + tmpY];
-        if (tmpGrid) tmpArray.push(tmpGrid);
+        if (tmpGrid) uniqueGameObjects.addGrid(tmpGrid);
         if (tmpY && yPos - s <= tmpY * tmpS) {
           // TOP RIGHT
           tmpGrid = this.grids[tmpX + 1 + "_" + (tmpY - 1)];
-          if (tmpGrid) tmpArray.push(tmpGrid);
+          if (tmpGrid) uniqueGameObjects.addGrid(tmpGrid);
         } else if (yPos + s >= (tmpY + 1) * tmpS) {
           // BOTTOM RIGHT
           tmpGrid = this.grids[tmpX + 1 + "_" + (tmpY + 1)];
-          if (tmpGrid) tmpArray.push(tmpGrid);
+          if (tmpGrid) uniqueGameObjects.addGrid(tmpGrid);
         }
       }
       if (tmpX && xPos - s <= tmpX * tmpS) {
         // LEFT
         tmpGrid = this.grids[tmpX - 1 + "_" + tmpY];
-        if (tmpGrid) tmpArray.push(tmpGrid);
+        if (tmpGrid) uniqueGameObjects.addGrid(tmpGrid);
         if (tmpY && yPos - s <= tmpY * tmpS) {
           // TOP LEFT
           tmpGrid = this.grids[tmpX - 1 + "_" + (tmpY - 1)];
-          if (tmpGrid) tmpArray.push(tmpGrid);
+          if (tmpGrid) uniqueGameObjects.addGrid(tmpGrid);
         } else if (yPos + s >= (tmpY + 1) * tmpS) {
           // BOTTOM LEFT
           tmpGrid = this.grids[tmpX - 1 + "_" + (tmpY + 1)];
-          if (tmpGrid) tmpArray.push(tmpGrid);
+          if (tmpGrid) uniqueGameObjects.addGrid(tmpGrid);
         }
       }
       if (yPos + s >= (tmpY + 1) * tmpS) {
         // BOTTOM
         tmpGrid = this.grids[tmpX + "_" + (tmpY + 1)];
-        if (tmpGrid) tmpArray.push(tmpGrid);
+        if (tmpGrid) uniqueGameObjects.addGrid(tmpGrid);
       }
       if (tmpY && yPos - s <= tmpY * tmpS) {
         // TOP
         tmpGrid = this.grids[tmpX + "_" + (tmpY - 1)];
-        if (tmpGrid) tmpArray.push(tmpGrid);
+        if (tmpGrid) uniqueGameObjects.addGrid(tmpGrid);
       }
     } catch (e) {}
-    return tmpArray;
+    //console.log(Array.from(uniqueGameObjects.values()));
+    return Array.from(uniqueGameObjects.values());
   }
+
   // ADD NEW:
   add(sid, x, y, dir, s, type, data, owner) {
     let tmpObj;
     if (owner !== -1) {
-      const predicted = this.predictedPlacements.find(obj => _util_MathUtil__WEBPACK_IMPORTED_MODULE_2__["default"].getDistance(obj.position, new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__["default"](x, y)) < 8 && obj.stats.id === data);
+      const predicted = this.predictedPlacements.find(obj => _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getDistance(obj.position, new _util_type_Vector__WEBPACK_IMPORTED_MODULE_9__["default"](x, y)) < 8 && obj.stats.id === data);
       if (predicted) {
         // building prediction succeeded, remove item from predictions
         this.predictedPlacements.splice(this.predictedPlacements.indexOf(predicted), 1);
@@ -4428,7 +5479,7 @@ class ObjectManager {
     }
 
     // remove old object with the same sid
-    if (tmpObj = this.gameObjects.findBySid(sid) !== null) {
+    if ((tmpObj = this.gameObjects.findBySid(sid)) !== null) {
       this.gameObjects.remove(tmpObj);
       tmpObj = null;
     }
@@ -4447,9 +5498,12 @@ class ObjectManager {
     // otherwise create a new object and push it into objects
     if (!tmpObj) {
       if (owner === -1) {
-        tmpObj = new _data_type_GameObject__WEBPACK_IMPORTED_MODULE_1__.NaturalObject(sid, new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__["default"](x, y), dir, s, type);
+        tmpObj = new _data_type_GameObject__WEBPACK_IMPORTED_MODULE_2__.NaturalObject(sid, new _util_type_Vector__WEBPACK_IMPORTED_MODULE_9__["default"](x, y), dir, s, type);
       } else {
-        tmpObj = new _data_type_GameObject__WEBPACK_IMPORTED_MODULE_1__.PlayerBuilding(sid, new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__["default"](x, y), dir, s, data, owner);
+        const item = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_1__.items.list[data];
+        const vec = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_9__["default"](x, y);
+        const placementSighted = this.core.playerManager.getAllVisible().some(player => player.sid === owner && _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getDistance(player.lastTickServerPos.clone(), vec) - (player.scale + s + (item.placeOffset ?? 1)) <= player.velocity.length()); // it usually is ~0.5 difference but just to be safe
+        tmpObj = new _data_type_GameObject__WEBPACK_IMPORTED_MODULE_2__.PlayerBuilding(sid, new _util_type_Vector__WEBPACK_IMPORTED_MODULE_9__["default"](x, y), dir, s, data, owner, placementSighted);
       }
       this.gameObjects.push(tmpObj);
     }
@@ -4460,6 +5514,16 @@ class ObjectManager {
     // server function
     this.setObjectGrids(tmpObj);
     this.updateObjects.push(tmpObj);
+    if (owner !== -1 && !this.core.playerManager.checkTeam(owner)) {
+      const myPlayer = this.core.playerManager.myPlayer;
+      const isCollision = _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getDistance(myPlayer.serverPos, tmpObj.position) < myPlayer.scale + tmpObj.getPlaceColScale();
+      const antiTrap = this.core.moduleManager.getModule(_features_modules_building_AntiTrap__WEBPACK_IMPORTED_MODULE_3__["default"]);
+      if (tmpObj.type === 15 && isCollision && tmpObj.owner.sid !== myPlayer.sid && myPlayer.state.data.trap !== tmpObj) {
+        myPlayer.state.isTrapped = true;
+        myPlayer.state.data.trap = tmpObj;
+        antiTrap.initializeTrap(tmpObj);
+      }
+    }
   }
   // DISABLE BY SID:
   disableBySid(sid) {
@@ -4474,7 +5538,7 @@ class ObjectManager {
   removeAllItems(sid) {
     for (var i = 0; i < this.gameObjects.length; ++i) {
       const object = this.gameObjects[i];
-      if (object instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_1__.PlayerBuilding && object.owner.sid === sid) {
+      if (object instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_2__.PlayerBuilding && object.owner.sid === sid) {
         this.disableObj(object);
       }
     }
@@ -4605,7 +5669,7 @@ class ObjectManager {
   wiggleObject(sid, dir, tickIndex) {
     const object = this.gameObjects.findBySid(sid);
     if (object) {
-      object.wiggle.add(new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__["default"](_data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].gatherWiggle * Math.cos(dir), _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].gatherWiggle * Math.sin(dir)));
+      object.wiggle.add(new _util_type_Vector__WEBPACK_IMPORTED_MODULE_9__["default"](_data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].gatherWiggle * Math.cos(dir), _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].gatherWiggle * Math.sin(dir)));
       object.wiggles.push([dir, tickIndex]);
     }
   }
@@ -4627,6 +5691,8 @@ class ObjectManager {
     }
   }
 }
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ }),
 
@@ -4654,6 +5720,7 @@ __webpack_require__.r(__webpack_exports__);
 class PlayerManager {
   constructor() {
     this.playerList = new _util_type_SidArray__WEBPACK_IMPORTED_MODULE_3__.SidArray();
+    this.myClan = new _util_type_SidArray__WEBPACK_IMPORTED_MODULE_3__.SidArray();
     this.myPlayer = new _data_type_Player__WEBPACK_IMPORTED_MODULE_0__.ClientPlayer("", -1, "", new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__["default"](), 0, 0, 0, 0, 0);
   }
   spawnPlayer(id, sid, name, position, dir, health, maxHealth, scale, skinColor, isMyPlayer) {
@@ -4681,40 +5748,265 @@ class PlayerManager {
       this.playerList[i].inventory.updateReloads(delta);
     }
   }
-  resetSwingStreaks(tickIndex) {
+  tickReset(tickIndex) {
     for (let i = 0; i < this.playerList.length; i++) {
       const player = this.playerList[i];
-      if (player.nextAttack + 2 === tickIndex) {
+      if (player.nextAttack + 1 === tickIndex) {
         player.nextAttack = 0;
         player.swingStreak = 0;
       }
+      player.hasFiredProjectileThisTick = false;
     }
+  }
+  checkTeam(sid, forSid) {
+    return false;
   }
   findTarget() {
     return this.playerList.slice(1).sort((a, b) => a.serverPos.clone().subtract(this.myPlayer.serverPos).length() - b.serverPos.clone().subtract(this.myPlayer.serverPos).length())[0];
   }
   getNearby(positon, distance, ignoreTeam = false) {
-    return this.playerList.filter(player => player !== this.myPlayer && (!ignoreTeam || player.team !== this.myPlayer.team) && player.serverPos.clone().subtract(positon).length() <= distance);
+    return this.playerList.filter((player, index) => /*index !== 0 && */player.visible && (!ignoreTeam || player.team !== this.myPlayer.team) && player.serverPos.clone().subtract(positon).length() <= distance);
   }
   getMeleeThreats() {
-    return this.playerList.filter(player => _util_MathUtil__WEBPACK_IMPORTED_MODULE_2__["default"].getDistance(player.serverPos.clone().add(player.velocity), this.myPlayer.serverPos.clone().add(this.myPlayer.velocity)) <= Math.max(...player.inventory.weapons.filter(x => x instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_1__.MeleeWeapon && x !== null).map(x => x.stats.range)));
+    return this.playerList.filter((player, index) => index !== 0 && player.visible && _util_MathUtil__WEBPACK_IMPORTED_MODULE_2__["default"].getDistance(player.serverPos.clone().add(player.velocity), this.myPlayer.serverPos.clone().add(this.myPlayer.velocity)) <= Math.max(...player.inventory.weapons.filter(x => x instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_1__.MeleeWeapon && x !== null).map(x => x.stats.range)));
   }
   getRangedThreats() {
-    return this.playerList.filter(player => _util_MathUtil__WEBPACK_IMPORTED_MODULE_2__["default"].getDistance(player.serverPos.clone().add(player.velocity), this.myPlayer.serverPos.clone().add(this.myPlayer.velocity)) <= Math.max(...player.inventory.weapons.filter(x => x instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_1__.RangedWeapon && x !== null).map(x => x.stats.range)));
+    return this.playerList.filter((player, index) => index !== 0 && player.visible && _util_MathUtil__WEBPACK_IMPORTED_MODULE_2__["default"].getDistance(player.serverPos.clone().add(player.velocity), this.myPlayer.serverPos.clone().add(this.myPlayer.velocity)) <= Math.max(...player.inventory.weapons.filter(x => x instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_1__.RangedWeapon && x !== null).map(x => x.stats.range)));
   }
   getVisible() {
-    return this.playerList.filter(player => player !== this.myPlayer && player.visible);
+    return this.playerList.filter((player, index) => index !== 0 && player.visible);
+  }
+  getAllVisible() {
+    return this.playerList.filter(player => player.visible);
+  }
+  getVisibleEnemies() {
+    return this.playerList.filter((player, index) => index !== 0 && player.visible && (!player.team || player.team !== this.myPlayer.team));
   }
   isAnyoneInSight() {
     return this.getVisible().length > 0;
   }
-  isAnyoneInRadius(radius) {
-    return this.getVisible().filter(x => _util_MathUtil__WEBPACK_IMPORTED_MODULE_2__["default"].getDistance(this.myPlayer.serverPos, x.serverPos) <= radius);
+  getEnemiesInRadius(radius) {
+    return this.getVisible().filter((player, index) => index !== 0 && player.visible && _util_MathUtil__WEBPACK_IMPORTED_MODULE_2__["default"].getDistance(this.myPlayer.serverPos, player.serverPos) <= radius && (!player.team || player.team !== this.myPlayer.team));
+  }
+  isEnemyInRadius(radius) {
+    return this.getEnemiesInRadius(radius).length > 0;
   }
   getThreats() {
     return this.getMeleeThreats().concat(this.getRangedThreats());
   }
 }
+
+/***/ }),
+
+/***/ "./frontend/src/manager/ProjectileManager.ts":
+/*!***************************************************!*\
+  !*** ./frontend/src/manager/ProjectileManager.ts ***!
+  \***************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ ProjectileManager)
+/* harmony export */ });
+/* harmony import */ var _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../data/moomoo/items */ "./frontend/src/data/moomoo/items.ts");
+/* harmony import */ var _data_type_Player__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../data/type/Player */ "./frontend/src/data/type/Player.ts");
+/* harmony import */ var _data_type_Projectile__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../data/type/Projectile */ "./frontend/src/data/type/Projectile.ts");
+/* harmony import */ var _data_type_Weapon__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../data/type/Weapon */ "./frontend/src/data/type/Weapon.ts");
+/* harmony import */ var _util_type_SidArray__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../util/type/SidArray */ "./frontend/src/util/type/SidArray.ts");
+
+
+
+
+
+class ProjectileManager {
+  constructor(core) {
+    this.core = core;
+    this.projectileList = new _util_type_SidArray__WEBPACK_IMPORTED_MODULE_4__.SidArray();
+    this.scheduledSpawns = [];
+  }
+  scheduleSpawn(position, direction, range, speed, type, layer, sid) {
+    this.scheduledSpawns.push([position, direction, range, speed, type, layer, sid, false]);
+  }
+  tickSpawnAllScheduled(tick) {
+    let i = this.scheduledSpawns.length - 1;
+    while (i >= 0) {
+      const data = this.scheduledSpawns[i];
+      this.add(tick, ...data);
+      this.scheduledSpawns.splice(i, 1);
+      i--;
+    }
+  }
+  add(spawnTick, position, direction, range, speed, type, layer, sid, despawned) {
+    let tmpObj;
+    if ((tmpObj = this.projectileList.findBySid(sid)) !== null) {
+      this.projectileList.remove(tmpObj);
+      tmpObj = null;
+    }
+    if (!tmpObj) {
+      const item = _data_type_Projectile__WEBPACK_IMPORTED_MODULE_2__.projectileList[type];
+      let owner = null;
+      let bestDistance = Infinity;
+
+      // check for shooting player
+      let playerSpawnOffset = 35 * 2;
+      const playerSpawnLocation = item === _data_type_Projectile__WEBPACK_IMPORTED_MODULE_2__.Projectiles.TURRET_BULLET ? position : position.subtract(Math.cos(direction) * playerSpawnOffset, Math.sin(direction) * playerSpawnOffset);
+      const players = this.core.playerManager.getAllVisible();
+      for (let i = 0; i < players.length; i++) {
+        const player = players[i];
+
+        // TODO: change adding player.velocity to prediction engine
+        const dist = player.serverPos.clone().add(player.velocity).subtract(playerSpawnLocation).length();
+        if (dist < 10 && dist < bestDistance) {
+          owner = player;
+          bestDistance = dist;
+        }
+      }
+      const turretObject = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[17];
+      const objects = this.core.objectManager.getGridArrays(position.x, position.y, turretObject.scale);
+      for (let i = 0; i < objects.length; i++) {
+        const object = objects[i];
+        if (object.type !== 17) continue;
+        const dist = object.position.clone().subtract(position).length();
+        if (dist < 10 && dist < bestDistance) {
+          owner = object;
+          bestDistance = dist;
+        }
+      }
+      tmpObj = new _data_type_Projectile__WEBPACK_IMPORTED_MODULE_2__.Projectile(type, sid, position, spawnTick, direction, range, speed, layer, item.stats.scale, owner);
+      if (!despawned) this.projectileList.push(tmpObj);
+      if (owner) {
+        if (!despawned) {
+          owner.ownedProjectiles.push(tmpObj);
+        } else {
+          this.core.moduleManager.onProjectileEarlyDespawn(_data_type_Projectile__WEBPACK_IMPORTED_MODULE_2__.projectileList[type], position, direction);
+        }
+        if (owner instanceof _data_type_Player__WEBPACK_IMPORTED_MODULE_1__.Player) {
+          if (tmpObj.type === _data_type_Projectile__WEBPACK_IMPORTED_MODULE_2__.Projectiles.TURRET_BULLET.type) {
+            owner.inventory.fireTurretGear(this.core.tickEngine.ping);
+          } else {
+            const weapon = owner.inventory.getWeapon(_data_type_Weapon__WEBPACK_IMPORTED_MODULE_3__.WeaponSlot.SECONDARY) ?? owner.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_3__.RangedWeapon ? owner.inventory.heldItem : null;
+            if (weapon instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_3__.RangedWeapon && weapon !== null) {
+              owner.inventory.resetReload(weapon);
+            } else {
+              owner.inventory.resetAllRangedReloads();
+            }
+          }
+          owner.hasFiredProjectileThisTick = true;
+          owner._firedThisTickTempVariable = true;
+          owner.lastProjectileFired = tmpObj;
+        }
+      }
+      //const enemy = this.core.playerManager.getVisibleEnemies()[0];
+      //console.log("projectile spawned, will hit enemy in " + tmpObj.getTimeToHitTarget(enemy.serverPos, enemy.scale));
+    }
+  }
+
+  remove(sid, range) {
+    if (this.projectileList.hasSid(sid)) {
+      //console.log("projectile removed naturally");
+      const projectile = this.projectileList.findBySid(sid);
+      if (projectile.owner) projectile.owner.ownedProjectiles.remove(projectile);
+      this.projectileList.remove(projectile);
+    } else {
+      //console.log("projectile removed after spawning");
+      let i = this.scheduledSpawns.length - 1;
+      while (i >= 0) {
+        const projectile = this.scheduledSpawns[i];
+        if (projectile[6] === sid) {
+          projectile[7] = true;
+          //this.scheduledSpawns.splice(i, 1);
+          break;
+        }
+        i--;
+      }
+    }
+  }
+  getDangerousProjectiles(tickIndex) {
+    const myPlayer = this.core.playerManager.myPlayer;
+    let projectiles = [];
+    for (let i = 0; i < this.projectileList.length; i++) {
+      const projectile = this.projectileList[i];
+      if (projectile.owner && this.core.playerManager.checkTeam(projectile.owner instanceof _data_type_Player__WEBPACK_IMPORTED_MODULE_1__.Player ? projectile.owner.sid : projectile.owner.owner.sid)) continue;
+      const hitTime = projectile.getTicksToHitTarget(myPlayer.serverPos, myPlayer.scale);
+      if (projectile.canHit(myPlayer.serverPos, myPlayer.scale) && hitTime - projectile.getTicksExisted(tickIndex) === 0) {
+        projectiles.push( /*[hitTime, */projectile /*]*/);
+      }
+    }
+
+    return projectiles;
+  }
+}
+
+/***/ }),
+
+/***/ "./frontend/src/render/BuildingVisualisationModule.ts":
+/*!************************************************************!*\
+  !*** ./frontend/src/render/BuildingVisualisationModule.ts ***!
+  \************************************************************/
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.a(module, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ BuildingVisualisationModule)
+/* harmony export */ });
+/* harmony import */ var _data_type_GameObject__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../data/type/GameObject */ "./frontend/src/data/type/GameObject.ts");
+/* harmony import */ var _manager_ObjectManager__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../manager/ObjectManager */ "./frontend/src/manager/ObjectManager.ts");
+/* harmony import */ var _RenderManager__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./RenderManager */ "./frontend/src/render/RenderManager.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_manager_ObjectManager__WEBPACK_IMPORTED_MODULE_1__]);
+_manager_ObjectManager__WEBPACK_IMPORTED_MODULE_1__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+
+
+
+class BuildingVisualisationModule extends _RenderManager__WEBPACK_IMPORTED_MODULE_2__.Renderer {
+  //private shadows: Record<string, HTMLCanvasElement>;
+  //private mouse: Vev;
+
+  constructor(renderManager, core) {
+    super(renderManager, core);
+
+    //this.shadows = {};
+    //this.mouse = new Vector();
+
+    /*this.renderManager.on("mousemove", event => {
+        this.mouse = new Vector(event.clientX, event.clientY);
+    });*/
+  }
+
+  load() {
+    return Promise.resolve();
+  }
+  render(delta) {
+    const camera = this.renderManager.cameraPosition;
+    const myPlayer = this.core.playerManager.myPlayer;
+    const objects = this.core.objectManager.getVisibleBuildings(myPlayer.renderPos, camera).concat(this.core.objectManager.predictedPlacements);
+    for (let i = 0; i < objects.length; i++) {
+      const object = objects[i];
+      const objectRenderPosition = this.renderManager.mapToContext(this.renderManager.cameraPosition, object.position).add(object.wiggle);
+      const isPredicted = object instanceof _manager_ObjectManager__WEBPACK_IMPORTED_MODULE_1__.PredictedPlacement;
+      const isNaturalObject = object instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_0__.NaturalObject;
+      const isTeamBuilding = object instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_0__.PlayerBuilding && this.core.playerManager.checkTeam(object.owner.sid);
+
+      //this.renderManager.context.save();
+      this.renderManager.context.moveTo(objectRenderPosition.x, objectRenderPosition.y);
+      this.renderManager.context.beginPath();
+      this.renderManager.context.arc(objectRenderPosition.x, objectRenderPosition.y, object.getScale(), 0, Math.PI * 2);
+      this.renderManager.context.fillStyle = isPredicted ? "rgba(20, 251, 255, 0.3)" : isNaturalObject ? "rgba(37, 14, 18, 0.3)" : isTeamBuilding ? "rgba(92, 129, 50, 0.3)" : "rgba(129, 53, 50, 0.3)";
+      this.renderManager.context.fill();
+      //this.renderManager.context.restore();
+
+      /*this.renderManager.context.save();
+      this.renderManager.context.translate(objectRenderPosition.x, objectRenderPosition.y);
+      this.renderManager.context.rotate(object.dir);
+      this.renderManager.context.drawImage(sprite, sprite.width / -2, sprite.height / -2);
+      this.renderManager.context.restore();*/
+    }
+  }
+}
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ }),
 
@@ -5028,8 +6320,18 @@ class Connection extends (events__WEBPACK_IMPORTED_MODULE_1___default()) {
     this.socket = null;
     this.defaultReceiver = null;
   }
+  bundleSend(type, data) {
+    if (this.socket && this.socket.readyState == 1) {
+      this.socket.bundleSend(type, data);
+    }
+  }
   injectSocket(socket) {
     this.socket = socket;
+  }
+  sendWMeta(packet, meta) {
+    if (this.socket && this.socket.readyState == 1) {
+      this.socket.sendWMeta(packetFactory.serializePacket(packet), meta);
+    }
   }
   send(packet, force) {
     if (this.socket && this.socket.readyState == 1) {
@@ -5058,7 +6360,7 @@ class Injection extends WebSocket {
       data: buffer
     }) {
       try {
-        const event = new _event_EventPacket__WEBPACK_IMPORTED_MODULE_2__["default"](packetFactory.deserializePacket(buffer, _packets_Packet__WEBPACK_IMPORTED_MODULE_4__.Side.Client, Date.now()));
+        const event = new _event_EventPacket__WEBPACK_IMPORTED_MODULE_2__["default"](packetFactory.deserializePacket(buffer, _packets_Packet__WEBPACK_IMPORTED_MODULE_4__.Side.ClientBound, Date.now()), false);
         connection.emit("packetreceive", event);
         if (event.isCanceled()) return;
         const serialized = packetFactory.serializePacket(event.getPacket());
@@ -5088,11 +6390,30 @@ class Injection extends WebSocket {
   }
   send(data, force) {
     if (force) return super.send(data);
-    const event = new _event_EventPacket__WEBPACK_IMPORTED_MODULE_2__["default"](packetFactory.deserializePacket(data, _packets_Packet__WEBPACK_IMPORTED_MODULE_4__.Side.Server, Date.now()));
+    const event = new _event_EventPacket__WEBPACK_IMPORTED_MODULE_2__["default"](packetFactory.deserializePacket(data, _packets_Packet__WEBPACK_IMPORTED_MODULE_4__.Side.ServerBound, Date.now()), false);
     connection.emit("packetsend", event);
     if (!event.isCanceled()) {
       connection.emit("packetsendp", event.getPacket());
       super.send(packetFactory.serializePacket(event.getPacket()));
+      if (event.callback) event.callback();
+    }
+  }
+  bundleSend(type, data) {
+    const event = new _event_EventPacket__WEBPACK_IMPORTED_MODULE_2__["default"](new _packets_Packet__WEBPACK_IMPORTED_MODULE_4__.Packet(_packets_PacketFactory__WEBPACK_IMPORTED_MODULE_5__.reversePacketTypeMapping.find(mapping => (mapping.side === _packets_Packet__WEBPACK_IMPORTED_MODULE_4__.Side.ServerBound || mapping.side === _packets_Packet__WEBPACK_IMPORTED_MODULE_4__.Side.BiDirectional) && mapping.value === type).type, data), true);
+    connection.emit("packetsend", event);
+    if (!event.isCanceled()) {
+      connection.emit("packetsendp", event.getPacket());
+      super.send(packetFactory.serializePacket(event.getPacket()));
+      if (event.callback) event.callback();
+    }
+  }
+  sendWMeta(data, meta) {
+    const event = new _event_EventPacket__WEBPACK_IMPORTED_MODULE_2__["default"](packetFactory.deserializePacket(data, _packets_Packet__WEBPACK_IMPORTED_MODULE_4__.Side.ServerBound, Date.now()), false);
+    connection.emit("packetsend", event, meta);
+    if (!event.isCanceled()) {
+      connection.emit("packetsendp", event.getPacket());
+      super.send(packetFactory.serializePacket(event.getPacket()));
+      if (event.callback) event.callback();
     }
   }
 }
@@ -5132,16 +6453,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "PacketHandler": () => (/* binding */ PacketHandler)
 /* harmony export */ });
 /* harmony import */ var _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../data/moomoo/items */ "./frontend/src/data/moomoo/items.ts");
-/* harmony import */ var _data_type_GameObject__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../data/type/GameObject */ "./frontend/src/data/type/GameObject.ts");
-/* harmony import */ var _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
-/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../main */ "./frontend/src/main.ts");
-/* harmony import */ var _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../util/type/Vector */ "./frontend/src/util/type/Vector.ts");
-/* harmony import */ var _data_type_Weapon__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../data/type/Weapon */ "./frontend/src/data/type/Weapon.ts");
-/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
-/* harmony import */ var _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../util/engine/TickEngine */ "./frontend/src/util/engine/TickEngine.ts");
-/* harmony import */ var _util_Logger__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../util/Logger */ "./frontend/src/util/Logger.ts");
-var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_3__]);
-_main__WEBPACK_IMPORTED_MODULE_3__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+/* harmony import */ var _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
+/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../main */ "./frontend/src/main.ts");
+/* harmony import */ var _util_type_Vector__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../util/type/Vector */ "./frontend/src/util/type/Vector.ts");
+/* harmony import */ var _data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../data/type/Weapon */ "./frontend/src/data/type/Weapon.ts");
+/* harmony import */ var _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../util/engine/TickEngine */ "./frontend/src/util/engine/TickEngine.ts");
+/* harmony import */ var _util_Logger__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../util/Logger */ "./frontend/src/util/Logger.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_2__]);
+_main__WEBPACK_IMPORTED_MODULE_2__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
 
 
 
@@ -5149,56 +6468,51 @@ _main__WEBPACK_IMPORTED_MODULE_3__ = (__webpack_async_dependencies__.then ? (awa
 
 
 
-
-
-const logger = new _util_Logger__WEBPACK_IMPORTED_MODULE_8__["default"]("packethandler");
+const logger = new _util_Logger__WEBPACK_IMPORTED_MODULE_6__["default"]("packethandler");
 let lastPath = 0;
 function processIn(packet) {
   switch (packet.type) {
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.PLAYER_ADD:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.PLAYER_ADD:
       const playerData = packet.data[0];
-      _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.spawnPlayer(playerData[0], playerData[1], playerData[2], new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__["default"](playerData[3], playerData[4]), playerData[5], playerData[6], playerData[7], playerData[8], playerData[9], packet.data[1]);
+      _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.spawnPlayer(playerData[0], playerData[1], playerData[2], new _util_type_Vector__WEBPACK_IMPORTED_MODULE_3__["default"](playerData[3], playerData[4]), playerData[5], playerData[6], playerData[7], playerData[8], playerData[9], packet.data[1]);
       break;
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.PLAYER_UPDATE:
-      for (let i = 0; i < _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.playerList.length; i++) {
-        _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.playerList[i].visible = false;
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.PLAYER_UPDATE:
+      for (let i = 0; i < _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.playerList.length; i++) {
+        _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.playerList[i].visible = false;
       }
+
+      //console.log("tick");
+
+      let playersUpdated = [];
       for (let i = 0; i < packet.data[0].length / 13; i++) {
         const playerData = packet.data[0].slice(i * 13, i * 13 + 13);
-        const player = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.playerList.findBySid(playerData[0]);
+        const player = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.playerList.findBySid(playerData[0]);
         if (player) {
-          if (player === _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer) {
+          player.hasFiredProjectileThisTick = false;
+          player.hasAttackedThisTick = false;
+          if (player._attackedThisTickTempVariable) {
+            player.hasAttackedThisTick = true;
+            player._attackedThisTickTempVariable = false;
+            const weapon = playerData[4] === -1 ? _data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__.weaponList[playerData[5]] : player.inventory.weaponSelected;
+            player.inventory.resetReload(weapon);
+            player.inventory.updateReloads(_main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.ping);
+            player.nextAttack = _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.getTickIndex(Date.now() - _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.ping * 2 + player.inventory.weaponSelected.stats.reloadTime) /* + 1*/;
+            player.swingStreak++;
+            console.log("swing at tick:", _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.tickIndex, "scheduled next:", player.nextAttack);
+          }
+          if (player._firedThisTickTempVariable) {
+            player.hasFiredProjectileThisTick = true;
+            player._firedThisTickTempVariable = false;
+          }
+          if (player === _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer) {
+
             //if (playerData[10] === 0) console.log("disequip at tick:", core.tickEngine.tickIndex);
           }
-          if (player === _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer) {
+          if (player === _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer) {
             //console.log("check tick:", core.tickEngine.tickIndex, "current hat:", playerData[9]);
             //if (window[core.tickEngine.tickIndex] !== playerData[9]) console.log("fail");
           }
-
-          /*player.dt = 0;
-            player.t1 = (player.t2 === undefined) ? Date.now() : player.t2;
-          player.t2 = Date.now();
-            player.x1 = player.x;
-          player.y1 = player.y;
-            player.x2 = playerData[1];
-          player.y2 = playerData[2];*/
-
-          //player.lastPositionTimestamp = player.positionTimestamp; // t1
-          //player.positionTimestamp = Date.now(); // t2
-          //player.clientPosX = player.x; // x1
-          //player.clientPosY = player.y; // y1
-          //player.lastDir = player.serverDir; // d1
-
-          //player.lastTickPosX = player.serverPosX;
-          //player.lastTickPosY = player.serverPosY;
-
-          /*player.clientPosition.set(player.renderPosition);
-            player.serverPosition.set(
-              playerData[1],
-              playerData[2]
-          );*/
-
-          player.updatePlayer(_main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager, playerData[1], playerData[2], playerData[3], playerData[4], playerData[5], playerData[6], playerData[7], playerData[8], playerData[9], playerData[10], playerData[11], playerData[12]);
+          player.updatePlayer(_main__WEBPACK_IMPORTED_MODULE_2__.core, playerData[1], playerData[2], playerData[3], playerData[4], playerData[5], playerData[6], playerData[7], playerData[8], playerData[9], playerData[10], playerData[11], playerData[12]);
 
           //player.lerpPos = new Vector(player.renderPos.x, player.renderPos.y) // clientPos
           //player.lastDir = player.serverDir; // d1
@@ -5225,7 +6539,11 @@ function processIn(packet) {
           player.iconIndex = playerData[11];
           player.zIndex = playerData[12];*/
           player.visible = true;
+          playersUpdated.push(player);
         }
+      }
+      for (let i = 0; i < playersUpdated.length; i++) {
+        _main__WEBPACK_IMPORTED_MODULE_2__.core.moduleManager.onPlayerUpdate(playersUpdated[i]);
       }
 
       /*setTarget(playerUtil.findTarget(players));
@@ -5236,97 +6554,69 @@ function processIn(packet) {
           //if (window.path) connection.send(new Packet(PacketType.CHAT, [`pathing:vertx=${window.path.length},thr=${Math.floor(Math.random()*16).toString(16).slice(1,3)},t=${target.sid}`]));
       }*/
       break;
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.LOAD_GAME_OBJ:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.LOAD_GAME_OBJ:
       for (let i = 0; i < packet.data[0].length / 8; i++) {
         const data = packet.data[0].slice(i * 8, i * 8 + 8);
         // type (data[5]) is null for player buildings but set for natural objects
         // id (data[6]) is null for natural objects but is set for player buildings
         // owner sid (data[7]) is -1 for natural objects otherwise is set.
-        _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager.add(...data);
+        _main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.add(...data);
       }
       break;
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.REMOVE_GAME_OBJ:
-      _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager.disableBySid(packet.data[0]);
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.REMOVE_GAME_OBJ:
+      _main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.disableBySid(packet.data[0]);
       break;
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.REMOVE_ALL_OBJ:
-      _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager.removeAllItems(packet.data[0]);
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.REMOVE_ALL_OBJ:
+      _main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.removeAllItems(packet.data[0]);
       break;
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.WIGGLE:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.WIGGLE:
       // first argument is ID and second argument is direction
       // however packet content is [direction, ID]
 
       // use tickIndex + 1 because wiggle packet is sent before player update
       // so tickIndex is not updated yet
-      _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager.wiggleObject(packet.data[1], packet.data[0], _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.tickIndex + 1);
+      _main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.wiggleObject(packet.data[1], packet.data[0], _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.tickIndex + 1);
       break;
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.UPDATE_ITEMS:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.UPDATE_ITEMS:
       if (packet.data[1]) {
-        _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer.inventory.setWeapons(packet.data[0]);
+        _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.inventory.setWeapons(packet.data[0]);
       } else {
-        _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer.inventory.setItems(packet.data[0]);
+        _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.inventory.setItems(packet.data[0]);
       }
       break;
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.DEATH:
-      _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer.alive = false;
-      _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer.inventory.reset();
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.DEATH:
+      _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.alive = false;
+      _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.inventory.reset();
       break;
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.UPDATE_STORE:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.UPDATE_STORE:
       {
         if (!packet.data[2]) {
-          if (!packet.data[0]) _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer.ownedHats.push(packet.data[1]);
+          if (!packet.data[0]) _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.ownedHats.push(packet.data[1]);
         } else {
-          if (!packet.data[0]) _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer.ownedTails.push(packet.data[1]);
+          if (!packet.data[0]) _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.ownedTails.push(packet.data[1]);
         }
         break;
       }
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.GATHER_ANIM:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.GATHER_ANIM:
       {
-        const player = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.playerList.findBySid(packet.data[0]);
+        const player = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.playerList.findBySid(packet.data[0]);
         if (!player) return;
-
-        // set reload
-        player.inventory.resetReload(player.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_5__.MeleeWeapon ? player.inventory.heldItem : player.inventory.weapons[0]);
-        player.inventory.updateReloads(_main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.ping);
-
-        // damage objects
-        const weapon = player.inventory.weaponSelected;
-        const grids = _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager.getGridArrays(player.serverPos.x, player.serverPos.y, weapon.stats.range + player.velocity.length() * 2).flat(1);
-        for (let i = 0; i < grids.length; i++) {
-          const object = grids[i];
-          // use object.scale because .getScale returns collision box while .scale is hitbox
-          if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getDistance(object.position, player.lastTickServerPos) - object.scale <= weapon.stats.range + player.velocity.length() * 2) {
-            for (const wiggle of object.wiggles) {
-              const gatherAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].roundTo(_util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getDirection(player.serverPos, object.position), 1);
-              const safeSpan = _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].lineSpan(object.position.clone(), player.lastTickServerPos.clone(), player.serverPos.clone().add(player.velocity));
-              if (true /*MathUtil.getAngleDist(wiggle[0], gatherAngle) <= safeSpan + Number.EPSILON*/) {
-                if (object instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_1__.PlayerBuilding) {
-                  // damage the building depending on the player's weapon damage
-                  const damage = weapon.stats.dmg * weapon.stats.buildingDmgMultiplier;
-                  object.health -= damage;
-                  _main__WEBPACK_IMPORTED_MODULE_3__.core.moduleManager.onBuildingHit(player, object, damage);
-                }
-
-                // remove the wiggle as its confirmed by gather packet
-                object.wiggles.splice(object.wiggles.indexOf(wiggle), 1);
-              } else {}
-            }
-          }
+        if (player === _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer) {
+          //console.log("hit!: skin=" + player.skinIndex + ", tail=" + player.tailIndex);
         }
-        if (player === _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer) player.justStartedAttacking = false;
-        player.nextAttack = _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.getTickIndex(Date.now() - _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.ping * 2 + player.inventory.weaponSelected.stats.reloadTime) + 1;
-        player.swingStreak++;
-        console.log("current tick:", _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.tickIndex, "scheduled next:", player.nextAttack);
+        player._attackedThisTickTempVariable = true;
+        if (player === _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer) player.justStartedAttacking = false;
         break;
       }
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.HEALTH_UPDATE:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.HEALTH_UPDATE:
       {
-        const player = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.playerList.findBySid(packet.data[0]);
+        const player = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.playerList.findBySid(packet.data[0]);
         const newHealth = packet.data[1];
         const delta = newHealth - player.health;
         const tracker = player.shame;
         if (delta < 0) {
-          tracker.lastDamage = _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.roundToTick(Date.now() - _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.ping, _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_7__.TickRoundType.ROUND);
-          if (Date.now() + _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.ping - tracker.lastDamage <= 120) {
+          tracker.lastDamage = _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.roundToTick(Date.now() - _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.ping, _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_5__.TickRoundType.ROUND);
+          if (Date.now() + _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.ping - tracker.lastDamage <= 120) {
             if (tracker.points++ >= 8) {
               tracker.isClowned = true;
               tracker.timer = 30 * 1000;
@@ -5334,94 +6624,166 @@ function processIn(packet) {
             }
           }
         }
-        if (player === _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer) {
-          const player = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer;
+        if (player === _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer) {
+          const player = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer;
           const lastPacketHealth = player.packetHealth;
           player.packetHealth = newHealth;
           if (newHealth < lastPacketHealth) {
             player.health -= lastPacketHealth - player.packetHealth;
           }
           if (player.packetHealth > player.health) {
-            logger.warn(_main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer.health, "health was not in sync: " + player.health + " -> " + newHealth + ", packet-health: " + player.packetHealth);
+            logger.warn(_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.health, "health was not in sync: " + player.health + " -> " + newHealth + ", packet-health: " + player.packetHealth);
             player.health = player.packetHealth;
           }
         } else {
           player.health = newHealth;
+          if (newHealth <= 0) player.visible = false;
         }
+        break;
+      }
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.ADD_PROJECTILE:
+      {
+        const data = packet.data;
+        // 2 ticks because:
+        // first tick is incremented on tick (projectiles are sent before players)
+        // second tick is because projectile will actually spawn on the next tick
+        _main__WEBPACK_IMPORTED_MODULE_2__.core.projectileManager.scheduleSpawn(new _util_type_Vector__WEBPACK_IMPORTED_MODULE_3__["default"](data[0], data[1]), data[2], data[3], data[4], data[5], data[6], data[7]);
+        break;
+      }
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.REMOVE_PROJECTILE:
+      {
+        _main__WEBPACK_IMPORTED_MODULE_2__.core.projectileManager.remove(packet.data[0], packet.data[1]);
         break;
       }
   }
 }
-let isAttackScheduled = -1;
-function processOut(packet) {
+function processOut(event, meta) {
+  const packet = event.getPacket();
   switch (packet.type) {
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.ATTACK:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.ATTACK:
       {
-        const myPlayer = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer;
-        const nextPredictableTick = _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.getNextPredictableTick();
-        let wasHeal = false;
+        const myPlayer = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer;
+        const nextPredictableTick = _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.getNextPredictableTick();
+        let wasPlace = false;
         if (packet.data[0] === 1) {
+          //console.log("attack");
           const heldItem = myPlayer.inventory.heldItem;
-          if (!(heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapon)) {
-            if (heldItem.group.id === 0 && myPlayer.health < 100) {
-              myPlayer.shame.lastDamage = -1;
-              myPlayer.health = Math.min(myPlayer.health + heldItem.healAmount, 100);
+          if (!(heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__.Weapon)) {
+            wasPlace = true;
+            if (heldItem.group.id === 0) {
+              if (myPlayer.health < 100) {
+                myPlayer.shame.lastDamage = -1;
+                myPlayer.health = Math.min(myPlayer.health + heldItem.healAmount, 100);
+                myPlayer.inventory.heldItem = myPlayer.inventory.weaponSelected;
+              }
+              return;
+            }
+            const blocking = _main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.getBlockingBuildings([myPlayer.serverPos, myPlayer.scale, packet.data[1] ?? myPlayer.serverDir], heldItem, packet.data[2] ?? []);
+            if (blocking.length === 0) {
               myPlayer.inventory.heldItem = myPlayer.inventory.weaponSelected;
-              wasHeal = true;
+              //console.log("placed item. new held:", myPlayer.inventory.heldItem);
+              if (meta) {
+                event.callback = () => {
+                  meta[1](false);
+                };
+              }
+            } else {
+              //console.log("blocked", meta);
+              if (meta) {
+                event.callback = () => {
+                  meta[1](true);
+                };
+              }
+            }
+
+            /*if (!meta || blocking.length === 0) {
+                if (meta) meta[1](false);
+                myPlayer.inventory.heldItem = myPlayer.inventory.weaponSelected;
+                console.log("placed item non blocked, now holding item:", myPlayer.inventory.heldItem);
+            }*/
+          } else {
+            myPlayer.isAttacking = true;
+            //console.log("started attacking");
+
+            if (packet.data[0] === 1 && myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__.Weapon && (myPlayer.swingStreak === 0 || myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id] - _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.ping <= 0)) {
+              //const [hat, tail] = .computeHat(core.tickEngine.tickIndex);
+
+              //myPlayer.nextAttack = core.tickEngine.getTickIndex(Date.now() - core.tickEngine.ping + myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id]);
+              /*if (!core.tickEngine.isTickPredictable(core.tickEngine.tickIndex + 1)) {
+                  core.scheduleAction(ActionType.ATTACK, ActionPriority.BIOMEHAT, nextPredictableTick, [1, packet.data[1]], true);
+                  isAttackScheduled = nextPredictableTick;
+              }*/
+              myPlayer.justStartedAttacking = true;
+              myPlayer.inventory.resetReload(myPlayer.inventory.heldItem);
+              //return false;
             }
           }
         } else {
-          if (!_main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.isTickPredictable(_main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.getTickIndex(Date.now() + myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id]))) {
+          if (!_main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.isTickPredictable(_main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.getTickIndex(Date.now() + myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id]))) {
             myPlayer.swingStreak = 0;
           }
+          myPlayer.isAttacking = false;
+          //console.log("stopped attacking");
           /*if (isAttackScheduled > -1) {
               core.scheduleAction(ActionType.ATTACK, ActionPriority.BIOMEHAT, isAttackScheduled + 1, [0, packet.data[1]], true);
               isAttackScheduled = -1;
           }*/
         }
 
-        if (!wasHeal && packet.data[0] === 1 && myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapon && (myPlayer.swingStreak === 0 || myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id] - _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.ping <= 0)) {
-          //const [hat, tail] = .computeHat(core.tickEngine.tickIndex);
-
-          //myPlayer.nextAttack = core.tickEngine.getTickIndex(Date.now() - core.tickEngine.ping + myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id]);
-          /*if (!core.tickEngine.isTickPredictable(core.tickEngine.tickIndex + 1)) {
-              core.scheduleAction(ActionType.ATTACK, ActionPriority.BIOMEHAT, nextPredictableTick, [1, packet.data[1]], true);
-              isAttackScheduled = nextPredictableTick;
-          }*/
-          myPlayer.justStartedAttacking = true;
-          myPlayer.inventory.resetReload(myPlayer.inventory.heldItem);
-          //return false;
+        if (typeof packet.data[1] === "number") {
+          //core.lastActionState.aim = packet.data[1];
+          myPlayer.dir = packet.data[1];
         }
-
-        myPlayer.isAttacking = packet.data[0];
         break;
       }
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.SELECT_ITEM:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.SELECT_ITEM:
       {
-        const myPlayer = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer;
-        const lastHeld = `${myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapon}_${myPlayer.inventory.heldItem.id}`;
+        const myPlayer = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer;
+        const lastHeldWasWeapon = myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__.Weapon;
+        const lastHeld = myPlayer.inventory.heldItem.id;
         if (packet.data[1]) {
-          myPlayer.inventory.heldItem = _data_type_Weapon__WEBPACK_IMPORTED_MODULE_5__.weaponList[packet.data[0]];
+          myPlayer.inventory.heldItem = _data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__.weaponList[packet.data[0]];
+          //console.log("selecting back to weapon:", myPlayer.inventory.heldItem);
         } else {
-          if (`${packet.data[1]}_${packet.data[0]}` === lastHeld) {
+          if (!lastHeldWasWeapon && packet.data[0] === lastHeld) {
+            //console.log("clicked item twice:", myPlayer.inventory.heldItem, "going to ", myPlayer.inventory.heldItem);
             myPlayer.inventory.heldItem = myPlayer.inventory.weaponSelected;
           } else {
+            myPlayer.isAttacking = false;
             myPlayer.inventory.heldItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[packet.data[0]];
+            //console.log("selecting item:", myPlayer.inventory.heldItem)
           }
         }
+        //console.log("selected item:", myPlayer.inventory.heldItem);
         break;
       }
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.AUTO_ATK:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.AUTO_ATK:
       {
-        const myPlayer = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer;
+        const myPlayer = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer;
         myPlayer.isAutoAttacking = !myPlayer.isAutoAttacking;
-        if (myPlayer.isAutoAttacking && myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapon && myPlayer.inventory.reloads[myPlayer.inventory.heldItem.id] === 0) {
+        if (myPlayer.isAutoAttacking && myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__.Weapon && myPlayer.inventory.reloads[myPlayer.inventory.heldItem.id] === 0) {
           //myPlayer.justStartedAttacking = true;
         }
         break;
       }
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.SET_ANGLE:
+      {
+        //core.lastActionState.aim = packet.data[0];
+        _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.dir = packet.data[0];
+        break;
+      }
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.BUY_AND_EQUIP:
+      {
+        if (packet.data[0] === 0) {
+          const myPlayer = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer;
+          if (packet.data[2] === 0) {
+            if (myPlayer.ownedHats.includes(packet.data[1])) myPlayer.skinIndex = packet.data[1];
+          } else {
+            if (myPlayer.ownedTails.includes(packet.data[1])) myPlayer.tailIndex = packet.data[1];
+          }
+        }
+      }
   }
-  return true;
 }
 const PacketHandler = {
   processIn,
@@ -5476,9 +6838,9 @@ var Side;
  * A packet of data recieved from or sent to the server
  */
 (function (Side) {
-  Side[Side["Server"] = 0] = "Server";
-  Side[Side["Client"] = 1] = "Client";
-  Side[Side["Both"] = 2] = "Both";
+  Side[Side["ServerBound"] = 0] = "ServerBound";
+  Side[Side["ClientBound"] = 1] = "ClientBound";
+  Side[Side["BiDirectional"] = 2] = "BiDirectional";
 })(Side || (Side = {}));
 class Packet {
   constructor(type, data, time = 0) {
@@ -5514,207 +6876,213 @@ __webpack_require__.r(__webpack_exports__);
 /**
  * A mapping of PacketTypes to their serialized counterparts
  */
+
 let packetTypeMapping = {};
 packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.ATTACK] = {
   value: "c",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Server
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ServerBound
 };
 packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.AUTO_ATK] = {
   value: "7",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Server
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.CHAT] = {
-  value: "ch",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Both
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ServerBound
 };
 packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.CLAN_ACC_JOIN] = {
   value: "11",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Server
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.DEATH] = {
-  value: "11",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ServerBound
 };
 packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.CLAN_CREATE] = {
   value: "8",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Server
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.CLAN_LIST] = {
-  value: "id",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.CLAN_ADD] = {
-  value: "ac",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.CLAN_DEL] = {
-  value: "ad",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ServerBound
 };
 packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.CLAN_KICK] = {
   value: "12",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Server
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ServerBound
 };
 packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.CLAN_REQ_JOIN] = {
   value: "10",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Server
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.DISCONN] = {
-  value: "d",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.GATHER_ANIM] = {
-  value: "7",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ServerBound
 };
 packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.BUY_AND_EQUIP] = {
   value: "13c",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Server
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.HEALTH_UPDATE] = {
-  value: "h",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.ITEM_BUY] = {
-  value: "13",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.LEADERBOARD_UPDATE] = {
-  value: "5",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ServerBound
 };
 packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.LEAVE_CLAN] = {
   value: "9",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Server
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.LOAD_GAME_OBJ] = {
-  value: "6",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.MINIMAP] = {
-  value: "mm",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.PING] = {
-  value: "pp",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Both
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ServerBound
 };
 packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.PLAYER_MOVE] = {
   value: "33",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Server
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.UPDATE_ANIMALS] = {
-  value: "a",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.PLAYER_REMOVE] = {
-  value: "4",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.PLAYER_SET_CLAN] = {
-  value: "st",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.PLAYER_START] = {
-  value: "1",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.PLAYER_UPDATE] = {
-  value: "33",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ServerBound
 };
 packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.SELECT_ITEM] = {
   value: "5",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Server
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ServerBound
 };
 packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.SELECT_UPGRADE] = {
   value: "6",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Server
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ServerBound
 };
 packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.SET_ANGLE] = {
   value: "2",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Server
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.SET_CLAN_PLAYERS] = {
-  value: "sa",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.UPDATE_AGE] = {
-  value: "15",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ServerBound
 };
 packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.CLAN_NOTIFY_SERVER] = {
   value: "14",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Server
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.CLAN_NOTIFY_CLIENT] = {
-  value: "p",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.UPDATE_PLACE_LIMIT] = {
-  value: "14",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ServerBound
 };
 packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.SPAWN] = {
   value: "sp",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Server
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.UPDATE_ITEMS] = {
-  value: "17",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.UPDATE_STORE] = {
-  value: "us",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.UPGRADES] = {
-  value: "16",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
-};
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.WIGGLE] = {
-  value: "8",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ServerBound
 };
 packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.WINDOW_FOCUS] = {
   value: "rmd",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Server
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ServerBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.CHAT] = {
+  value: "ch",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.BiDirectional
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.PING] = {
+  value: "pp",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.BiDirectional
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.DEATH] = {
+  value: "11",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.CLAN_LIST] = {
+  value: "id",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.CLAN_ADD] = {
+  value: "ac",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.CLAN_DEL] = {
+  value: "ad",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.DISCONN] = {
+  value: "d",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.GATHER_ANIM] = {
+  value: "7",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.HEALTH_UPDATE] = {
+  value: "h",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+//packetTypeMapping[PacketType.ITEM_BUY] = { value: "13", side: Side.Client };
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.LEADERBOARD_UPDATE] = {
+  value: "5",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.LOAD_GAME_OBJ] = {
+  value: "6",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.MINIMAP] = {
+  value: "mm",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.ANIMALS_UPDATE] = {
+  value: "a",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.PLAYER_REMOVE] = {
+  value: "4",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.PLAYER_SET_CLAN] = {
+  value: "st",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.PLAYER_START] = {
+  value: "1",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.PLAYER_UPDATE] = {
+  value: "33",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.SET_CLAN_PLAYERS] = {
+  value: "sa",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.UPDATE_AGE] = {
+  value: "15",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.CLAN_NOTIFY_CLIENT] = {
+  value: "p",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.UPDATE_PLACE_LIMIT] = {
+  value: "14",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.UPDATE_ITEMS] = {
+  value: "17",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.UPDATE_STORE] = {
+  value: "us",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.UPGRADES] = {
+  value: "16",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.WIGGLE] = {
+  value: "8",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
 };
 packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.PLAYER_ADD] = {
   value: "2",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
 };
 // packetTypeMapping[PacketType.PLAYER_ATTACK] = { value: "2", side: Side.Client };
 packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.UPDATE_STATS] = {
   value: "9",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
 };
 packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.IO_INIT] = {
   value: "io-init",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
 };
 packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.DAMAGE_TEXT] = {
   value: "t",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
 };
 packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.JOIN_REQUEST] = {
   value: "an",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
 };
 packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.REMOVE_GAME_OBJ] = {
   value: "12",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
 };
 packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.REMOVE_ALL_OBJ] = {
   value: "13",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Server
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
 };
 packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.ADD_PROJECTILE] = {
   value: "18",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
 };
-packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.UPDATE_PROJECTILES] = {
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.REMOVE_PROJECTILE] = {
   value: "19",
-  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Client
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.TURRET_SHOOT] = {
+  value: "sp",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
+};
+packetTypeMapping[_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.ANIMAL_ANIMATION] = {
+  value: "aa",
+  side: _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.ClientBound
 };
 let reversePacketTypeMapping = [];
 for (let key of Object.keys(packetTypeMapping)) {
@@ -5769,12 +7137,15 @@ class PacketFactory {
     } catch (error) {
       throw new Error("Invalid packet");
     }
+
+    //if (side === Side.Client && array[0] !== "33" && array[0] !== "5" && array[0] !== "pp" && array[0] !== "a" && array[0] !== "mm" && array[0] !== "6") console.log(array);
+
     let packetType;
-    let mapping = reversePacketTypeMapping.find(mapping => (mapping.side === side || mapping.side === _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.Both) && mapping.value === array[0]);
+    let mapping = reversePacketTypeMapping.find(mapping => (mapping.side === side || mapping.side === _Packet__WEBPACK_IMPORTED_MODULE_0__.Side.BiDirectional) && mapping.value === array[0]);
     if (mapping) {
       return new _Packet__WEBPACK_IMPORTED_MODULE_0__.Packet(mapping.type, array[1], timeStamp);
     } else {
-      throw new Error( /*`Invalid packet type: ${array[0]}`*/);
+      throw new Error(`Failed to deserialize packet because of invalid packet type: ${array[0]}`);
     }
   }
 }
@@ -5832,7 +7203,7 @@ var PacketType;
   PacketType[PacketType["PLAYER_ADD"] = 34] = "PLAYER_ADD";
   PacketType[PacketType["SPAWN"] = 35] = "SPAWN";
   PacketType[PacketType["IO_INIT"] = 36] = "IO_INIT";
-  PacketType[PacketType["UPDATE_ANIMALS"] = 37] = "UPDATE_ANIMALS";
+  PacketType[PacketType["ANIMALS_UPDATE"] = 37] = "ANIMALS_UPDATE";
   PacketType[PacketType["CLAN_LIST"] = 38] = "CLAN_LIST";
   PacketType[PacketType["BUY_AND_EQUIP"] = 39] = "BUY_AND_EQUIP";
   PacketType[PacketType["DEATH"] = 40] = "DEATH";
@@ -5844,9 +7215,142 @@ var PacketType;
   PacketType[PacketType["REMOVE_ALL_OBJ"] = 46] = "REMOVE_ALL_OBJ";
   PacketType[PacketType["UPDATE_PLACE_LIMIT"] = 47] = "UPDATE_PLACE_LIMIT";
   PacketType[PacketType["ADD_PROJECTILE"] = 48] = "ADD_PROJECTILE";
-  PacketType[PacketType["UPDATE_PROJECTILES"] = 49] = "UPDATE_PROJECTILES";
+  PacketType[PacketType["REMOVE_PROJECTILE"] = 49] = "REMOVE_PROJECTILE";
+  PacketType[PacketType["TURRET_SHOOT"] = 50] = "TURRET_SHOOT";
+  PacketType[PacketType["ANIMAL_ANIMATION"] = 51] = "ANIMAL_ANIMATION";
 })(PacketType || (PacketType = {}));
 
+
+/***/ }),
+
+/***/ "./frontend/src/util/AlghoritmUtil.ts":
+/*!********************************************!*\
+  !*** ./frontend/src/util/AlghoritmUtil.ts ***!
+  \********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/**
+ * Credits: ChatGPT with Zaary's assistance
+ * https://sharegpt.com/c/3b3zXhq
+ */
+function allowedAnglesFromBlocked(blocked) {
+  const allowed = [];
+  const n = blocked.length;
+  let start = 0;
+  let end = 2 * Math.PI;
+  let blockStart, blockEnd;
+
+  // Split blocks that cross 0 into two separate blocks
+  const blocks = [];
+  for (let i = 0; i < n; i++) {
+    blockStart = blocked[i][0];
+    blockEnd = blocked[i][1];
+    if (blockEnd < blockStart) {
+      blocks.push([blockStart, 2 * Math.PI]);
+      blocks.push([0, blockEnd]);
+    } else {
+      blocks.push([blockStart, blockEnd]);
+    }
+  }
+
+  // Sort blocks by their start angle
+  blocks.sort((a, b) => a[0] - b[0]);
+
+  // Create allowed intervals
+  for (let i = 0; i < blocks.length; i++) {
+    blockStart = blocks[i][0];
+    blockEnd = blocks[i][1];
+    if (start < blockStart) {
+      allowed.push([start, blockStart]);
+    }
+    start = blockEnd;
+  }
+  if (start < end) {
+    allowed.push([start, end]);
+  }
+  return allowed;
+}
+
+/**
+ * Credits: Base by ChatGPT, 2 * PI wrapping added by Zaary
+ */
+function mergeArcsCartesian(arcs) {
+  // sort arcs by starting angle in ascending order
+  arcs.sort((a, b) => a[0] - b[0]);
+
+  // initialize merged arcs with the first arc in the sorted array
+  let mergedArcs = [arcs[0]];
+
+  // loop through the rest of the arcs
+  for (let i = 1; i < arcs.length; i++) {
+    // get the last merged arc
+    let lastArc = mergedArcs[mergedArcs.length - 1];
+
+    // check if the current arc overlaps with the last merged arc
+    if (arcs[i][0] <= lastArc[1]) {
+      // update the end angle of the last merged arc to be the maximum of the two end angles
+      lastArc[1] = Math.max(lastArc[1], arcs[i][1]);
+
+      // replace the last merged arc with the updated arc
+      mergedArcs[mergedArcs.length - 1] = lastArc;
+    } else if (arcs[i][1] >= Math.PI * 2 && arcs[i][1] % (Math.PI * 2) >= mergedArcs[0][0]) {
+      mergedArcs[0][0] = arcs[i][0];
+    } else {
+      // add the current arc to the merged arcs array if it does not overlap with the last merged arc
+      mergedArcs.push(arcs[i]);
+    }
+  }
+
+  // return the merged arcs array
+  return mergedArcs;
+}
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
+  allowedAnglesFromBlocked,
+  mergeArcsCartesian
+});
+
+/***/ }),
+
+/***/ "./frontend/src/util/ArrayUtil.ts":
+/*!****************************************!*\
+  !*** ./frontend/src/util/ArrayUtil.ts ***!
+  \****************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+function mapTupleArray(array, mapFunc) {
+  return array.map(value => [mapFunc(value[0]), mapFunc(value[1])]);
+}
+
+/*
+
+UNFINISHED!
+
+function mapRecursive<T>(array: T[], mapFunc: any) {
+    return array.map(function(element) {
+        if (Array.isArray(element)) {
+            return mapArrayValues(element, mapFunc);
+        } else {
+            return mapFunc(element);
+        }
+    });
+}
+
+*/
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
+  mapTupleArray
+  //mapRecursive
+});
 
 /***/ }),
 
@@ -6090,6 +7594,112 @@ function lineSpan(origin, p1, p2) {
   var AC = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
   return Math.acos((BC * BC + AB * AB - AC * AC) / (2 * BC * AB));
 }
+function lineInRectMooMoo(recX, recY, recX2, recY2, x1, y1, x2, y2) {
+  var minX = x1;
+  var maxX = x2;
+  if (x1 > x2) {
+    minX = x2;
+    maxX = x1;
+  }
+  if (maxX > recX2) maxX = recX2;
+  if (minX < recX) minX = recX;
+  if (minX > maxX) return false;
+  var minY = y1;
+  var maxY = y2;
+  var dx = x2 - x1;
+  if (Math.abs(dx) > 0.0000001) {
+    var a = (y2 - y1) / dx;
+    var b = y1 - a * x1;
+    minY = a * minX + b;
+    maxY = a * maxX + b;
+  }
+  if (minY > maxY) {
+    var tmp = maxY;
+    maxY = minY;
+    minY = tmp;
+  }
+  if (maxY > recY2) maxY = recY2;
+  if (minY < recY) minY = recY;
+  if (minY > maxY) return false;
+  return true;
+}
+function getTangentSpanIntersectionRadius(distanceToTarget, targetScale, intersectionRadius) {
+  return Math.acos((targetScale ** 2 - distanceToTarget ** 2 - intersectionRadius ** 2) / (-2 * distanceToTarget * intersectionRadius));
+}
+function getTangentSpanSimple(distanceToTarget, targetScale) {
+  const tangentDistance = Math.sqrt(Math.pow(distanceToTarget, 2) - Math.pow(targetScale, 2));
+  return Math.atan(targetScale / tangentDistance);
+}
+function willTargetBeHit(source, targetPosition, targetSize, shotAngle) {
+  // Calculate the distance from the observer to the target
+  const distanceToTarget = getDistance(source, targetPosition);
+
+  // Calculate the tangent span of the target
+  const tangentSpan = getTangentSpanSimple(distanceToTarget, targetSize);
+
+  // Calculate the angle from the observer to the target
+  const angleToTarget = getDirection(source, targetPosition);
+
+  // Calculate the difference between the shot angle and the angle to the target
+  const angleDifference = getAngleDist(angleToTarget, shotAngle);
+
+  // Check if the shot angle is within the tangent span of the target
+  return angleDifference <= tangentSpan;
+}
+
+// no one knows how much these functions mean to me me (i literally spent several hours figuring this shit out and raging multiple times)
+function polarToCartesian(angle) {
+  return angle < 0 && angle > -Math.PI ? -angle : Math.PI * 2 - angle;
+}
+function cartesianToPolar(angle) {
+  return angle > Math.PI ? Math.PI * 2 - angle : -angle;
+}
+function clampPolar(angle) {
+  return angle >= -Math.PI && angle <= Math.PI ? angle : angle < -Math.PI ? angle + 2 * Math.PI : angle - 2 * Math.PI;
+}
+function clampCartesian(angle) {
+  return angle >= 0 && angle <= 2 * Math.PI ? angle : angle < 0 ? angle + 2 * Math.PI : angle - 2 * Math.PI;
+}
+function middleOfCartesianArc(angles) {
+  let startAngle = angles[0];
+  let endAngle = angles[1];
+  if (endAngle < startAngle) {
+    endAngle += 2 * Math.PI;
+  }
+  return (startAngle + (endAngle - startAngle) / 2) % (Math.PI * 2);
+}
+
+/*
+function angleToUnitCircle(angle: number) {
+	var unitAngle;
+	if (angle >= 0 && angle <= Math.PI) {
+	  	unitAngle = angle;
+	} else {
+	  	unitAngle = Math.PI * -2 + angle;
+	}
+	return unitAngle;
+}
+
+
+function clampUnitCircleAngle(angle: number) {
+	angle %= Math.PI * 2;
+	if (angle < -Math.PI) {
+		return angle + Math.PI * 2;
+	} else if (angle > Math.PI) {
+		return angle - Math.PI * 2;
+	}
+	return angle;
+}
+
+function unitCircleAngleToFull(angle: number) {
+	if (angle < 0) {
+		return angle + Math.PI * 2;
+	} else {
+		return angle;
+	}
+}
+*/
+
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   randInt,
   randFloat,
@@ -6103,7 +7713,60 @@ function lineSpan(origin, p1, p2) {
   averageOfArray,
   roundTo,
   lineSpan,
-  sumArray
+  lineInRectMooMoo,
+  sumArray,
+  getTangentSpanIntersectionRadius,
+  getTangentSpanSimple,
+  willTargetBeHit,
+  polarToCartesian,
+  cartesianToPolar,
+  clampPolar,
+  clampCartesian,
+  middleOfCartesianArc
+});
+
+/***/ }),
+
+/***/ "./frontend/src/util/RecognitionUtil.ts":
+/*!**********************************************!*\
+  !*** ./frontend/src/util/RecognitionUtil.ts ***!
+  \**********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _data_type_Weapon__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../data/type/Weapon */ "./frontend/src/data/type/Weapon.ts");
+
+function isLegit(player) {
+  return false;
+}
+function canInstakill(player) {
+  return true;
+  /*const primary = player.inventory.getWeapon(WeaponSlot.PRIMARY)!;
+  const secondary = player.inventory.getWeapon(WeaponSlot.SECONDARY) ?? (primary === Weapons.SHORT_SWORD || primary === Weapons.POLEARM ? Weapons.MUSKET : Weapons.GREAT_HAMMER);
+    return (isLegit(player) || (player.seenHats.has(12) && player.seenTails.has(11))) && primary.stats.dmg * 1.5 + secondary.stats.dmg + 25 >= 100;*/
+}
+
+function isPossibleCombo(primary, secondary) {
+  const secondaryPre = _data_type_Weapon__WEBPACK_IMPORTED_MODULE_0__.weaponPreMap.get(secondary);
+  if (typeof secondaryPre === "number") {
+    return secondaryPre === primary;
+  } else {
+    return true;
+  }
+}
+function assumeSecondary(primary) {
+  if (primary === _data_type_Weapon__WEBPACK_IMPORTED_MODULE_0__.Weapons.POLEARM.id || primary === _data_type_Weapon__WEBPACK_IMPORTED_MODULE_0__.Weapons.SHORT_SWORD.id) return _data_type_Weapon__WEBPACK_IMPORTED_MODULE_0__.Weapons.MUSKET;
+  return _data_type_Weapon__WEBPACK_IMPORTED_MODULE_0__.Weapons.GREAT_HAMMER;
+}
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
+  isLegit,
+  canInstakill,
+  isPossibleCombo,
+  assumeSecondary
 });
 
 /***/ }),
@@ -6144,9 +7807,10 @@ function escapeRegex(string) {
 /*!*******************************************************!*\
   !*** ./frontend/src/util/engine/InteractionEngine.ts ***!
   \*******************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
+__webpack_require__.a(module, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (/* binding */ InteractionEngine)
@@ -6154,9 +7818,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var tsee__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tsee */ "./node_modules/tsee/lib/index.js");
 /* harmony import */ var tsee__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(tsee__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _data_type_Weapon__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../data/type/Weapon */ "./frontend/src/data/type/Weapon.ts");
-/* harmony import */ var _socket_Connection__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../socket/Connection */ "./frontend/src/socket/Connection.ts");
-/* harmony import */ var _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../socket/packets/Packet */ "./frontend/src/socket/packets/Packet.ts");
-/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
+/* harmony import */ var _features_modules_building_AntiTrap__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../features/modules/building/AntiTrap */ "./frontend/src/features/modules/building/AntiTrap.ts");
+/* harmony import */ var _features_modules_player_AutoHat__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../features/modules/player/AutoHat */ "./frontend/src/features/modules/player/AutoHat.ts");
+/* harmony import */ var _socket_Connection__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../socket/Connection */ "./frontend/src/socket/Connection.ts");
+/* harmony import */ var _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../socket/packets/Packet */ "./frontend/src/socket/packets/Packet.ts");
+/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_features_modules_building_AntiTrap__WEBPACK_IMPORTED_MODULE_2__, _features_modules_player_AutoHat__WEBPACK_IMPORTED_MODULE_3__]);
+([_features_modules_building_AntiTrap__WEBPACK_IMPORTED_MODULE_2__, _features_modules_player_AutoHat__WEBPACK_IMPORTED_MODULE_3__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+
+
 
 
 
@@ -6166,6 +7836,8 @@ class InteractionEngine extends tsee__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
   constructor(core) {
     super();
     this.core = core;
+    this.autoHatModule = core.moduleManager.getModule(_features_modules_player_AutoHat__WEBPACK_IMPORTED_MODULE_3__["default"]);
+    this.antiTrapModule = core.moduleManager.getModule(_features_modules_building_AntiTrap__WEBPACK_IMPORTED_MODULE_2__["default"]);
   }
   safePlacement(item, angle) {
     const canPlace = this.core.objectManager.canPlaceObject([this.core.playerManager.myPlayer.serverPos, 35, angle], item, true);
@@ -6174,19 +7846,75 @@ class InteractionEngine extends tsee__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
       this.vanillaPlaceItem(item, angle);
     }
   }
-  vanillaPlaceItem(item, angle) {
+  safePlacementIgnoring(item, angle, ignore) {
+    const canPlace = this.core.objectManager.canPlaceObject([this.core.playerManager.myPlayer.serverPos, 35, angle], item, true, [ignore.sid]);
+    if (canPlace) {
+      this.core.objectManager.addPlacementAttempt([this.core.playerManager.myPlayer.serverPos, 35, angle], item);
+      this.vanillaPlaceItem(item, angle, [ignore.sid]);
+    }
+  }
+  vanillaPlacementAddingPrediction(item, angle) {
+    this.core.objectManager.addPlacementAttempt([this.core.playerManager.myPlayer.serverPos, 35, angle], item);
+    this.vanillaPlaceItem(item, angle);
+  }
+  vanillaUseFoodItem(item, isLastHeal) {
     const myPlayer = this.core.playerManager.myPlayer;
     const wasAttacking = myPlayer.isAttacking;
-    const lastHeldItem = myPlayer.inventory.heldItem;
-    if (lastHeldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_1__.Weapon || lastHeldItem.id !== item.id) {
-      _socket_Connection__WEBPACK_IMPORTED_MODULE_2__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.SELECT_ITEM, [item.id, false]));
+    const oldAngle = myPlayer.dir;
+    const lastHeldWasWeapon = myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_1__.Weapon;
+    const lastHeldItem = myPlayer.inventory.heldItem.id;
+    if (lastHeldWasWeapon || lastHeldItem !== item.id) {
+      _socket_Connection__WEBPACK_IMPORTED_MODULE_4__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_5__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_6__.PacketType.SELECT_ITEM, [item.id, false]));
     }
-    _socket_Connection__WEBPACK_IMPORTED_MODULE_2__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.ATTACK, [1, angle]));
-    _socket_Connection__WEBPACK_IMPORTED_MODULE_2__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.ATTACK, [+wasAttacking, angle]));
+    _socket_Connection__WEBPACK_IMPORTED_MODULE_4__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_5__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_6__.PacketType.ATTACK, [1, null]));
+    if (isLastHeal && (wasAttacking || this.core.mstate.mouseHeld) || this.antiTrapModule.isBreaking) _socket_Connection__WEBPACK_IMPORTED_MODULE_4__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_5__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_6__.PacketType.ATTACK, [1, oldAngle]));
+  }
+  vanillaPlaceItem(item, angle, ignoredSids) {
+    const myPlayer = this.core.playerManager.myPlayer;
+    const wasAttacking = myPlayer.isAttacking;
+    const oldAngle = myPlayer.dir;
+    const lastHeld = myPlayer.inventory.heldItem.id;
+    const lastHeldWasWeapon = myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_1__.Weapon;
+    this.autoHatModule.isPlacing = true;
+    if (lastHeldWasWeapon || lastHeld !== item.id) {
+      //console.log(lastHeld, lastHeldWasWeapon);
+      _socket_Connection__WEBPACK_IMPORTED_MODULE_4__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_5__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_6__.PacketType.SELECT_ITEM, [item.id, false]));
+    }
+    _socket_Connection__WEBPACK_IMPORTED_MODULE_4__.connection.sendWMeta(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_5__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_6__.PacketType.ATTACK, [1, angle]), [[], wasBlocked => {
+      //if (wasBlocked) {
+      _socket_Connection__WEBPACK_IMPORTED_MODULE_4__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_5__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_6__.PacketType.SELECT_ITEM, [lastHeld, lastHeldWasWeapon]));
+      this.autoHatModule.isPlacing = false;
+      //}
+
+      //console.log(wasAttacking, this.core.mstate.mouseHeld);
+      if (wasAttacking || this.core.mstate.mouseHeld || this.antiTrapModule.isBreaking) {
+        _socket_Connection__WEBPACK_IMPORTED_MODULE_4__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_5__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_6__.PacketType.ATTACK, [1, oldAngle]));
+      } else if (this.core.lastActionState.attack === 1) {
+        _socket_Connection__WEBPACK_IMPORTED_MODULE_4__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_5__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_6__.PacketType.ATTACK, [0, oldAngle]));
+      }
+    }]);
+
+    /*const wasAttacking = myPlayer.isAttacking;
+    const lastHeldWasWeapon = myPlayer.inventory.heldItem instanceof Weapon;
+    const lastHeldItem = myPlayer.inventory.heldItem.id;
+    const oldAngle = myPlayer.serverDir;
+      if (lastHeldWasWeapon || lastHeldItem !== item.id) {
+        //console.log(lastHeldItem + " !== " + item.id, "switching to", item.id);
+        connection.send(new Packet(PacketType.SELECT_ITEM, [item.id, false]));
+    }
+    
+    connection.sendWMeta(new Packet(PacketType.ATTACK, [1, angle]), [ignoredSids, (isBlocked: boolean) => {
+        if ((isBlocked && lastHeldWasWeapon) || (lastHeldItem !== myPlayer.inventory.heldItem.id && lastHeldWasWeapon !== myPlayer.inventory.heldItem instanceof Weapon)) connection.send(new Packet(PacketType.SELECT_ITEM, [lastHeldItem, isBlocked ? true : lastHeldWasWeapon]));
+    }]);
+      connection.send(new Packet(PacketType.ATTACK, [+(wasAttacking || this.core.mstate.mouseHeld), oldAngle]));*/
+    //this.core.scheduleAction(ActionType.ATTACK, ActionPriority.COMPATIBILITY, this.core.tickEngine.getNextPredictableTick(), [+(wasAttacking || this.core.mstate.mouseHeld), oldAngle])
+    //connection.send(new Packet(PacketType.ATTACK, [+(wasAttacking || this.core.mstate.mouseHeld), oldAngle]));
+    //connection.send(new Packet(PacketType.SET_ANGLE, [oldAngle]));
     // TODO: switch to last item instead of primary weapon
-    _socket_Connection__WEBPACK_IMPORTED_MODULE_2__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.SELECT_ITEM, [lastHeldItem.id, lastHeldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_1__.Weapon]));
   }
 }
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ }),
 
@@ -6297,6 +8025,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _data_moomoo_items__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../data/moomoo/items */ "./frontend/src/data/moomoo/items.ts");
 /* harmony import */ var _socket_Connection__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../socket/Connection */ "./frontend/src/socket/Connection.ts");
 /* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
+/* harmony import */ var _MathUtil__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../MathUtil */ "./frontend/src/util/MathUtil.ts");
+
 
 
 
@@ -6310,8 +8040,8 @@ let TickRoundType;
 })(TickRoundType || (TickRoundType = {}));
 function getStandardDeviation(array) {
   const n = array.length;
-  const mean = array.reduce((a, b) => a + b) / n;
-  return Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n);
+  const mean = array.reduce((a, b) => a + b, 0) / n;
+  return Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b, 0) / n);
 }
 const roundArray = [Math.round, Math.floor, Math.ceil];
 class TickEngine extends tsee__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
@@ -6323,12 +8053,13 @@ class TickEngine extends tsee__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
     this.pingQueue = [];
     this.lastPing = 0;
     this.ping = 0;
+    this.pingStd = 0;
     this.firstPinged = false;
     this.firstPonged = false;
     this.lastTick = 0;
     this.predictionTick = -1;
     this.nextPreTick = 0;
-    this.waitingForPostPrediction = 0;
+    this.nextPostTick = 0;
     this.futureProgress = 0;
     this.lastPredictedPre = -1;
     this.lastPredictedPost = -1;
@@ -6356,6 +8087,7 @@ class TickEngine extends tsee__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         } else {
           this.pings.push(this.ping);
         }
+        this.pingStd = getStandardDeviation(this.pings);
         this.emit("ping", this.ping);
       } else if (packet.type == _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.PLAYER_UPDATE) {
         this.tickIndex++;
@@ -6363,7 +8095,8 @@ class TickEngine extends tsee__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         this.predictionTick = this.tickIndex * TickEngine.TICK_DELTA - this.ping;
         if (this.serverLag > 0) this.emit("serverlag", this.serverLag);
         core.objectManager.resetWiggles(this.tickIndex);
-        core.playerManager.resetSwingStreaks(this.tickIndex);
+        core.playerManager.tickReset(this.tickIndex);
+        core.projectileManager.tickSpawnAllScheduled(this.tickIndex);
         this.emit("tick", this.tickIndex);
       } else if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.IO_INIT) {
         canReceivePing = true;
@@ -6377,15 +8110,17 @@ class TickEngine extends tsee__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
       if (this.deltas.length > 5) this.deltas.shift();
       const maxDelta = Math.max(...this.deltas);
       const maxPing = Math.max(...this.pings);
+      const avgDelta = _MathUtil__WEBPACK_IMPORTED_MODULE_5__["default"].averageOfArray(this.deltas);
+      const deltaStd = getStandardDeviation(this.deltas);
       if (this.predictionTick === -1) return;
       this.predictionTick += delta;
-      const offset = getStandardDeviation(this.deltas) + getStandardDeviation(this.pings);
-      const futureProgress = 1 + (this.predictionTick + delta + this.ping + offset) / TickEngine.TICK_DELTA;
+      const offset = deltaStd + getStandardDeviation(this.pings);
+      const futureProgress = (this.predictionTick + delta + this.ping + offset) / TickEngine.TICK_DELTA;
       this.futureProgress = futureProgress;
 
       // emit 30% before the actual tick
-      if (futureProgress >= this.nextPreTick) {
-        if (futureProgress - this.nextPreTick >= 1) return this.nextPreTick = Math.ceil(futureProgress);
+      if (futureProgress + 0.8 >= this.nextPreTick) {
+        if (futureProgress + 0.8 - this.nextPreTick >= 1) return this.nextPreTick = Math.ceil(futureProgress + 0.8);
         if (this.nextPreTick > this.lastPredictedPre) {
           const predictedTickIndex = this.nextPreTick;
           this.lastPredictedPre = predictedTickIndex;
@@ -6399,11 +8134,16 @@ class TickEngine extends tsee__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         }
       }
 
-      // emit 30% after the actual tick
-      if (futureProgress >= this.waitingForPostPrediction + offset && this.waitingForPostPrediction > this.lastPredictedPost) {
-        this.emit("posttick", this.waitingForPostPrediction);
-        this.lastPredictedPost = this.waitingForPostPrediction;
-        this.waitingForPostPrediction = Math.ceil(futureProgress);
+      // post tick
+      const postOffset = deltaStd / TickEngine.TICK_DELTA;
+      if (futureProgress - postOffset >= this.nextPostTick) {
+        if (futureProgress - postOffset - this.nextPostTick >= 1) return this.nextPostTick = Math.ceil(futureProgress);
+        if (this.nextPostTick > this.lastPredictedPost) {
+          const predictedTickIndex = this.nextPostTick;
+          this.lastPredictedPost = predictedTickIndex;
+          this.emit("posttick", predictedTickIndex);
+          this.nextPostTick++;
+        }
       }
 
       // clean all predicted buildings if we didnt receive confirming placement packet
@@ -6437,6 +8177,9 @@ class TickEngine extends tsee__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
   }
   isTickPredictable(tick) {
     return tick - this.futureProgress > 1;
+  }
+  toTicks(ms) {
+    return Math.ceil(ms / TickEngine.TICK_DELTA);
   }
   get timeToNextTick() {
     return TickEngine.TICK_DELTA - (Date.now() - this.lastTick) - this.ping;
@@ -6579,6 +8322,28 @@ class MovementProcessor {
 
 /***/ }),
 
+/***/ "./frontend/src/util/type/GridSet.ts":
+/*!*******************************************!*\
+  !*** ./frontend/src/util/type/GridSet.ts ***!
+  \*******************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GridSet)
+/* harmony export */ });
+class GridSet extends Set {
+  constructor(values) {
+    super(values);
+  }
+  addGrid(grid) {
+    for (let i = 0; i < grid.length; i++) this.add(grid[i]);
+  }
+}
+
+/***/ }),
+
 /***/ "./frontend/src/util/type/SidArray.ts":
 /*!********************************************!*\
   !*** ./frontend/src/util/type/SidArray.ts ***!
@@ -6593,6 +8358,15 @@ __webpack_require__.r(__webpack_exports__);
 class SidArray extends Array {
   constructor(size = 0) {
     super(size);
+  }
+  hasSid(sid) {
+    for (let i = 0, length = this.length; i < length; i++) {
+      const item = this[i];
+      if (item.sid === sid) {
+        return true;
+      }
+    }
+    return false;
   }
   findBySid(sid) {
     for (let i = 0, length = this.length; i < length; i++) {
@@ -6612,6 +8386,9 @@ class SidArray extends Array {
   }
   removeBySid(sid) {
     this.remove(this.findBySid(sid));
+  }
+  clear() {
+    this.length = 0;
   }
 }
 
@@ -6742,7 +8519,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_noSourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "* {\n  box-sizing: border-box;\n}\n\nbody {\n  margin: 0;\n  overflow: hidden;\n}\n\n#loader-wrapper {\n  position: fixed;\n  top: 50%;\n  left: 50%;\n  width: 500px;\n  height: auto;\n  padding: 0px;\n  transform: translate(-50%, -50%);\n  z-index: 99999;\n}\n\n#loader {\n  position: relative;\n  margin: 0px;\n  width: 500px;\n  height: auto;\n  color: white;\n  padding: 30px;\n  border-radius: 40px;\n  z-index: 99999;\n  text-shadow: -3px -3px 0 black, -3px -2px 0 black, -3px -1px 0 black, -3px 0px 0 black, -3px 1px 0 black, -3px 2px 0 black, -3px 3px 0 black, -2px -3px 0 black, -2px -2px 0 black, -2px -1px 0 black, -2px 0px 0 black, -2px 1px 0 black, -2px 2px 0 black, -2px 3px 0 black, -1px -3px 0 black, -1px -2px 0 black, -1px -1px 0 black, -1px 0px 0 black, -1px 1px 0 black, -1px 2px 0 black, -1px 3px 0 black, 0px -3px 0 black, 0px -2px 0 black, 0px -1px 0 black, 0px 0px 0 black, 0px 1px 0 black, 0px 2px 0 black, 0px 3px 0 black, 1px -3px 0 black, 1px -2px 0 black, 1px -1px 0 black, 1px 0px 0 black, 1px 1px 0 black, 1px 2px 0 black, 1px 3px 0 black, 2px -3px 0 black, 2px -2px 0 black, 2px -1px 0 black, 2px 0px 0 black, 2px 1px 0 black, 2px 2px 0 black, 2px 3px 0 black, 3px -3px 0 black, 3px -2px 0 black, 3px -1px 0 black, 3px 0px 0 black, 3px 1px 0 black, 3px 2px 0 black, 3px 3px 0 black;\n}\n\n#loader::after {\n  content: \"\";\n  position: absolute;\n  top: 0;\n  left: 0;\n  background: linear-gradient(105deg, rgb(91, 0, 0) 0%, rgb(101, 0, 78) 24%, rgb(0, 67, 94) 48%, rgb(7, 85, 0) 73%, rgb(0, 9, 88) 100%);\n  width: 100%;\n  height: 100%;\n  transform: scale(1.02);\n  z-index: -1;\n  background-size: 500%;\n  animation: animate 20s infinite;\n}\n\n#loader::after {\n  filter: blur(7px);\n}\n\n@keyframes animate {\n  0% {\n    background-position: 0 0;\n  }\n  50% {\n    background-position: 100% 0;\n  }\n  100% {\n    background-position: 0 0;\n  }\n}\n#loader #header {\n  text-align: center;\n  font-size: 35px;\n}\n\n#loader #info {\n  text-align: center;\n  font-size: 22px;\n}\n\n#loader #details {\n  text-align: center;\n  font-size: 18px;\n}\n\n#loader .mark-error {\n  color: rgb(245, 55, 55);\n}\n\n#loader input[type=text] {\n  background: transparent;\n  backdrop-filter: saturate(50%);\n  width: 90%;\n  padding: 6px 10px;\n  margin: auto;\n  box-sizing: border-box;\n  border: 2px solid white;\n  border-radius: 4px;\n  color: white;\n  text-transform: uppercase;\n}\n#loader input[type=text]:focus {\n  outline: none;\n}", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "* {\n  box-sizing: border-box;\n}\n\nbody {\n  margin: 0;\n  overflow: hidden;\n}\n\n#loader-wrapper {\n  position: fixed;\n  top: 50%;\n  left: 50%;\n  width: 500px;\n  height: auto;\n  padding: 0px;\n  transform: translate(-50%, -50%);\n  z-index: 99999;\n}\n\n#loader {\n  position: relative;\n  margin: 0px;\n  width: 500px;\n  height: auto;\n  color: white;\n  padding: 30px;\n  border-radius: 40px;\n  z-index: 99999;\n  text-shadow: -3px -3px 0 black, -3px -2px 0 black, -3px -1px 0 black, -3px 0px 0 black, -3px 1px 0 black, -3px 2px 0 black, -3px 3px 0 black, -2px -3px 0 black, -2px -2px 0 black, -2px -1px 0 black, -2px 0px 0 black, -2px 1px 0 black, -2px 2px 0 black, -2px 3px 0 black, -1px -3px 0 black, -1px -2px 0 black, -1px -1px 0 black, -1px 0px 0 black, -1px 1px 0 black, -1px 2px 0 black, -1px 3px 0 black, 0px -3px 0 black, 0px -2px 0 black, 0px -1px 0 black, 0px 0px 0 black, 0px 1px 0 black, 0px 2px 0 black, 0px 3px 0 black, 1px -3px 0 black, 1px -2px 0 black, 1px -1px 0 black, 1px 0px 0 black, 1px 1px 0 black, 1px 2px 0 black, 1px 3px 0 black, 2px -3px 0 black, 2px -2px 0 black, 2px -1px 0 black, 2px 0px 0 black, 2px 1px 0 black, 2px 2px 0 black, 2px 3px 0 black, 3px -3px 0 black, 3px -2px 0 black, 3px -1px 0 black, 3px 0px 0 black, 3px 1px 0 black, 3px 2px 0 black, 3px 3px 0 black;\n}\n\n#loader::after {\n  content: \"\";\n  position: absolute;\n  top: 0;\n  left: 0;\n  background: linear-gradient(105deg, rgb(91, 0, 0) 0%, rgb(101, 0, 78) 24%, rgb(0, 67, 94) 48%, rgb(7, 85, 0) 73%, rgb(0, 9, 88) 100%);\n  width: 100%;\n  height: 100%;\n  transform: scale(1.02);\n  z-index: -1;\n  background-size: 500%;\n  animation: animate 20s infinite;\n}\n\n#loader::after {\n  filter: blur(7px);\n}\n\n@keyframes animate {\n  0% {\n    background-position: 0 0;\n  }\n  50% {\n    background-position: 100% 0;\n  }\n  100% {\n    background-position: 0 0;\n  }\n}\n#loader #header {\n  text-align: center;\n  font-size: 35px;\n}\n\n#loader #info {\n  text-align: center;\n  font-size: 22px;\n}\n\n#loader #details {\n  text-align: center;\n  font-size: 18px;\n}\n\n#loader .mark-error {\n  color: rgb(245, 55, 55);\n}\n\n#loader .mark-success {\n  color: rgb(81, 247, 59);\n}\n\n#loader input[type=text] {\n  background: transparent;\n  backdrop-filter: saturate(50%);\n  width: 90%;\n  padding: 6px 10px;\n  margin: auto;\n  box-sizing: border-box;\n  border: 2px solid white;\n  border-radius: 4px;\n  color: white;\n  text-transform: uppercase;\n}\n#loader input[type=text]:focus {\n  outline: none;\n}", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 

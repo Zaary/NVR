@@ -73,10 +73,10 @@ class ProjectileItem {
 
 const Projectiles = {
     BOW_ARROW: new ProjectileItem(0, { scale: 103, range: 1000, speed: 1.6, dmg: 25 }),
-    TURRET_BULLET: new ProjectileItem(1, { scale: 20, range: 700, speed: 3.6, dmg: 25 }),
+    TURRET_BULLET: new ProjectileItem(1, { scale: 20, range: 700, speed: 2, dmg: 25 }),
     CROSSBOW_ARROW: new ProjectileItem(2, { scale: 103, range: 1200, speed: 2.5, dmg: 35 }),
     REPEATER_CROSSBOW_ARROW: new ProjectileItem(3, {scale: 103, range: 1200, speed: 2, dmg: 30 }),
-    UNKNOWN_PROJECTILE: new ProjectileItem(4, { scale: 20, range: 700, speed: 3.6, dmg: 16 }),
+    UNKNOWN_PROJECTILE: new ProjectileItem(4, { scale: 20, range: 700, speed: 2, dmg: 16 }),
     MUSKET_BULLET: new ProjectileItem(5, { scale: 160, range: 1400, speed: 3.6, dmg: 50 })
 }
 
@@ -111,13 +111,26 @@ class Projectile {
 
 		this.owner = owner;
 		
-		console.log("a projectile spawned:", projectileList[type], "owner:", this.owner);
+		//console.log("a projectile spawned:", projectileList[type], "owner:", this.owner);
     }
 
 	static willBeTicked(projectileItem: ProjectileItem, source: Vector, sourceScale: number, destination: Vector) {
 		const dist = Math.max(0, MathUtil.getDistance(source, destination) - sourceScale);
-		if (dist > projectileItem.stats.range) return false;
-		return dist === 0 || dist / projectileItem.stats.speed > TickEngine.TICK_DELTA;
+		if (dist > projectileItem.stats.range) return true;
+		return dist !== 0 && dist / projectileItem.stats.speed > TickEngine.TICK_DELTA;
+	}
+	
+	static canHit(item: ProjectileItem, spawnPos: Vector, dir: number, targetPos: Vector, targetScale: number) {
+		return MathUtil.lineInRectMooMoo(
+			targetPos.x - targetScale,
+			targetPos.y - targetScale,
+			targetPos.x + targetScale,
+			targetPos.y + targetScale,
+			spawnPos.x + 70 * Math.cos(dir),
+			spawnPos.y + 70 * Math.sin(dir),
+			spawnPos.x + Math.cos(dir) * (item.stats.range + item.stats.speed),
+			spawnPos.y + Math.sin(dir) * (item.stats.range + item.stats.speed)
+		);
 	}
 
 	public getTicksExisted(currentTick: number) {

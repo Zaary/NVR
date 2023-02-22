@@ -1,6 +1,6 @@
 import Transformation from "../Transformation";
 
-export default class TSourceMapping extends Transformation {
+export default class TSourceMappingTransformer extends Transformation {
     constructor() {
         super();
     }

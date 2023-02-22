@@ -3,7 +3,7 @@ import EventEmitter from "events";
 import EventPacket from "../event/EventPacket";
 import Logger from "../util/Logger";
 import { Packet, Side } from "./packets/Packet";
-import { PacketFactory } from "./packets/PacketFactory";
+import { PacketFactory, reversePacketTypeMapping } from "./packets/PacketFactory";
 import { PacketType } from "./packets/PacketType";
 
 const logger = new Logger("connection");
@@ -20,6 +20,12 @@ class Connection extends EventEmitter {
         super();
         this.socket = null;
         this.defaultReceiver = null;
+    }
+
+    bundleSend(type: string, data: any) {
+        if (this.socket && this.socket.readyState == 1) {
+            this.socket.bundleSend(type, data);
+        }
     }
 
     injectSocket(socket: Injection) {
@@ -61,7 +67,7 @@ class Injection extends WebSocket {
 
         this.addEventListener("message", function({ data: buffer }: { data: ArrayBuffer }) {
             try {
-                const event = new EventPacket(packetFactory.deserializePacket(buffer, Side.ClientBound, Date.now()));
+                const event = new EventPacket(packetFactory.deserializePacket(buffer, Side.ClientBound, Date.now()), false);
                 connection.emit("packetreceive", event);
 
                 if (event.isCanceled()) return;
@@ -97,7 +103,19 @@ class Injection extends WebSocket {
     send(data: string | ArrayBufferLike | Blob | ArrayBufferView, force?: boolean): void {
         if (force) return super.send(data);
 
-        const event = new EventPacket(packetFactory.deserializePacket(<ArrayBuffer> data, Side.ServerBound, Date.now()));
+        const event = new EventPacket(packetFactory.deserializePacket(<ArrayBuffer> data, Side.ServerBound, Date.now()), false);
+        connection.emit("packetsend", event);
+
+        if (!event.isCanceled()) {
+            connection.emit("packetsendp", event.getPacket());
+            super.send(packetFactory.serializePacket(event.getPacket()));
+
+            if (event.callback) event.callback();
+        }
+    }
+
+    bundleSend(type: string, data: any): void {
+        const event = new EventPacket(new Packet(reversePacketTypeMapping.find(mapping => (mapping.side === Side.ServerBound || mapping.side === Side.BiDirectional) && mapping.value === type)!.type, data), true);
         connection.emit("packetsend", event);
 
         if (!event.isCanceled()) {
@@ -109,7 +127,7 @@ class Injection extends WebSocket {
     }
 
     sendWMeta(data: string | ArrayBufferLike | Blob | ArrayBufferView, meta: any): void {
-        const event = new EventPacket(packetFactory.deserializePacket(<ArrayBuffer> data, Side.ServerBound, Date.now()));
+        const event = new EventPacket(packetFactory.deserializePacket(<ArrayBuffer> data, Side.ServerBound, Date.now()), false);
         connection.emit("packetsend", event, meta);
 
         if (!event.isCanceled()) {

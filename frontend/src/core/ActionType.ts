@@ -8,6 +8,7 @@ enum ActionPriority {
     ANTITRAP,
     AUTOBREAK,
     ANTIBULL,
+    SPIKESYNC,
     ANTIINSTA,
     
     FORCED

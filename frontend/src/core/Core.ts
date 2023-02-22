@@ -30,6 +30,7 @@ import NVRLoader from "../loader/NVRLoader";
 import BuildingVisualisationModule from "../render/BuildingVisualisationModule";
 import { items } from "../data/moomoo/items";
 import ProjectileManager from "../manager/ProjectileManager";
+import { Weapon } from "../data/type/Weapon";
 
 interface MState {
     mouseHeld: boolean;
@@ -98,6 +99,8 @@ class Core extends EventEmitter {
 
     public mouseAngle: number;
 
+    private bundleDir: [ActionPriority, number] | null;
+
     constructor() {
         super();
 
@@ -107,7 +110,7 @@ class Core extends EventEmitter {
 
         logger.info(`launched StarLit core version ${Core.VER} by ${Core.AUTHORS.join(", ")}`);
 
-        this.bundleAPI = new API();
+        this.bundleAPI = new API(this);
 
         this.loaded = false;
 
@@ -141,6 +144,31 @@ class Core extends EventEmitter {
         this.interactionEngine = new InteractionEngine(this);
 
         this.mouseAngle = 0;
+
+        this.bundleDir = null;
+    }
+
+    lockBundleDirection(priority: ActionPriority, dir: number) {
+        if (this.bundleDir === null || priority >= this.bundleDir[0]) {
+            this.bundleDir = [priority, dir];
+            this.bundleAPI.values.set("attackdir", dir);
+        }
+    }
+
+    unlockBundleDirection(priority: ActionPriority) {
+        if (this.bundleDir !== null && priority >= this.bundleDir[0]) {
+            this.bundleDir = null;
+            this.bundleAPI.values.delete("attackdir");
+        }
+    }
+
+    onApiCallback(name: string, args: any, callback: () => any) {
+        switch (name) {
+            case "iosend": {
+                connection.bundleSend(args[0], args[1]);
+                break;
+            }
+        }
     }
 
     removePacketInterceptor489() {
@@ -179,10 +207,10 @@ class Core extends EventEmitter {
             this.moduleManager.onPreTick(tick);
 
             // run actions based on priority
-            this.runUppermostAction(ActionType.HAT, tick);
-            this.runUppermostAction(ActionType.TAIL, tick);
-            this.runUppermostAction(ActionType.WEAPON, tick); // important to switch weapon before attack
-            this.runUppermostAction(ActionType.ATTACK, tick);
+            this.runUppermostActions(ActionType.HAT, tick);
+            this.runUppermostActions(ActionType.TAIL, tick);
+            this.runUppermostActions(ActionType.WEAPON, tick); // important to switch weapon before attack
+            this.runUppermostActions(ActionType.ATTACK, tick);
         });
 
         this.tickEngine.on("posttick", (tick: number) => {
@@ -308,24 +336,36 @@ class Core extends EventEmitter {
         if (index > -1) this.packetBlocks[type].splice(index, 1);
     }
 
-    runUppermostAction(action: ActionType, tick: number) {
+    runUppermostActions(action: ActionType, tick: number) {
         // filter and sort by highest priority
-        const sorted = this.scheduledActions.filter(a => a.type == action && a.executeTick == tick && (() => {
+        const filtered = this.scheduledActions.filter(a => a.type == action && a.executeTick == tick && (() => {
             if (a.type === ActionType.HAT && !this.playerManager.myPlayer.ownedHats.includes(a.data[0])) return false;
             if (a.type === ActionType.TAIL && !this.playerManager.myPlayer.ownedTails.includes(a.data[0])) return false;
             if (a.type === ActionType.WEAPON && (a.data[1] ? !this.playerManager.myPlayer.inventory.hasWeapon(a.data[0]) : this.playerManager.myPlayer.inventory.items[items.list[a.data[0]].group.id] !== a.data[0])) return false;
             return true;
-        })()).sort((a, b) => b.priority - a.priority);
-        if (sorted.length > 0) {
-            // run action
-            const action = sorted[0];
-            this.runAction(action);
+        })());
 
-            // remove action from the list
-            const index = this.scheduledActions.indexOf(action);
+        const maxPriority = Math.max(...filtered.map(x => x.priority));
+
+        //const sorted = filtered.sort((a, b) => b.priority - a.priority);
+
+        const final = filtered.filter(x => x.priority === maxPriority);
+
+        //console.log(final);
+
+        if (final.length > 0/*sorted.length > 0*/) {
+            // run action
+
+            //const action = final[0];
+            for (let i = 0; i < final.length; i++) {
+                this.runAction(final[i]/*sorted[0]*/);
+            }
+
+            // remove action from the list (not needed since we clear all actions on tick begin)
+            /*const index = this.scheduledActions.indexOf(action);
             if (index > -1) {
                 this.scheduledActions.splice(index, 1);
-            }
+            }*/
         }
     }
 
@@ -334,18 +374,23 @@ class Core extends EventEmitter {
             case ActionType.HAT:
                 if (action.data[0] === this.lastActionState.hat) return;
                 connection.send(new Packet(PacketType.BUY_AND_EQUIP, [0, action.data[0], 0]));
+                this.lastActionState.hat = action.data[0];
                 break;
             case ActionType.TAIL:
                 if (action.data[0] === this.lastActionState.tail) return;
                 connection.send(new Packet(PacketType.BUY_AND_EQUIP, [0, action.data[0], 1]));
+                this.lastActionState.tail = action.data[0];
                 break;
             case ActionType.ATTACK:
                 if (action.data[0] === this.lastActionState.attack && action.data[1] === this.lastActionState.aim) return;
                 connection.send(new Packet(PacketType.ATTACK, action.data), action.force);
+                this.lastActionState.attack = action.data[0];
+                this.lastActionState.aim = action.data[1];
                 break;
             case ActionType.WEAPON:
                 if (action.data[0] === this.lastActionState.weapon[0] && action.data[1] === this.lastActionState.weapon[1]) return;
                 connection.send(new Packet(PacketType.SELECT_ITEM, [action.data[0], action.data[1]]));
+                this.lastActionState.weapon = [action.data[0], action.data[1]];
             default:
                 return;
         }

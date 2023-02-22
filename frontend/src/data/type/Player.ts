@@ -26,6 +26,7 @@ class Inventory {
 	private player: Player;
 
 	public weapons: [MeleeWeapon, Weapon | null];
+	public weaponVariants: [number, number | null];
 	public reloads: Record<number, number>;
 
 	public items: number[];
@@ -38,6 +39,7 @@ class Inventory {
 	constructor(player: Player) {
 		this.player = player;
 		this.weapons = [Weapons.TOOL_HAMMER, null];
+		this.weaponVariants = [0, null];
 		this.reloads = Object.fromEntries(new Array(weaponList.length).fill(undefined).map((_x, i) => [i, 0]));
 		this.items = [0, 3, 6, 10];
 		this.heldItem = Weapons.TOOL_HAMMER;
@@ -47,6 +49,7 @@ class Inventory {
 	
 	reset() {
 		this.weapons = [Weapons.TOOL_HAMMER, null];
+		this.weaponVariants = [0, null];
 		this.reloads = Object.fromEntries(new Array(weaponList.length).fill(undefined).map((_x, i) => [i, 0]));;
 		this.items = [0, 3, 6, 10];
 		this.heldItem = Weapons.TOOL_HAMMER;
@@ -63,6 +66,13 @@ class Inventory {
 
 	resetReload(item: Weapon) {
 		this.reloads[item.id] = item.stats.reloadTime;
+	}
+
+	resetAllRangedReloads() {
+		this.reloads[Weapons.HUNTING_BOW.id] = Weapons.HUNTING_BOW.stats.reloadTime;
+		this.reloads[Weapons.CROSSBOW.id] = Weapons.CROSSBOW.stats.reloadTime;
+		this.reloads[Weapons.REPEATER_CROSSBOW.id] = Weapons.REPEATER_CROSSBOW.stats.reloadTime;
+		this.reloads[Weapons.MUSKET.id] = Weapons.MUSKET.stats.reloadTime;
 	}
 
 	updateReloads(delta: number) {
@@ -94,6 +104,10 @@ class Inventory {
 
 	getWeapon(slot: WeaponSlot) {
 		return this.weapons[slot];
+	}
+
+	getWeaponVariant(slot: WeaponSlot) {
+		return this.weaponVariants[slot];
 	}
 
 	hasWeapon(weapon: number | Weapon) {
@@ -132,6 +146,10 @@ class ShameTracker {
 	isSafeHeal(ping: number) {
 		return Date.now() + ping - this.lastDamage > 120;
 	}
+
+	whenSafeHeal(ping: number) {
+		return 120 - (Date.now() + ping - this.lastDamage);
+	}
 }
 
 class Player {
@@ -163,12 +181,15 @@ class Player {
 	public _attackedThisTickTempVariable: boolean;
 	
 	public hasFiredProjectileThisTick: boolean;
+	public _firedThisTickTempVariable: boolean;
+	public lastProjectileFired: Projectile | null;
 	
 	/*public zIndex: number = 0;
 	public xVel: number = 0;
 	public yVel: number = 0;*/
 
 	public dir: number = 0;
+	public serverDir: number;
 
 	public maxHealth: number = 100;
 	public health: number = this.maxHealth;
@@ -185,19 +206,21 @@ class Player {
 
 	public inventory: Inventory;
 
-	public reloads: { [key: number]: number } = {};
-
 	public state: State;
 
 	public nextAttack: number;
 	public swingStreak: number;
+
+	public seenHats: Set<number>;
+	public seenTails: Set<number>;
     
 	public visible: boolean = false;
     forcePos: any;
+
+	public lastUpdate: number;
     
     lastTickPosX: number;
     lastTickPosY: number;
-    serverDir: any;
 
 	dt: any;
 
@@ -235,6 +258,8 @@ class Player {
 		this._attackedThisTickTempVariable = false;
 
 		this.hasFiredProjectileThisTick = false;
+		this._firedThisTickTempVariable = false;
+		this.lastProjectileFired = null;
 
 		this.state = {
 			isTrapped: false,
@@ -247,8 +272,13 @@ class Player {
 
 		this.nextAttack = 0;
 		this.swingStreak = 0;
+
+		this.seenHats = new Set();
+		this.seenTails = new Set();
 		
 		this.ownedProjectiles = new SidArray();
+
+		this.lastUpdate = 0;
     }
 
 	updatePlayer(core: Core, x: number, y: number, dir: number, buildIndex: number, weaponIndex: number, _weaponVariant: number, _team: string, _isLeader: boolean, _skinIndex: number, _tailIndex: number, _iconIndex: boolean, _zIndex: number) {
@@ -263,9 +293,30 @@ class Player {
 		this.skinIndex = _skinIndex;
 		this.tailIndex = _tailIndex;
 
+		this.seenHats.add(_skinIndex);
+		this.seenTails.add(_tailIndex);
+
 		const holdsWeapon = buildIndex === -1;
-		//this.inventory.heldItem = holdsWeapon ? weaponList[weaponIndex] : items.list[buildIndex];
+		
 		this.inventory.weaponSelected = weaponList[weaponIndex];
+
+		if (this.sid !== core.playerManager.myPlayer.sid) {
+			this.inventory.heldItem = holdsWeapon ? weaponList[weaponIndex] : items.list[buildIndex];
+
+			if (holdsWeapon) {
+				(<Weapon> this.inventory.weapons[this.inventory.weaponSelected.id < 9 ? WeaponSlot.PRIMARY : WeaponSlot.SECONDARY]) = this.inventory.weaponSelected;
+			}
+		}
+
+		if (holdsWeapon) {
+			this.inventory.weaponVariants[this.inventory.weaponSelected.id < 9 ? WeaponSlot.PRIMARY : WeaponSlot.SECONDARY] = _weaponVariant;
+		}
+
+		/*if (this.lastUpdate > 0) {
+			const now = Date.now();
+			this.inventory.updateReloads(now - this.lastUpdate);
+			this.lastUpdate = now;
+		}*/
 
                     /*player.buildIndex = playerData[4];
                     player.weaponIndex = playerData[5];
@@ -302,9 +353,9 @@ class Player {
 							const hatMultiplier = hats.find(x => x.id === this.skinIndex)?.bDmg ?? 1;
 							const damage = weapon.stats.dmg * weapon.stats.buildingDmgMultiplier * hatMultiplier;
 							object.health -= damage;
-							console.log("hit building " + object.stats.name + " new health:", object.health, "angles;", wiggle[0], MathUtil.roundTo(gatherAngle, 1));
+							//console.log("hit building " + object.stats.name + " new health:", object.health, "angles;", wiggle[0], MathUtil.roundTo(gatherAngle, 1));
 						} else {
-							console.warn("detected hit while holding ranged weapon");
+							//console.warn("detected hit while holding ranged weapon");
 						}
 						//core.moduleManager.onBuildingHit(player, object, damage);
 
@@ -326,11 +377,6 @@ class Player {
 			const isCollision = MathUtil.getDistance(this.serverPos, object.position) < this.scale + object.getScale();
 
 			if (object.type === 15 && isCollision && (<PlayerBuilding> object).owner.sid !== this.sid) this.state.isTrapped = true, this.state.data.trap = <PlayerBuilding> object;
-		}
-
-		if (this.skinIndex === 53 && this.inventory.turretGearReload <= 0) {
-			this.inventory.fireTurretGear(core.tickEngine.ping);
-			console.log("just fired turret gear");
 		}
 	}
 

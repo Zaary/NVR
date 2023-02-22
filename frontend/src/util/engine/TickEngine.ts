@@ -177,9 +177,9 @@ class TickEngine extends EventEmitter<{
             }
 
             // post tick
-            //const postOffset = deltaStd / TickEngine.TICK_DELTA;
-            if (futureProgress >= this.nextPostTick) {
-                if (futureProgress - this.nextPostTick >= 1) return this.nextPostTick = Math.ceil(futureProgress);
+            const postOffset = deltaStd / TickEngine.TICK_DELTA;
+            if (futureProgress - postOffset >= this.nextPostTick) {
+                if (futureProgress - postOffset - this.nextPostTick >= 1) return this.nextPostTick = Math.ceil(futureProgress);
 
                 if (this.nextPostTick > this.lastPredictedPost) {
                     const predictedTickIndex = this.nextPostTick;

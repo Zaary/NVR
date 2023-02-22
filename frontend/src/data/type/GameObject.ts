@@ -34,7 +34,7 @@ class GameObject {
     }
 
     getScale(fullScale = false): number {
-        return this instanceof NaturalObject ? (this.type === 0 || this.type === 1 ? this.scale * 0.6 : this.scale) : this.scale * (fullScale ? 1 : items.list[this.type].colDiv ?? 1);
+        return this instanceof NaturalObject ? ((this.type === 0 || this.type === 1) ? this.scale * 0.36 : this.scale) : this.scale * (fullScale ? 1 : items.list[this.type].colDiv ?? 1);
     }
 
     getPlaceColScale(): number {

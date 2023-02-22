@@ -18,11 +18,15 @@ export default class AntiTrap extends Module {
     private willTrapBreakNextTick: boolean;
     private aimPacketsBlocker: number;
 
+    private lastWeapon: number | null;
+
     constructor() {
         super();
         this.currentTrap = null;
         this.willTrapBreakNextTick = false;
         this.aimPacketsBlocker = -1;
+
+        this.lastWeapon = null;
     }
 
     /*activate(tickIndex = core.tickEngine.getNextPredictableTick(), isNotSync?: boolean) {
@@ -90,7 +94,7 @@ export default class AntiTrap extends Module {
         
         if (myPlayer.state.isTrapped && this.trap === null) {
             this.initializeTrap(myPlayer.state.data.trap!);
-        } else if (!myPlayer.state.isTrapped && this.trap !== null) {
+        } else if ((!myPlayer.state.isTrapped && this.trap !== null) || this.willTrapBreakNextTick) {
             this.setTrapBroken();
         } else if (this.currentTrap !== null) {
 
@@ -104,16 +108,17 @@ export default class AntiTrap extends Module {
                 bestWeapon = primaryWeapon;
                 usePrimaryAttack = true;
                 this.willTrapBreakNextTick = true;
-                console.log("hitting with retarded wep!!");
+                //console.log("hitting with retarded wep!!");
             }
     
             if ((myPlayer.nextAttack === tickIndex - 1 || myPlayer.inventory.reloads[bestWeapon.id] <= core.tickEngine.timeToNextTick) || usePrimaryAttack) {
-                //core.scheduleAction(ActionType.HAT, ActionPriority.AUTOBREAK, tickIndex, [40]);
+                core.scheduleAction(ActionType.HAT, ActionPriority.AUTOBREAK, tickIndex, [40]);
                 core.scheduleAction(ActionType.WEAPON, ActionPriority.AUTOBREAK, tickIndex, [bestWeapon.id, true]);
-                if (!usePrimaryAttack) core.scheduleAction(ActionType.ATTACK, ActionPriority.AUTOBREAK, tickIndex, [1, angle]);
+                core.scheduleAction(ActionType.ATTACK, ActionPriority.AUTOBREAK, tickIndex, [1, angle]);
+                core.scheduleAction(ActionType.ATTACK, ActionPriority.AUTOBREAK, tickIndex, [0, null]);
                 //core.scheduleAction(ActionType.ATTACK, ActionPriority.AUTOBREAK, tickIndex + 1, [0, null]);
 
-                console.log("anti trap check", this.currentTrap!.health, bestWeapon.stats.dmg * bestWeapon.stats.buildingDmgMultiplier * (myPlayer.ownedHats.includes(40) ? tankGear.bDmg! : 1))
+                //console.log("anti trap check", this.currentTrap!.health, bestWeapon.stats.dmg * bestWeapon.stats.buildingDmgMultiplier * (myPlayer.ownedHats.includes(40) ? tankGear.bDmg! : 1))
                 if (this.currentTrap!.health <= bestWeapon.stats.dmg * bestWeapon.stats.buildingDmgMultiplier * (myPlayer.ownedHats.includes(40) ? tankGear.bDmg! : 1)) {
                     this.willTrapBreakNextTick = true;
                 }
@@ -134,9 +139,26 @@ export default class AntiTrap extends Module {
 
         const myPlayer = core.playerManager.myPlayer;
 
+        this.lastWeapon = myPlayer.inventory.heldItem.id;
+
         const tankGear = hats.find(x => x.id === 40)!;
 
         const angle = MathUtil.getDirection(myPlayer.serverPos, trap.position);
+
+        const antiAngle = MathUtil.getDirection(this.currentTrap.position, myPlayer.serverPos);
+        const cartAngle = MathUtil.polarToCartesian(antiAngle);
+        const spikeItem = items.list[myPlayer.inventory.items[2]];
+        const arcs = core.objectManager.findPlacementArcs([myPlayer.serverPos, myPlayer.scale], spikeItem);
+
+        if (arcs.length > 0) {
+            const closestAllowArc = arcs.sort((a, b) => Math.min(MathUtil.getAngleDist(a[0], antiAngle), MathUtil.getAngleDist(a[1], antiAngle)) - Math.min(MathUtil.getAngleDist(b[0], antiAngle), MathUtil.getAngleDist(b[1], antiAngle)))[0];
+            const [arcStart, arcEnd] = [MathUtil.polarToCartesian(closestAllowArc[0]), MathUtil.polarToCartesian(closestAllowArc[1])];
+            if (cartAngle > arcStart && cartAngle < arcEnd) {
+                core.interactionEngine.safePlacement(spikeItem, antiAngle);
+            } else {
+                core.interactionEngine.safePlacement(spikeItem, MathUtil.cartesianToPolar(MathUtil.middleOfCartesianArc([arcStart, arcEnd])));
+            }
+        }
 
         const bestWeapon = myPlayer.inventory.findBestWeapon(Inventory.WeaponFinders.BUILDING_BREAK)!;
         const currentWeapon = <MeleeWeapon> myPlayer.inventory.heldItem;
@@ -144,59 +166,29 @@ export default class AntiTrap extends Module {
 
         if (this.aimPacketsBlocker === -1) this.aimPacketsBlocker = core.createPacketBlock(PacketType.SET_ANGLE);
 
-        if (core.tickEngine.isTickPredictable(core.tickEngine.tickIndex + 1)) {
-            const predictableTick = core.tickEngine.tickIndex + 1;
-            let scheduledWeapon = bestWeapon;
-
-            if (myPlayer.inventory.heldItem !== bestWeapon && (myPlayer.inventory.heldItem instanceof MeleeWeapon && trap.health > currentWeapon.stats.dmg * currentWeapon.stats.buildingDmgMultiplier * (myPlayer.ownedHats.includes(40) ? tankGear.bDmg! : 1))) {
-                core.scheduleAction(ActionType.WEAPON, ActionPriority.AUTOBREAK, predictableTick, [bestWeapon.id, true]);
-            } else if (myPlayer.inventory.heldItem !== bestWeapon) {
-                scheduledWeapon = currentWeapon;
-            }
-
-            if (myPlayer.inventory.reloads[scheduledWeapon.id] <= (lastHeldItemId === scheduledWeapon.id ? core.tickEngine.timeToNextTick : 0)) {
-                core.scheduleAction(ActionType.ATTACK, ActionPriority.AUTOBREAK, predictableTick, [1, angle]);
-                //console.log("predictable, reloaded");
-                //myPlayer.nextAttack = predictableTick + 1;
-            } else {
-                myPlayer.nextAttack = core.tickEngine.tickIn(myPlayer.inventory.reloads[scheduledWeapon.id]) + (lastHeldItemId === scheduledWeapon.id ? 1 : 2);
-                //console.log("predictable, not reloaded");
-            }
-        } else {
-            if (core.isHighestPriority(ActionPriority.AUTOBREAK, core.tickEngine.tickIndex)) {
-                // if currently held weapon doesn't break the building by one hit, switch to best weapon
-                if (myPlayer.inventory.heldItem !== bestWeapon && (myPlayer.inventory.heldItem instanceof MeleeWeapon && trap.health > currentWeapon.stats.dmg * currentWeapon.stats.buildingDmgMultiplier * (myPlayer.ownedHats.includes(40) ? tankGear.bDmg! : 1))) {
-                    connection.send(new Packet(PacketType.SELECT_ITEM, [bestWeapon.id, true]));
-                }
-                if (myPlayer.inventory.reloads[bestWeapon.id] <= (lastHeldItemId === myPlayer.inventory.heldItem.id ? core.tickEngine.timeToNextTick : 0)) {
-                    console.log("unpredictable, reloaded: ", myPlayer.inventory.reloads[bestWeapon.id], (lastHeldItemId === myPlayer.inventory.heldItem.id ? core.tickEngine.timeToNextTick : 0));
-                    connection.send(new Packet(PacketType.ATTACK, [1, angle]));
-                } else {
-                    myPlayer.nextAttack = core.tickEngine.tickIn(myPlayer.inventory.reloads[myPlayer.inventory.heldItem.id]) + (lastHeldItemId === myPlayer.inventory.heldItem.id ? 1 : 2);
-                    //console.log("unpredictable, not reloaded");
-                }
+        if (myPlayer.inventory.reloads[bestWeapon.id] <= (currentWeapon === bestWeapon ? core.tickEngine.timeToNextTick : 0)) {
+            if (core.isHighestPriority(ActionPriority.AUTOBREAK, core.tickEngine.tickIndex + 1)) {
+                if (!(myPlayer.inventory.heldItem instanceof Weapon) || bestWeapon.id !== myPlayer.inventory.heldItem.id) connection.send(new Packet(PacketType.SELECT_ITEM, [bestWeapon.id, true]));
+                if (myPlayer.ownedHats.includes(40) && core.lastActionState.hat !== 40) connection.send(new Packet(PacketType.BUY_AND_EQUIP, [0, 40, 0]));
+                if (!myPlayer.isAttacking) connection.send(new Packet(PacketType.ATTACK, [1, angle]));
             }
         }
     }
 
     setTrapBroken() {
+        if (this.currentTrap === null) return;
+
         this.currentTrap = null;
         this.willTrapBreakNextTick = false;
 
         if (this.aimPacketsBlocker > -1) core.removePacketBlock(PacketType.SET_ANGLE, this.aimPacketsBlocker);
 
         const myPlayer = core.playerManager.myPlayer;
-        const bestWeapon = myPlayer.inventory.findBestWeapon(Inventory.WeaponFinders.DAMAGE)!;
 
-        if (core.tickEngine.isTickPredictable(core.tickEngine.tickIndex + 1)) {
-            const predictableTick = core.tickEngine.tickIndex + 1;
-            core.scheduleAction(ActionType.WEAPON, ActionPriority.AUTOBREAK, predictableTick, [bestWeapon.id, true]);
-            core.scheduleAction(ActionType.ATTACK, ActionPriority.AUTOBREAK, predictableTick, [0, null]);
-        } else {
-            if (core.isHighestPriority(ActionPriority.AUTOBREAK, core.tickEngine.tickIndex)) {
-                if (myPlayer.inventory.heldItem !== bestWeapon) connection.send(new Packet(PacketType.SELECT_ITEM, [bestWeapon.id, true]));
-                connection.send(new Packet(PacketType.ATTACK, [0, null]));
-            }
+        if (!core.mstate.mouseHeld) connection.send(new Packet(PacketType.ATTACK, [0, null]));
+
+        if (core.isHighestPriority(ActionPriority.AUTOBREAK, core.tickEngine.tickIndex + 1)) {
+            if (this.lastWeapon && (!(myPlayer.inventory.heldItem instanceof Weapon) || this.lastWeapon !== myPlayer.inventory.heldItem.id)) connection.send(new Packet(PacketType.SELECT_ITEM, [this.lastWeapon, true]));
         }
     }
 

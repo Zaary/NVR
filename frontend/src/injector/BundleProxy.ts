@@ -3,16 +3,20 @@ import Logger from "../util/Logger";
 import StringUtil from "../util/StringUtil";
 import { Class } from "../util/type/Definitions";
 import Transformation from "./Transformation";
-import TObjectSpriteLoader from "./transformations/TObjectSpriteLoader";
-import TSourceMapping from "./transformations/TSourceMapping";
+import GetAttackDirTransformer from "./transformations/GetAttackDirTransformer";
+import IOClientTransformer from "./transformations/IOClientTransformer";
+import ObjectSpriteLoaderTransformer from "./transformations/ObjectSpriteLoaderTransformer";
+import SourceMappingTransformer from "./transformations/SourceMappingTransformer";
 
 const logger = new Logger("bundle-proxy");
 
 let isCaptchaReady = false;
 
 const transformations: Class<Transformation>[] = [
-    TObjectSpriteLoader,
-    TSourceMapping
+    GetAttackDirTransformer,
+    IOClientTransformer,
+    ObjectSpriteLoaderTransformer,
+    SourceMappingTransformer
 ];
 
 let _promise: Promise<void>;

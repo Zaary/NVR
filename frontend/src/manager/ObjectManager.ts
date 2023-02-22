@@ -101,7 +101,8 @@ export default class ObjectManager {
 
         const allowsCartesian = AlghoritmUtil.allowedAnglesFromBlocked(blockingAngles);
         const mergedCartesian = AlghoritmUtil.mergeArcsCartesian(allowsCartesian);
-        return ArrayUtil.mapTupleArray(mergedCartesian, MathUtil.cartesianToPolar);
+
+        return mergedCartesian.length > 0 && mergedCartesian[0] !== undefined ? ArrayUtil.mapTupleArray(mergedCartesian, MathUtil.cartesianToPolar) : [];
     }
     
     splitPlacement(playerScale: number, item: Item, angle: number): [number, number] {
