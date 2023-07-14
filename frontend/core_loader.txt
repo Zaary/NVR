@@ -1,0 +1,67 @@
+// self destruct if invalid cid
+if (cid !== this.cid) this.sd();
+
+this.lastUpdate = Date.now();
+
+this.tickEngine.once("ping", this.packetEngine.handlePing.bind(this.packetEngine));
+
+this.tickEngine.on("tick", (tick) => {
+    this.cleanActions(tick);
+
+    this.moduleManager.onTick(tick, this.tickEngine.getFirstSchedulableTick());
+
+    // run actions based on priority. we need to run actions from future ticks
+    // so packets have time to get to the server before the tick happens
+    this.runTickActions(tick + this.tickEngine.getPingTicks());
+
+    this.moduleManager.onPostTick(tick);
+});
+
+/*this.tickEngine.on("posttick", (tick) => {
+    this.moduleManager.onPostTick(tick);
+});*/
+
+//this.tickEngine.on("tick", this.moduleManager.onTick.bind(this.moduleManager));
+
+this.mouseAngle = 0;
+
+document.addEventListener("keydown", event => {
+    this.emit("keydown", event);
+    this.moduleManager.onKeydown(event.keyCode);
+});
+
+document.addEventListener("keyup", event => {
+    this.emit("keyup", event)
+    this.moduleManager.onKeyup(event.keyCode);
+});
+
+this.attachLastActionStateListener();
+
+// cancels aim packets because it only spams packets
+// and messes up autobreak aim (kinda lazy solution)
+// should be fixed explicitly in the future and
+// remove the packet cancelling
+connection.on("packetsend", (event, meta) => {
+    const packet = event.getPacket();
+    //console.log(packet);
+    if (this.packetBlocks.hasOwnProperty(packet.type)) {
+        if (this.packetBlocks[packet.type].length > 0) {
+            event.cancel();
+            return;
+        }
+    }
+
+    PacketHandler.processOut(event, meta);
+    this.moduleManager.onPacketSend(event);
+});
+
+// listen for received packets (always process the packet before passing it to modules)
+connection.on("packetreceive", (event) => {
+    PacketHandler.processIn(event.getPacket());
+    this.moduleManager.onPacketReceive(event);
+});
+
+setInterval(this.update.bind(this), 1);
+
+this.loaded = true;
+NVRLoader.stop();

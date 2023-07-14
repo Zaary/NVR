@@ -49,10 +49,20 @@ let isCoreLoaded = false;
 
 function x(num: number) {
     nn = num + rr;
+    Object.defineProperty(Core.prototype, sym, {
+        value: stop,
+        writable: false
+    });
     return sym;
 }
 
 async function start(m: (a: any) => (() => void)) {
+
+
+    if (/*window.location.host === "127.0.0.1"*/true) {
+        m(nn);
+        return;
+    }
 
     const ENDPOINT = Core.ENDPOINT;
     const VER = Core.VER.uformat();
@@ -92,7 +102,7 @@ async function start(m: (a: any) => (() => void)) {
         return Promise.reject();
     }
 
-    const fpjsloader: any = await FingerprintJS.import("jAYuN2pGILWUwQbCDWTw");
+    const fpjsloader: any = await FingerprintJS.import(ENDPOINT, "jAYuN2pGILWUwQbCDWTw");
     const fpjs = await fpjsloader.load();
     const fingerprint: any = await fpjs.get();
     
@@ -280,6 +290,7 @@ async function start(m: (a: any) => (() => void)) {
                 try {
                     vm();
                 } catch (err) {
+                    console.log(err);
                     fail();
                 }
             }

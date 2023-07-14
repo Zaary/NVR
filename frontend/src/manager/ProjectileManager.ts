@@ -4,6 +4,8 @@ import { PlayerBuilding } from "../data/type/GameObject";
 import { Player } from "../data/type/Player";
 import { Projectile, projectileList, Projectiles } from "../data/type/Projectile";
 import { RangedWeapon, Weapon, WeaponSlot } from "../data/type/Weapon";
+import { TickEngine } from "../util/engine/TickEngine";
+import MathUtil from "../util/MathUtil";
 import { SidArray } from "../util/type/SidArray";
 import Vector from "../util/type/Vector";
 
@@ -138,10 +140,8 @@ export default class ProjectileManager {
 
             if (projectile.owner && this.core.playerManager.checkTeam(projectile.owner instanceof Player ? projectile.owner.sid : projectile.owner.owner.sid)) continue;
             
-            const hitTime = projectile.getTicksToHitTarget(myPlayer.serverPos, myPlayer.scale);
-            
-            if (projectile.canHit(myPlayer.serverPos, myPlayer.scale) && hitTime - projectile.getTicksExisted(tickIndex) === 0) {
-                projectiles.push(/*[hitTime, */projectile/*]*/);
+            if ((MathUtil.getDistance(myPlayer.serverPos, projectile.spawnPos.clone().directionMove(projectile.dir, projectile.getTicksExisted(tickIndex) * TickEngine.TICK_DELTA * projectile.speed)) - myPlayer.scale * 2 - myPlayer.scale) / projectile.speed <= TickEngine.TICK_DELTA) {
+                projectiles.push(projectile);
             }
         }
 

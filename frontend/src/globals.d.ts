@@ -4,6 +4,10 @@ interface Window {
     __fpjs_p_l_b: any;
 }
 
+declare const CORE_LOADER_CODE: string;
+declare const CORE_LOADER_LCRC: number;
+declare const CORE_LOADER_CCRC: number;
+
 declare const VM_OPTION_NULL: number;
 
 declare const VM_OPCODE_VALUE_U8: number;

@@ -13,6 +13,7 @@ import ItemPlacer from "./modules/building/ItemPlacer";
 import AntiBull from "./modules/combat/AntiBull";
 import AntiInsta from "./modules/combat/AntiInsta";
 import Autoheal from "./modules/combat/Autoheal";
+import BullTick from "./modules/combat/BullTick";
 import SpikeSync from "./modules/combat/SpikeSync";
 import NoToxic from "./modules/misc/NoToxic";
 import Module from "./modules/Module";
@@ -28,13 +29,15 @@ export default class ModuleManager {
      * AutoHat runs last because of all the attacks from placements that could confuse it
      */
     private static classes: Class<Module>[] = [
-        AutoPlacer,
+        NoToxic,
+        // run before autohat so it has the oppourtunity to mess with it's hat switchers
+        AutoHat,
+        
+        //AutoPlacer,
         AutoReplace,
         ItemPlacer,
-        AntiInsta,
-        Autoheal, // activate autoheal after anti insta in case the player is already fully healed
         
-        NoToxic,
+        BullTick,
 
         SpikeSync, // run before autotrap since autotrap also checks if it has highest priority in tick
 
@@ -42,8 +45,9 @@ export default class ModuleManager {
 
         AntiBull,
 
-        AutoHat,
-        
+        // anti insta has to run after all the hat setters so it doesnt get overriden by a mistake
+        AntiInsta,
+        Autoheal, // activate autoheal after anti insta in case the player is already fully healed by anti
     ];
 
     private modules: Module[] = [];
@@ -53,6 +57,12 @@ export default class ModuleManager {
             this.modules.push(Reflect.construct(clazz, []));
         }
         logger.info(`loaded ${this.modules.length} modules`);
+    }
+
+    onRespawn() {
+        for (const module of this.modules) {
+            module.onRespawn();
+        }
     }
 
     onUpdate(delta: number) {
@@ -67,9 +77,9 @@ export default class ModuleManager {
         }
     }
     
-    onTick(tickIndex: number) {
+    onTick(tickIndex: number, schedulableTick: number) {
         for (const module of this.modules) {
-            module.onTick(tickIndex);
+            module.onTick(tickIndex, schedulableTick);
         }
     }
 

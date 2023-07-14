@@ -41,7 +41,7 @@ export default class AutoReplace extends Module {
 
         if (enemyPlayer && MathUtil.getDistance(enemyPlayer.serverPos, myPlayer.serverPos) <= 850 && MathUtil.getDistance(myPlayer.serverPos, building.position) <= building.getScale() + myPlayer.scale + 220) {
             const playerToBuilding = MathUtil.getDistance(enemyPlayer.serverPos.clone().add(enemyPlayer.velocity), building.position);
-            const item = (playerToBuilding < enemyPlayer.scale + spikeItem.scale * 1.3 + myPlayer.scale + (spikeItem.placeOffset ?? 0)) ? spikeItem : trapItem;
+            const item = (playerToBuilding < enemyPlayer.scale + spikeItem.scale * 1.03 + myPlayer.scale + (spikeItem.placeOffset ?? 0)) ? spikeItem : trapItem;
 
             // calculate angle
             const arcs = core.objectManager.findPlacementArcs([myPlayer.serverPos, myPlayer.scale], item, [building]);

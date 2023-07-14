@@ -5,6 +5,7 @@
 // @description  try to take over the world!
 // @author       You
 // @include      /^http[s]?:\/\/((sandbox|dev)\.)?moomoo\.io\/?(\?server=\d+:\d+:\d+)?$/
+// @include      http://127.0.0.1/
 // @icon         https://media.discordapp.net/attachments/1026024421925855302/1058027305764667452/UMrA0xrKmPkAAAAASUVORK5CYII.png
 // @grant        none
 // @run-at       document-start

@@ -63,7 +63,7 @@ export default class InteractionEngine extends EventEmitter {
     vanillaPlaceItem(item: Item, angle: number, ignoredSids?: number[]) {
         const myPlayer = this.core.playerManager.myPlayer;
         const wasAttacking = myPlayer.isAttacking;
-        const oldAngle = myPlayer.dir;
+        const oldAngle = this.core.lastActionState.aim;
         const lastHeld = myPlayer.inventory.heldItem.id;
         const lastHeldWasWeapon = myPlayer.inventory.heldItem instanceof Weapon;
 
@@ -81,7 +81,7 @@ export default class InteractionEngine extends EventEmitter {
             //}
 
             //console.log(wasAttacking, this.core.mstate.mouseHeld);
-            if (wasAttacking || this.core.mstate.mouseHeld || this.antiTrapModule.isBreaking) {
+            if ((wasAttacking || this.core.mstate.mouseHeld) && !this.antiTrapModule.getterIsFirstHit) {
                 connection.send(new Packet(PacketType.ATTACK, [1, oldAngle]));
             } else if (this.core.lastActionState.attack === 1) {
                 connection.send(new Packet(PacketType.ATTACK, [0, oldAngle]));

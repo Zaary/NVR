@@ -62,7 +62,7 @@ export default class AutoPlacer extends Module {
     private debugAngles: number[] = [];
 
     private state: State;
-    private toggled: boolean;
+    private amountPlacedThisTick = 0;
 
     constructor() {
         super();
@@ -86,9 +86,9 @@ export default class AutoPlacer extends Module {
 
         for (let i = 0; i < enemies.length; i++) {
             const enemy = enemies[i];
-            const distance = MathUtil.getDistance(enemy.serverPos, myPlayer.serverPos);
+            const distance = MathUtil.getDistance(enemy.serverPos.clone().add(enemy.velocity), myPlayer.serverPos.clone().add(myPlayer.velocity));
 
-            const nextDistance = MathUtil.getDistance(enemy.serverPos.clone().add(enemy.velocity), myPlayer.serverPos);
+            const nextDistance = MathUtil.getDistance(enemy.serverPos.clone().add(enemy.velocity).clone().add(enemy.velocity), myPlayer.serverPos.clone().add(myPlayer.velocity));
             const trappingDistance = myPlayer.scale + enemy.scale + trapItem.scale + trapItem.scale * trapItem.colDiv! + trapItem.placeOffset!;
 
             if (distance <= trappingDistance && nextDistance <= trappingDistance && !enemy.state.isTrapped) {
@@ -97,7 +97,7 @@ export default class AutoPlacer extends Module {
             }
             
             if (enemy.state.isTrapped) {
-                if (MathUtil.getDistance(enemy.state.data.trap!.position, myPlayer.serverPos) - myPlayer.scale - trapItem.scale - spikeItem.scale * 2 - (spikeItem.placeOffset ?? 0) <= 0) {
+                if (MathUtil.getDistance(enemy.state.data.trap!.position, myPlayer.serverPos.clone().add(myPlayer.velocity)) - myPlayer.scale - trapItem.scale - spikeItem.scale * 2 - (spikeItem.placeOffset ?? 0) <= 0) {
                     this.state = State.SPIKE_TRAPPED;
                     this.targetsTrapSpikable.add(enemy);
                 }
@@ -105,6 +105,10 @@ export default class AutoPlacer extends Module {
         }
 
         if (this.state === State.IDLE) this.state = State.WINDMILLS;
+    }
+
+    onTick(tickIndex: number): void {
+        this.amountPlacedThisTick = 0;
     }
 
     onUpdate(tickIndex: number): void {
@@ -130,7 +134,10 @@ export default class AutoPlacer extends Module {
                 const angles = singleAngles.filter(angle => util.getAngleDist(backdir, angle) <= Math.PI / 2.8);
 
                 for (let i = 0; i < angles.length; i++) {
-                    core.interactionEngine.safePlacement(windmillItem, angles[i]);
+                    if (this.amountPlacedThisTick <= 5) {
+                        core.interactionEngine.safePlacement(windmillItem, angles[i]);
+                        this.amountPlacedThisTick++;
+                    }
                     //InteractUtil.place(<number> inventory.get(InventoryItem.WINDMILL), angles[i], true);
                 }
 
@@ -141,14 +148,20 @@ export default class AutoPlacer extends Module {
                 const trapItem = items.list[15];
                 for (let iterator = this.targetsTrappable.values(), iteration = null, value = (iteration = iterator.next()).value; !iteration.done; value = (iteration = iterator.next()).value) {
                     const target = value;
-                    const targetDir = MathUtil.getDirection(myPlayer.serverPos, target.serverPos);
+                    const targetDir = MathUtil.getDirection(myPlayer.serverPos.clone().add(myPlayer.velocity), target.serverPos.clone().add(target.velocity));
                     const trappingDistance = myPlayer.scale + target.scale + trapItem.scale + trapItem.scale * trapItem.colDiv! + trapItem.placeOffset!;
-                    const angles = translateAllowAngles(core.objectManager.findPlacementArcs([core.playerManager.myPlayer.serverPos, core.playerManager.myPlayer.scale], trapItem), 3);
+                    const angles = translateAllowAngles(core.objectManager.findPlacementArcs([myPlayer.serverPos.clone().add(myPlayer.velocity), core.playerManager.myPlayer.scale], trapItem), 3);
                     const placeAngles = angles.filter(angle => MathUtil.getAngleDist(angle, targetDir) <= Math.sin(trappingDistance / (target.scale + trapItem.scale * trapItem.colDiv!)));
 
-                    core.interactionEngine.safePlacement(trapItem, targetDir);
+                    if (this.amountPlacedThisTick <= 5) {
+                        core.interactionEngine.safePlacement(trapItem, targetDir);
+                        this.amountPlacedThisTick++;
+                    }
                     for (let i = 0; i < placeAngles.length; i++) {
-                        core.interactionEngine.safePlacement(trapItem, placeAngles[i]);
+                        if (this.amountPlacedThisTick <= 5) {
+                            core.interactionEngine.safePlacement(trapItem, placeAngles[i]);
+                            this.amountPlacedThisTick++;
+                        }
                     }
                 }
                 break;
@@ -162,13 +175,16 @@ export default class AutoPlacer extends Module {
                     const trap = target.state.data.trap;
 
                     if (trap) {
-                        const tangentAngle = core.objectManager.findPlacementTangent([myPlayer.serverPos, myPlayer.scale], trap, spikeItem, 5);
-                        const straightAngle = MathUtil.getDirection(myPlayer.serverPos, trap.position);
-                        const targetAngle = MathUtil.getDirection(myPlayer.serverPos, target.serverPos);
+                        const tangentAngle = core.objectManager.findPlacementTangent([myPlayer.serverPos.clone().add(myPlayer.velocity), myPlayer.scale], trap, spikeItem, 5);
+                        const straightAngle = MathUtil.getDirection(myPlayer.serverPos.clone().add(myPlayer.velocity), trap.position);
+                        const targetAngle = MathUtil.getDirection(myPlayer.serverPos.clone().add(myPlayer.velocity), target.serverPos.clone().add(target.velocity));
                         const angle1 = straightAngle + tangentAngle;
                         const angle2 = straightAngle - tangentAngle;
                         const closestAngle = MathUtil.getAngleDist(angle1, targetAngle) > MathUtil.getAngleDist(angle2, targetAngle) ? angle2 : angle1;
-                        core.interactionEngine.safePlacement(spikeItem, closestAngle);
+                        if (this.amountPlacedThisTick <= 5) {
+                            core.interactionEngine.safePlacement(spikeItem, closestAngle);
+                            this.amountPlacedThisTick++;
+                        }
                     }
                 }
                 break;

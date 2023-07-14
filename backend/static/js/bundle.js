@@ -6,6 +6,7 @@
  * // @description  try to take over the world!
  * // @author       You
  * // @include      /^http[s]?:\/\/((sandbox|dev)\.)?moomoo\.io\/?(\?server=\d+:\d+:\d+)?$/
+ * // @include      http://127.0.0.1/
  * // @icon         https://media.discordapp.net/attachments/1026024421925855302/1058027305764667452/UMrA0xrKmPkAAAAASUVORK5CYII.png
  * // @grant        none
  * // @run-at       document-start
@@ -58,12 +59,15 @@ var ActionPriority;
 (function (ActionPriority) {
   ActionPriority[ActionPriority["COMPATIBILITY"] = 0] = "COMPATIBILITY";
   ActionPriority[ActionPriority["BIOMEHAT"] = 1] = "BIOMEHAT";
-  ActionPriority[ActionPriority["ANTITRAP"] = 2] = "ANTITRAP";
-  ActionPriority[ActionPriority["AUTOBREAK"] = 3] = "AUTOBREAK";
-  ActionPriority[ActionPriority["ANTIBULL"] = 4] = "ANTIBULL";
-  ActionPriority[ActionPriority["SPIKESYNC"] = 5] = "SPIKESYNC";
-  ActionPriority[ActionPriority["ANTIINSTA"] = 6] = "ANTIINSTA";
-  ActionPriority[ActionPriority["FORCED"] = 7] = "FORCED";
+  ActionPriority[ActionPriority["AUTOHAT"] = 2] = "AUTOHAT";
+  ActionPriority[ActionPriority["BULLTICK"] = 3] = "BULLTICK";
+  ActionPriority[ActionPriority["ANTITRAP"] = 4] = "ANTITRAP";
+  ActionPriority[ActionPriority["AUTOBREAK"] = 5] = "AUTOBREAK";
+  ActionPriority[ActionPriority["ANTIBULL"] = 6] = "ANTIBULL";
+  ActionPriority[ActionPriority["ANTIREFLECT"] = 7] = "ANTIREFLECT";
+  ActionPriority[ActionPriority["SPIKESYNC"] = 8] = "SPIKESYNC";
+  ActionPriority[ActionPriority["ANTIINSTA"] = 9] = "ANTIINSTA";
+  ActionPriority[ActionPriority["FORCED"] = 10] = "FORCED";
 })(ActionPriority || (ActionPriority = {}));
 var ActionType;
 (function (ActionType) {
@@ -94,31 +98,31 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var events__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! events */ "./node_modules/events/events.js");
 /* harmony import */ var events__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(events__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _socket_Connection__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../socket/Connection */ "./frontend/src/socket/Connection.ts");
-/* harmony import */ var _socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../socket/PacketHandler */ "./frontend/src/socket/PacketHandler.ts");
-/* harmony import */ var _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../socket/packets/Packet */ "./frontend/src/socket/packets/Packet.ts");
-/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
-/* harmony import */ var _util_Logger__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../util/Logger */ "./frontend/src/util/Logger.ts");
-/* harmony import */ var _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../util/engine/TickEngine */ "./frontend/src/util/engine/TickEngine.ts");
-/* harmony import */ var _Action__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./Action */ "./frontend/src/core/Action.ts");
-/* harmony import */ var _ActionType__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./ActionType */ "./frontend/src/core/ActionType.ts");
-/* harmony import */ var _util_engine_PacketCountEngine__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../util/engine/PacketCountEngine */ "./frontend/src/util/engine/PacketCountEngine.ts");
-/* harmony import */ var _manager_ObjectManager__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../manager/ObjectManager */ "./frontend/src/manager/ObjectManager.ts");
-/* harmony import */ var _render_RenderManager__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../render/RenderManager */ "./frontend/src/render/RenderManager.ts");
-/* harmony import */ var _render_interface_PacketCountModule__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../render/interface/PacketCountModule */ "./frontend/src/render/interface/PacketCountModule.ts");
-/* harmony import */ var _features_ModuleManager__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../features/ModuleManager */ "./frontend/src/features/ModuleManager.ts");
-/* harmony import */ var _util_engine_InteractionEngine__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../util/engine/InteractionEngine */ "./frontend/src/util/engine/InteractionEngine.ts");
-/* harmony import */ var _injector_BundleProxy__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../injector/BundleProxy */ "./frontend/src/injector/BundleProxy.ts");
-/* harmony import */ var _injector_api_API__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../injector/api/API */ "./frontend/src/injector/api/API.ts");
-/* harmony import */ var _render_interface_PacketGraphModule__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ../render/interface/PacketGraphModule */ "./frontend/src/render/interface/PacketGraphModule.ts");
-/* harmony import */ var _manager_PlayerManager__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ../manager/PlayerManager */ "./frontend/src/manager/PlayerManager.ts");
-/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
-/* harmony import */ var _util_type_Vector__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ../util/type/Vector */ "./frontend/src/util/type/Vector.ts");
-/* harmony import */ var _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ../loader/NVRLoader */ "./frontend/src/loader/NVRLoader.ts");
-/* harmony import */ var _render_BuildingVisualisationModule__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ../render/BuildingVisualisationModule */ "./frontend/src/render/BuildingVisualisationModule.ts");
-/* harmony import */ var _data_moomoo_items__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ../data/moomoo/items */ "./frontend/src/data/moomoo/items.ts");
-/* harmony import */ var _manager_ProjectileManager__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ../manager/ProjectileManager */ "./frontend/src/manager/ProjectileManager.ts");
-var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__, _manager_ObjectManager__WEBPACK_IMPORTED_MODULE_10__, _features_ModuleManager__WEBPACK_IMPORTED_MODULE_13__, _util_engine_InteractionEngine__WEBPACK_IMPORTED_MODULE_14__, _injector_BundleProxy__WEBPACK_IMPORTED_MODULE_15__, _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_21__, _render_BuildingVisualisationModule__WEBPACK_IMPORTED_MODULE_22__]);
-([_socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__, _manager_ObjectManager__WEBPACK_IMPORTED_MODULE_10__, _features_ModuleManager__WEBPACK_IMPORTED_MODULE_13__, _util_engine_InteractionEngine__WEBPACK_IMPORTED_MODULE_14__, _injector_BundleProxy__WEBPACK_IMPORTED_MODULE_15__, _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_21__, _render_BuildingVisualisationModule__WEBPACK_IMPORTED_MODULE_22__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+/* harmony import */ var _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../socket/packets/Packet */ "./frontend/src/socket/packets/Packet.ts");
+/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
+/* harmony import */ var _util_Logger__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../util/Logger */ "./frontend/src/util/Logger.ts");
+/* harmony import */ var _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../util/engine/TickEngine */ "./frontend/src/util/engine/TickEngine.ts");
+/* harmony import */ var _Action__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./Action */ "./frontend/src/core/Action.ts");
+/* harmony import */ var _ActionType__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./ActionType */ "./frontend/src/core/ActionType.ts");
+/* harmony import */ var _util_engine_PacketCountEngine__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../util/engine/PacketCountEngine */ "./frontend/src/util/engine/PacketCountEngine.ts");
+/* harmony import */ var _manager_ObjectManager__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../manager/ObjectManager */ "./frontend/src/manager/ObjectManager.ts");
+/* harmony import */ var _render_RenderManager__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../render/RenderManager */ "./frontend/src/render/RenderManager.ts");
+/* harmony import */ var _render_interface_PacketCountModule__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../render/interface/PacketCountModule */ "./frontend/src/render/interface/PacketCountModule.ts");
+/* harmony import */ var _features_ModuleManager__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../features/ModuleManager */ "./frontend/src/features/ModuleManager.ts");
+/* harmony import */ var _util_engine_InteractionEngine__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../util/engine/InteractionEngine */ "./frontend/src/util/engine/InteractionEngine.ts");
+/* harmony import */ var _injector_BundleProxy__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../injector/BundleProxy */ "./frontend/src/injector/BundleProxy.ts");
+/* harmony import */ var _injector_api_API__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../injector/api/API */ "./frontend/src/injector/api/API.ts");
+/* harmony import */ var _render_interface_PacketGraphModule__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../render/interface/PacketGraphModule */ "./frontend/src/render/interface/PacketGraphModule.ts");
+/* harmony import */ var _manager_PlayerManager__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ../manager/PlayerManager */ "./frontend/src/manager/PlayerManager.ts");
+/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
+/* harmony import */ var _util_type_Vector__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ../util/type/Vector */ "./frontend/src/util/type/Vector.ts");
+/* harmony import */ var _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ../loader/NVRLoader */ "./frontend/src/loader/NVRLoader.ts");
+/* harmony import */ var _render_BuildingVisualisationModule__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ../render/BuildingVisualisationModule */ "./frontend/src/render/BuildingVisualisationModule.ts");
+/* harmony import */ var _data_moomoo_items__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ../data/moomoo/items */ "./frontend/src/data/moomoo/items.ts");
+/* harmony import */ var _manager_ProjectileManager__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ../manager/ProjectileManager */ "./frontend/src/manager/ProjectileManager.ts");
+/* harmony import */ var _util_StringUtil__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ../util/StringUtil */ "./frontend/src/util/StringUtil.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_manager_ObjectManager__WEBPACK_IMPORTED_MODULE_9__, _features_ModuleManager__WEBPACK_IMPORTED_MODULE_12__, _util_engine_InteractionEngine__WEBPACK_IMPORTED_MODULE_13__, _injector_BundleProxy__WEBPACK_IMPORTED_MODULE_14__, _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_20__, _render_BuildingVisualisationModule__WEBPACK_IMPORTED_MODULE_21__]);
+([_manager_ObjectManager__WEBPACK_IMPORTED_MODULE_9__, _features_ModuleManager__WEBPACK_IMPORTED_MODULE_12__, _util_engine_InteractionEngine__WEBPACK_IMPORTED_MODULE_13__, _injector_BundleProxy__WEBPACK_IMPORTED_MODULE_14__, _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_20__, _render_BuildingVisualisationModule__WEBPACK_IMPORTED_MODULE_21__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
 
 //import { Pathfinder } from "../pathfinding/Pathfinder";
 
@@ -145,7 +149,7 @@ var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_soc
 
 
 
-const logger = new _util_Logger__WEBPACK_IMPORTED_MODULE_5__["default"]("core");
+const logger = new _util_Logger__WEBPACK_IMPORTED_MODULE_4__["default"]("core");
 const sym = Symbol();
 let target = null;
 
@@ -177,13 +181,16 @@ class Core extends (events__WEBPACK_IMPORTED_MODULE_0___default()) {
   }
   actionIdCounter = 0;
   packetBlockIdCounter = 0;
-  constructor() {
+  constructor(cid, callback) {
     super();
+
+    // for loader verify
+    this.cid = cid;
     Object.defineProperty(window, "core", {
       value: this
     });
     logger.info(`launched StarLit core version ${Core.VER} by ${Core.AUTHORS.join(", ")}`);
-    this.bundleAPI = new _injector_api_API__WEBPACK_IMPORTED_MODULE_16__["default"](this);
+    this.bundleAPI = new _injector_api_API__WEBPACK_IMPORTED_MODULE_15__["default"](this);
     this.loaded = false;
     this.mstate = {
       mouseHeld: false
@@ -198,17 +205,29 @@ class Core extends (events__WEBPACK_IMPORTED_MODULE_0___default()) {
       weapon: [0, true]
     };
     this.packetBlocks = {};
-    this.moduleManager = new _features_ModuleManager__WEBPACK_IMPORTED_MODULE_13__["default"](); // initialize modules first so engines can hook into them
 
-    this.objectManager = new _manager_ObjectManager__WEBPACK_IMPORTED_MODULE_10__["default"](this);
-    this.playerManager = new _manager_PlayerManager__WEBPACK_IMPORTED_MODULE_18__["default"]();
-    this.projectileManager = new _manager_ProjectileManager__WEBPACK_IMPORTED_MODULE_24__["default"](this);
+    // initialize modules first so engines can hook into them
+    this.moduleManager = new _features_ModuleManager__WEBPACK_IMPORTED_MODULE_12__["default"]();
+    this.objectManager = new _manager_ObjectManager__WEBPACK_IMPORTED_MODULE_9__["default"](this);
+    this.playerManager = new _manager_PlayerManager__WEBPACK_IMPORTED_MODULE_17__["default"]();
+    this.projectileManager = new _manager_ProjectileManager__WEBPACK_IMPORTED_MODULE_23__["default"](this);
     this.renderManager = null;
-    this.tickEngine = new _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_6__.TickEngine(this);
-    this.packetEngine = new _util_engine_PacketCountEngine__WEBPACK_IMPORTED_MODULE_9__.PacketCountEngine(this);
-    this.interactionEngine = new _util_engine_InteractionEngine__WEBPACK_IMPORTED_MODULE_14__["default"](this);
+    this.tickEngine = new _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_5__.TickEngine(this);
+    this.packetEngine = new _util_engine_PacketCountEngine__WEBPACK_IMPORTED_MODULE_8__.PacketCountEngine(this);
+    this.interactionEngine = new _util_engine_InteractionEngine__WEBPACK_IMPORTED_MODULE_13__["default"](this);
     this.mouseAngle = 0;
     this.bundleDir = null;
+    const argstr = _util_StringUtil__WEBPACK_IMPORTED_MODULE_24__["default"].randomString(40);
+    callback(c => {
+      const func = new Function(argstr, "cid", `with(${argstr}){${c}}`);
+      const lcrcsub = `with(${argstr}){}`.length;
+      const ccrcsub = `with(${argstr}){}`.split("").reduce((previous, current) => previous + current.charCodeAt(0), 0);
+      const toStr = func.toString();
+      const body = toStr.substring(toStr.indexOf("{") + 1, toStr.lastIndexOf("}")).replace(/\n/g, "");
+      const lcrc = body.length - lcrcsub;
+      const ccrc = body.split("").reduce((previous, current) => previous + current.charCodeAt(0), 0) - ccrcsub;
+      return [func.bind(this), [lcrc, ccrc]];
+    });
   }
   lockBundleDirection(priority, dir) {
     if (this.bundleDir === null || priority >= this.bundleDir[0]) {
@@ -231,116 +250,22 @@ class Core extends (events__WEBPACK_IMPORTED_MODULE_0___default()) {
         }
     }
   }
-  removePacketInterceptor489() {
-    _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_21__["default"].stop();
-  }
-
-  // the name is just a disguise, its actually a function which initializes the core
-  removePacketInterceptor164() {
-    this.lastUpdate = Date.now();
-
-    /*this.scheduledActions = [];
-    this.lastActionState = {
-        hat: 0,
-        tail: 0,
-        attack: 0,
-        aim: 0,
-        weapon: 0
-    }
-      this.packetBlocks = {};
-      this.objectManager = new ObjectManager(this);
-    this.playerManager = new PlayerManager();
-    this.renderManager = null;
-    this.moduleManager = new ModuleManager();
-      this.tickEngine = new TickEngine(this);
-    this.packetEngine = new PacketCountEngine(this);
-    this.interactionEngine = new InteractionEngine(this);*/
-
-    this.tickEngine.once("ping", this.packetEngine.handlePing.bind(this.packetEngine));
-    this.tickEngine.on("pretick", tick => {
-      this.scheduledActions = []; // since modules use actions, we can clear right before calling them
-
-      this.moduleManager.onPreTick(tick);
-
-      // run actions based on priority
-      this.runUppermostActions(_ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.HAT, tick);
-      this.runUppermostActions(_ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.TAIL, tick);
-      this.runUppermostActions(_ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.WEAPON, tick); // important to switch weapon before attack
-      this.runUppermostActions(_ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.ATTACK, tick);
-    });
-    this.tickEngine.on("posttick", tick => {
-      this.moduleManager.onPostTick(tick);
-    });
-    this.tickEngine.on("tick", this.moduleManager.onTick.bind(this.moduleManager));
-    this.mouseAngle = 0;
-    document.addEventListener("keydown", event => {
-      this.emit("keydown", event);
-      this.moduleManager.onKeydown(event.keyCode);
-    });
-    document.addEventListener("keyup", event => {
-      this.emit("keyup", event);
-      this.moduleManager.onKeyup(event.keyCode);
-    });
-
-    // listen for packet send (post) - after its impossible to cancel
-    _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.on("packetsendp", packet => {
-      if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.BUY_AND_EQUIP) {
-        if (packet.data[0] === 0) {
-          if (!packet.data[2]) {
-            this.lastActionState.hat = packet.data[1];
-          } else {
-            this.lastActionState.tail = packet.data[1];
-          }
-        }
-      } else if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.ATTACK) {
-        this.lastActionState.attack = packet.data[0];
-        if (typeof packet.data[1] === "number") this.lastActionState.aim = packet.data[1];
-      } else if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.SET_ANGLE) {
-        this.lastActionState.aim = packet.data[0];
-      } else if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.SELECT_ITEM) {
-        this.lastActionState.weapon = [packet.data[0], packet.data[1]];
-      }
-    });
-
-    // cancels aim packets because it only spams packets
-    // and messes up autobreak aim (kinda lazy solution)
-    // should be fixed explicitly in the future and
-    // remove the packet cancelling
-    _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.on("packetsend", (event, meta) => {
-      const packet = event.getPacket();
-      //console.log(packet);
-      if (this.packetBlocks.hasOwnProperty(packet.type)) {
-        if (this.packetBlocks[packet.type].length > 0) {
-          event.cancel();
-          return;
-        }
-      }
-      _socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__.PacketHandler.processOut(event, meta);
-      this.moduleManager.onPacketSend(event);
-    });
-
-    // listen for received packets (always process the packet before passing it to modules)
-    _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.on("packetreceive", event => {
-      _socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__.PacketHandler.processIn(event.getPacket());
-      this.moduleManager.onPacketReceive(event);
-    });
-    setInterval(this.update.bind(this), 1);
-    this.loaded = true;
-    _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_21__["default"].stop();
+  sd() {
+    _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_20__["default"].stop();
   }
   patchBundle(src, promise) {
-    _injector_BundleProxy__WEBPACK_IMPORTED_MODULE_15__["default"].loadBundle(src, this.bundleAPI, promise);
+    _injector_BundleProxy__WEBPACK_IMPORTED_MODULE_14__["default"].loadBundle(src, this.bundleAPI, promise);
   }
   async initializeRenderer(canvas) {
-    this.renderManager = new _render_RenderManager__WEBPACK_IMPORTED_MODULE_11__["default"](this, canvas, 1920, 1080);
+    this.renderManager = new _render_RenderManager__WEBPACK_IMPORTED_MODULE_10__["default"](this, canvas, 1920, 1080);
 
     //await this.renderManager.createRenderer("background", HoverInfoModule, this);
-    await this.renderManager.createRenderer("buildingVisualisation", _render_BuildingVisualisationModule__WEBPACK_IMPORTED_MODULE_22__["default"], this);
-    await this.renderManager.createInterfaceRenderer("packetCount", _render_interface_PacketCountModule__WEBPACK_IMPORTED_MODULE_12__["default"], this);
-    await this.renderManager.createInterfaceRenderer("packetGraph", _render_interface_PacketGraphModule__WEBPACK_IMPORTED_MODULE_17__["default"], this);
+    await this.renderManager.createRenderer("buildingVisualisation", _render_BuildingVisualisationModule__WEBPACK_IMPORTED_MODULE_21__["default"], this);
+    await this.renderManager.createInterfaceRenderer("packetCount", _render_interface_PacketCountModule__WEBPACK_IMPORTED_MODULE_11__["default"], this);
+    await this.renderManager.createInterfaceRenderer("packetGraph", _render_interface_PacketGraphModule__WEBPACK_IMPORTED_MODULE_16__["default"], this);
     this.renderManager.createRenderHook();
     this.renderManager.on("mousemove", event => {
-      this.mouseAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_19__["default"].getDirection(new _util_type_Vector__WEBPACK_IMPORTED_MODULE_20__["default"](window.innerWidth / 2, window.innerHeight / 2), new _util_type_Vector__WEBPACK_IMPORTED_MODULE_20__["default"](event.clientX, event.clientY));
+      this.mouseAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_18__["default"].getDirection(new _util_type_Vector__WEBPACK_IMPORTED_MODULE_19__["default"](window.innerWidth / 2, window.innerHeight / 2), new _util_type_Vector__WEBPACK_IMPORTED_MODULE_19__["default"](event.clientX, event.clientY));
     });
     this.renderManager.on("mousedown", event => {
       this.mstate.mouseHeld = true;
@@ -372,12 +297,50 @@ class Core extends (events__WEBPACK_IMPORTED_MODULE_0___default()) {
     const index = this.packetBlocks[type].indexOf(id);
     if (index > -1) this.packetBlocks[type].splice(index, 1);
   }
+  attachLastActionStateListener() {
+    // listen for packet send (post) - after its impossible to cancel
+    _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.on("packetsendp", packet => {
+      if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.BUY_AND_EQUIP) {
+        if (packet.data[0] === 0) {
+          if (!packet.data[2]) {
+            this.lastActionState.hat = packet.data[1];
+          } else {
+            this.lastActionState.tail = packet.data[1];
+          }
+        }
+      } else if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.ATTACK) {
+        this.lastActionState.attack = packet.data[0];
+        if (typeof packet.data[1] === "number") this.lastActionState.aim = packet.data[1];
+      } else if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.SET_ANGLE) {
+        this.lastActionState.aim = packet.data[0];
+      } else if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.SELECT_ITEM) {
+        this.lastActionState.weapon = [packet.data[0], packet.data[1]];
+      }
+    });
+  }
+  cleanActions(tick) {
+    // clean actions
+    let i = this.scheduledActions.length - 1;
+    while (i >= 0) {
+      const action = this.scheduledActions[i];
+      if (action.executeTick < tick) this.scheduledActions.splice(i, 1);
+      i--;
+    }
+  }
+  runTickActions(tick) {
+    this.runUppermostActions(_ActionType__WEBPACK_IMPORTED_MODULE_7__.ActionType.HAT, tick);
+    this.runUppermostActions(_ActionType__WEBPACK_IMPORTED_MODULE_7__.ActionType.TAIL, tick);
+    this.runUppermostActions(_ActionType__WEBPACK_IMPORTED_MODULE_7__.ActionType.WEAPON, tick); // important to switch weapon before attack
+    this.runUppermostActions(_ActionType__WEBPACK_IMPORTED_MODULE_7__.ActionType.ATTACK, tick);
+  }
   runUppermostActions(action, tick) {
     // filter and sort by highest priority
     const filtered = this.scheduledActions.filter(a => a.type == action && a.executeTick == tick && (() => {
-      if (a.type === _ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.HAT && !this.playerManager.myPlayer.ownedHats.includes(a.data[0])) return false;
-      if (a.type === _ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.TAIL && !this.playerManager.myPlayer.ownedTails.includes(a.data[0])) return false;
-      if (a.type === _ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.WEAPON && (a.data[1] ? !this.playerManager.myPlayer.inventory.hasWeapon(a.data[0]) : this.playerManager.myPlayer.inventory.items[_data_moomoo_items__WEBPACK_IMPORTED_MODULE_23__.items.list[a.data[0]].group.id] !== a.data[0])) return false;
+      if (a.data !== undefined) {
+        if (a.type === _ActionType__WEBPACK_IMPORTED_MODULE_7__.ActionType.HAT && !this.playerManager.myPlayer.ownedHats.includes(a.data[0])) return false;
+        if (a.type === _ActionType__WEBPACK_IMPORTED_MODULE_7__.ActionType.TAIL && !this.playerManager.myPlayer.ownedTails.includes(a.data[0])) return false;
+        if (a.type === _ActionType__WEBPACK_IMPORTED_MODULE_7__.ActionType.WEAPON && (a.data[1] ? !this.playerManager.myPlayer.inventory.hasWeapon(a.data[0]) : this.playerManager.myPlayer.inventory.items[_data_moomoo_items__WEBPACK_IMPORTED_MODULE_22__.items.list[a.data[0]].group.id] !== a.data[0])) return false;
+      }
       return true;
     })());
     const maxPriority = Math.max(...filtered.map(x => x.priority));
@@ -405,45 +368,127 @@ class Core extends (events__WEBPACK_IMPORTED_MODULE_0___default()) {
   }
 
   runAction(action) {
+    if (action.data === undefined) return;
     switch (action.type) {
-      case _ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.HAT:
+      case _ActionType__WEBPACK_IMPORTED_MODULE_7__.ActionType.HAT:
         if (action.data[0] === this.lastActionState.hat) return;
-        _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.BUY_AND_EQUIP, [0, action.data[0], 0]));
+        _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_2__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.BUY_AND_EQUIP, [0, action.data[0], 0]));
         this.lastActionState.hat = action.data[0];
         break;
-      case _ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.TAIL:
+      case _ActionType__WEBPACK_IMPORTED_MODULE_7__.ActionType.TAIL:
         if (action.data[0] === this.lastActionState.tail) return;
-        _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.BUY_AND_EQUIP, [0, action.data[0], 1]));
+        _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_2__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.BUY_AND_EQUIP, [0, action.data[0], 1]));
         this.lastActionState.tail = action.data[0];
         break;
-      case _ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.ATTACK:
+      case _ActionType__WEBPACK_IMPORTED_MODULE_7__.ActionType.ATTACK:
         if (action.data[0] === this.lastActionState.attack && action.data[1] === this.lastActionState.aim) return;
-        _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.ATTACK, action.data), action.force);
+        _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_2__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.ATTACK, action.data), action.force);
         this.lastActionState.attack = action.data[0];
         this.lastActionState.aim = action.data[1];
         break;
-      case _ActionType__WEBPACK_IMPORTED_MODULE_8__.ActionType.WEAPON:
+      case _ActionType__WEBPACK_IMPORTED_MODULE_7__.ActionType.WEAPON:
         if (action.data[0] === this.lastActionState.weapon[0] && action.data[1] === this.lastActionState.weapon[1]) return;
-        _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.SELECT_ITEM, [action.data[0], action.data[1]]));
+        _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_2__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_3__.PacketType.SELECT_ITEM, [action.data[0], action.data[1]]));
         this.lastActionState.weapon = [action.data[0], action.data[1]];
       default:
         return;
     }
     this.moduleManager.onActionRun(action);
   }
+  scheduleBlockerAction(action, pririoty, tick) {
+    this.scheduledActions.push(new _Action__WEBPACK_IMPORTED_MODULE_6__.Action(this.actionIdCounter++, action, pririoty, tick, undefined, false));
+  }
   scheduleAction(action, priority, tick = this.tickEngine.tickIndex + 1, data, force) {
-    const ac = new _Action__WEBPACK_IMPORTED_MODULE_7__.Action(this.actionIdCounter++, action, priority, tick, data, force ? true : false);
+    const ac = new _Action__WEBPACK_IMPORTED_MODULE_6__.Action(this.actionIdCounter++, action, priority, tick, data, force ? true : false);
     this.scheduledActions.push(ac);
     return ac.id;
   }
-  cleanActions(priority, action, tick) {
-    this.scheduledActions = this.scheduledActions.filter(x => x.priority === priority && (action === undefined || x.type === action) && (tick === undefined || tick === x.executeTick));
+  runImmediateAction(action, priority, data) {
+    this.runAction(new _Action__WEBPACK_IMPORTED_MODULE_6__.Action(this.actionIdCounter++, action, priority, -1, data, false));
+  }
+  cancelScheduledAction(type, maxPriority, tick, includeTicksBefore = false) {
+    let i = this.scheduledActions.length - 1;
+    while (i >= 0) {
+      const action = this.scheduledActions[i];
+      if (action.type === type && (includeTicksBefore ? action.executeTick <= tick : action.executeTick === tick) && action.priority <= maxPriority) {
+        this.scheduledActions.splice(i, 1);
+      }
+      i--;
+    }
   }
   isHighestPriority(priority, tick) {
     return this.scheduledActions.filter(x => x.priority > priority && x.executeTick === tick).length === 0;
   }
 }
 
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
+
+/***/ }),
+
+/***/ "./frontend/src/core/CoreCreator.ts":
+/*!******************************************!*\
+  !*** ./frontend/src/core/CoreCreator.ts ***!
+  \******************************************/
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.a(module, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ CoreCreator)
+/* harmony export */ });
+/* harmony import */ var _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../loader/NVRLoader */ "./frontend/src/loader/NVRLoader.ts");
+/* harmony import */ var _socket_Connection__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../socket/Connection */ "./frontend/src/socket/Connection.ts");
+/* harmony import */ var _socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../socket/PacketHandler */ "./frontend/src/socket/PacketHandler.ts");
+/* harmony import */ var _Core__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./Core */ "./frontend/src/core/Core.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_loader_NVRLoader__WEBPACK_IMPORTED_MODULE_0__, _socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__, _Core__WEBPACK_IMPORTED_MODULE_3__]);
+([_loader_NVRLoader__WEBPACK_IMPORTED_MODULE_0__, _socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__, _Core__WEBPACK_IMPORTED_MODULE_3__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+
+
+
+
+class CoreCreator {
+  static create(cid) {
+    return new _Core__WEBPACK_IMPORTED_MODULE_3__.Core(cid, cb2 => {
+      const dict = {
+        "connection": _socket_Connection__WEBPACK_IMPORTED_MODULE_1__.connection,
+        "PacketHandler": _socket_PacketHandler__WEBPACK_IMPORTED_MODULE_2__.PacketHandler,
+        "NVRLoader": _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_0__["default"],
+        "cid": cid
+      };
+      const keys = Object.keys(dict);
+
+      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with
+      const namespace = new Proxy({}, {
+        has(target, key) {
+          // Avoid trapping global properties like `console`
+          if (key in globalThis) {
+            return false;
+          }
+          // Trap all property lookups
+          if (typeof key === "symbol") return false;
+          return keys.includes(key);
+        },
+        get(target, p, receiver) {
+          return dict[p];
+        }
+      });
+      const [func, crcData] = cb2("// self destruct if invalid cid\rif (cid !== this.cid) this.sd();\r\rthis.lastUpdate = Date.now();\r\rthis.tickEngine.once(\"ping\", this.packetEngine.handlePing.bind(this.packetEngine));\r\rthis.tickEngine.on(\"tick\", (tick) => {\r    this.cleanActions(tick);\r\r    this.moduleManager.onTick(tick, this.tickEngine.getFirstSchedulableTick());\r\r    // run actions based on priority. we need to run actions from future ticks\r    // so packets have time to get to the server before the tick happens\r    this.runTickActions(tick + this.tickEngine.getPingTicks());\r\r    this.moduleManager.onPostTick(tick);\r});\r\r/*this.tickEngine.on(\"posttick\", (tick) => {\r    this.moduleManager.onPostTick(tick);\r});*/\r\r//this.tickEngine.on(\"tick\", this.moduleManager.onTick.bind(this.moduleManager));\r\rthis.mouseAngle = 0;\r\rdocument.addEventListener(\"keydown\", event => {\r    this.emit(\"keydown\", event);\r    this.moduleManager.onKeydown(event.keyCode);\r});\r\rdocument.addEventListener(\"keyup\", event => {\r    this.emit(\"keyup\", event)\r    this.moduleManager.onKeyup(event.keyCode);\r});\r\rthis.attachLastActionStateListener();\r\r// cancels aim packets because it only spams packets\r// and messes up autobreak aim (kinda lazy solution)\r// should be fixed explicitly in the future and\r// remove the packet cancelling\rconnection.on(\"packetsend\", (event, meta) => {\r    const packet = event.getPacket();\r    //console.log(packet);\r    if (this.packetBlocks.hasOwnProperty(packet.type)) {\r        if (this.packetBlocks[packet.type].length > 0) {\r            event.cancel();\r            return;\r        }\r    }\r\r    PacketHandler.processOut(event, meta);\r    this.moduleManager.onPacketSend(event);\r});\r\r// listen for received packets (always process the packet before passing it to modules)\rconnection.on(\"packetreceive\", (event) => {\r    PacketHandler.processIn(event.getPacket());\r    this.moduleManager.onPacketReceive(event);\r});\r\rsetInterval(this.update.bind(this), 1);\r\rthis.loaded = true;\rNVRLoader.stop();");
+
+      // verify function integrity
+      if (1974 !== crcData[0] || 169649 !== crcData[1]) {
+        while (69 * 420 === 28980) {
+          undefined;
+        }
+        ;
+      } else {
+        // init core
+        func(namespace, cid);
+      }
+    });
+  }
+}
 __webpack_async_result__();
 } catch(e) { __webpack_async_result__(e); } });
 
@@ -1920,11 +1965,40 @@ class ShameTracker {
     this.isClowned = false;
     this.lastDamage = -1;
   }
-  isSafeHeal(ping) {
-    return Date.now() + ping - this.lastDamage > 120;
+  isSafeHeal(ping, std) {
+    return Date.now() + ping - std - this.lastDamage > 120;
   }
   whenSafeHeal(ping) {
     return 120 - (Date.now() + ping - this.lastDamage);
+  }
+}
+class HatTracker {
+  static BUFFER_LENGTH = _moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].serverUpdateRate * 3; // track from previous 3 seconds
+
+  constructor() {
+    this.currentHat = null;
+    this.currentTail = null;
+    this.hatBuffer = [];
+    this.tailBuffer = [];
+  }
+  push(hat, tail) {
+    this.hatBuffer.push(hat);
+    if (this.hatBuffer.length >= HatTracker.BUFFER_LENGTH) this.hatBuffer.shift();
+    this.tailBuffer.push(tail);
+    if (this.tailBuffer.length >= HatTracker.BUFFER_LENGTH) this.tailBuffer.shift();
+  }
+  isFull() {
+    return this.hatBuffer.length + this.tailBuffer.length >= HatTracker.BUFFER_LENGTH * 2;
+  }
+
+  // these calculations are fine: array.length - lastIndexOf(lastElement) = 1
+  getLastSeenHat(hat) {
+    const lastIndex = this.hatBuffer.lastIndexOf(hat);
+    return lastIndex === -1 ? -1 : HatTracker.BUFFER_LENGTH - lastIndex;
+  }
+  getLastSeenTail(tail) {
+    const lastIndex = this.tailBuffer.lastIndexOf(tail);
+    return lastIndex === -1 ? -1 : HatTracker.BUFFER_LENGTH - lastIndex;
   }
 }
 class Player {
@@ -1961,6 +2035,7 @@ class Player {
     this.health = health;
     this.maxHealth = maxHealth;
     this.shame = new ShameTracker();
+    this.hatTracker = new HatTracker();
     this.scale = scale;
     this.skinColor = skinColor;
     this.skinIndex = 0;
@@ -1999,6 +2074,11 @@ class Player {
     this.state.buildIndex = buildIndex;
     this.skinIndex = _skinIndex;
     this.tailIndex = _tailIndex;
+
+    // perf TODO: remake this so it doesnt use .find (very expensive to iterate the entire arr)
+    this.hatTracker.currentHat = _moomoo_hats__WEBPACK_IMPORTED_MODULE_2__["default"].find(x => x.id === _skinIndex) ?? null;
+    this.hatTracker.currentTail = _moomoo_accessories__WEBPACK_IMPORTED_MODULE_0__["default"].find(x => x.id === _tailIndex) ?? null;
+    this.hatTracker.push(_skinIndex, _tailIndex);
     this.seenHats.add(_skinIndex);
     this.seenTails.add(_tailIndex);
     const holdsWeapon = buildIndex === -1;
@@ -2096,6 +2176,7 @@ class ClientPlayer extends Player {
     this.isAttacking = false;
     this.isAutoAttacking = false;
     this.justStartedAttacking = false;
+    this.isAttackingWhileBlocked = false;
     this.ownedHats = _moomoo_hats__WEBPACK_IMPORTED_MODULE_2__["default"].filter(x => x.price === 0).map(x => x.id);
     this.ownedTails = _moomoo_accessories__WEBPACK_IMPORTED_MODULE_0__["default"].filter(x => x.price === 0).map(x => x.id);
     this.ownedHats.push(0);
@@ -2146,7 +2227,7 @@ const Projectiles = {
   TURRET_BULLET: new ProjectileItem(1, {
     scale: 20,
     range: 700,
-    speed: 2,
+    speed: 1.5,
     dmg: 25
   }),
   CROSSBOW_ARROW: new ProjectileItem(2, {
@@ -2769,17 +2850,17 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _util_Logger__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../util/Logger */ "./frontend/src/util/Logger.ts");
 /* harmony import */ var _modules_building_AntiTrap__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./modules/building/AntiTrap */ "./frontend/src/features/modules/building/AntiTrap.ts");
-/* harmony import */ var _modules_building_AutoPlacer__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./modules/building/AutoPlacer */ "./frontend/src/features/modules/building/AutoPlacer.ts");
-/* harmony import */ var _modules_building_AutoReplace__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./modules/building/AutoReplace */ "./frontend/src/features/modules/building/AutoReplace.ts");
-/* harmony import */ var _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./modules/building/ItemPlacer */ "./frontend/src/features/modules/building/ItemPlacer.ts");
-/* harmony import */ var _modules_combat_AntiBull__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./modules/combat/AntiBull */ "./frontend/src/features/modules/combat/AntiBull.ts");
-/* harmony import */ var _modules_combat_AntiInsta__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./modules/combat/AntiInsta */ "./frontend/src/features/modules/combat/AntiInsta.ts");
-/* harmony import */ var _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./modules/combat/Autoheal */ "./frontend/src/features/modules/combat/Autoheal.ts");
+/* harmony import */ var _modules_building_AutoReplace__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./modules/building/AutoReplace */ "./frontend/src/features/modules/building/AutoReplace.ts");
+/* harmony import */ var _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./modules/building/ItemPlacer */ "./frontend/src/features/modules/building/ItemPlacer.ts");
+/* harmony import */ var _modules_combat_AntiBull__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./modules/combat/AntiBull */ "./frontend/src/features/modules/combat/AntiBull.ts");
+/* harmony import */ var _modules_combat_AntiInsta__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./modules/combat/AntiInsta */ "./frontend/src/features/modules/combat/AntiInsta.ts");
+/* harmony import */ var _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./modules/combat/Autoheal */ "./frontend/src/features/modules/combat/Autoheal.ts");
+/* harmony import */ var _modules_combat_BullTick__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./modules/combat/BullTick */ "./frontend/src/features/modules/combat/BullTick.ts");
 /* harmony import */ var _modules_combat_SpikeSync__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./modules/combat/SpikeSync */ "./frontend/src/features/modules/combat/SpikeSync.ts");
 /* harmony import */ var _modules_misc_NoToxic__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./modules/misc/NoToxic */ "./frontend/src/features/modules/misc/NoToxic.ts");
 /* harmony import */ var _modules_player_AutoHat__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./modules/player/AutoHat */ "./frontend/src/features/modules/player/AutoHat.ts");
-var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_modules_building_AntiTrap__WEBPACK_IMPORTED_MODULE_1__, _modules_building_AutoPlacer__WEBPACK_IMPORTED_MODULE_2__, _modules_building_AutoReplace__WEBPACK_IMPORTED_MODULE_3__, _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_4__, _modules_combat_AntiBull__WEBPACK_IMPORTED_MODULE_5__, _modules_combat_AntiInsta__WEBPACK_IMPORTED_MODULE_6__, _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_7__, _modules_combat_SpikeSync__WEBPACK_IMPORTED_MODULE_8__, _modules_misc_NoToxic__WEBPACK_IMPORTED_MODULE_9__, _modules_player_AutoHat__WEBPACK_IMPORTED_MODULE_10__]);
-([_modules_building_AntiTrap__WEBPACK_IMPORTED_MODULE_1__, _modules_building_AutoPlacer__WEBPACK_IMPORTED_MODULE_2__, _modules_building_AutoReplace__WEBPACK_IMPORTED_MODULE_3__, _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_4__, _modules_combat_AntiBull__WEBPACK_IMPORTED_MODULE_5__, _modules_combat_AntiInsta__WEBPACK_IMPORTED_MODULE_6__, _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_7__, _modules_combat_SpikeSync__WEBPACK_IMPORTED_MODULE_8__, _modules_misc_NoToxic__WEBPACK_IMPORTED_MODULE_9__, _modules_player_AutoHat__WEBPACK_IMPORTED_MODULE_10__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_modules_building_AntiTrap__WEBPACK_IMPORTED_MODULE_1__, _modules_building_AutoReplace__WEBPACK_IMPORTED_MODULE_2__, _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_3__, _modules_combat_AntiBull__WEBPACK_IMPORTED_MODULE_4__, _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_6__, _modules_combat_BullTick__WEBPACK_IMPORTED_MODULE_7__, _modules_combat_SpikeSync__WEBPACK_IMPORTED_MODULE_8__, _modules_misc_NoToxic__WEBPACK_IMPORTED_MODULE_9__, _modules_player_AutoHat__WEBPACK_IMPORTED_MODULE_10__]);
+([_modules_building_AntiTrap__WEBPACK_IMPORTED_MODULE_1__, _modules_building_AutoReplace__WEBPACK_IMPORTED_MODULE_2__, _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_3__, _modules_combat_AntiBull__WEBPACK_IMPORTED_MODULE_4__, _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_6__, _modules_combat_BullTick__WEBPACK_IMPORTED_MODULE_7__, _modules_combat_SpikeSync__WEBPACK_IMPORTED_MODULE_8__, _modules_misc_NoToxic__WEBPACK_IMPORTED_MODULE_9__, _modules_player_AutoHat__WEBPACK_IMPORTED_MODULE_10__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
 
 
 
@@ -2799,19 +2880,29 @@ class ModuleManager {
    * AntiTrap runs after placing it would mess it up
    * AutoHat runs last because of all the attacks from placements that could confuse it
    */
-  static classes = [_modules_building_AutoPlacer__WEBPACK_IMPORTED_MODULE_2__["default"], _modules_building_AutoReplace__WEBPACK_IMPORTED_MODULE_3__["default"], _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_4__["default"], _modules_combat_AntiInsta__WEBPACK_IMPORTED_MODULE_6__["default"], _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_7__["default"],
-  // activate autoheal after anti insta in case the player is already fully healed
-
-  _modules_misc_NoToxic__WEBPACK_IMPORTED_MODULE_9__["default"], _modules_combat_SpikeSync__WEBPACK_IMPORTED_MODULE_8__["default"],
+  static classes = [_modules_misc_NoToxic__WEBPACK_IMPORTED_MODULE_9__["default"],
+  // run before autohat so it has the oppourtunity to mess with it's hat switchers
+  _modules_player_AutoHat__WEBPACK_IMPORTED_MODULE_10__["default"],
+  //AutoPlacer,
+  _modules_building_AutoReplace__WEBPACK_IMPORTED_MODULE_2__["default"], _modules_building_ItemPlacer__WEBPACK_IMPORTED_MODULE_3__["default"], _modules_combat_BullTick__WEBPACK_IMPORTED_MODULE_7__["default"], _modules_combat_SpikeSync__WEBPACK_IMPORTED_MODULE_8__["default"],
   // run before autotrap since autotrap also checks if it has highest priority in tick
 
-  _modules_building_AntiTrap__WEBPACK_IMPORTED_MODULE_1__["default"], _modules_combat_AntiBull__WEBPACK_IMPORTED_MODULE_5__["default"], _modules_player_AutoHat__WEBPACK_IMPORTED_MODULE_10__["default"]];
+  _modules_building_AntiTrap__WEBPACK_IMPORTED_MODULE_1__["default"], _modules_combat_AntiBull__WEBPACK_IMPORTED_MODULE_4__["default"],
+  // anti insta has to run after all the hat setters so it doesnt get overriden by a mistake
+  _modules_combat_AntiInsta__WEBPACK_IMPORTED_MODULE_5__["default"], _modules_combat_Autoheal__WEBPACK_IMPORTED_MODULE_6__["default"] // activate autoheal after anti insta in case the player is already fully healed by anti
+  ];
+
   modules = [];
   constructor() {
     for (const clazz of ModuleManager.classes) {
       this.modules.push(Reflect.construct(clazz, []));
     }
     logger.info(`loaded ${this.modules.length} modules`);
+  }
+  onRespawn() {
+    for (const module of this.modules) {
+      module.onRespawn();
+    }
   }
   onUpdate(delta) {
     for (const module of this.modules) {
@@ -2823,9 +2914,9 @@ class ModuleManager {
       module.onPreTick(tickIndex);
     }
   }
-  onTick(tickIndex) {
+  onTick(tickIndex, schedulableTick) {
     for (const module of this.modules) {
-      module.onTick(tickIndex);
+      module.onTick(tickIndex, schedulableTick);
     }
   }
   onPostTick(tickIndex) {
@@ -2906,9 +2997,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (/* binding */ Module)
 /* harmony export */ });
 class Module {
+  constructor() {
+    this.toggled = true;
+  }
+  onRespawn() {}
   onUpdate(delta) {}
   onPreTick(tickIndex) {}
-  onTick(tickIndex) {}
+  onTick(tickIndex, schedulableTick) {}
   onPostTick(tickIndex) {}
   onKeydown(keyCode) {}
   onKeyup(keyCode) {}
@@ -2920,6 +3015,9 @@ class Module {
   onBuildingBreak(building) {}
   onPlayerUpdate(player) {}
   onProjectileEarlyDespawn(projectileItem, spawnPosition, direction) {}
+  isToggled() {
+    return this.toggled;
+  }
 }
 
 /***/ }),
@@ -2963,6 +3061,7 @@ _main__WEBPACK_IMPORTED_MODULE_5__ = (__webpack_async_dependencies__.then ? (awa
 class AntiTrap extends _Module__WEBPACK_IMPORTED_MODULE_10__["default"] {
   constructor() {
     super();
+    this.isFirstHit = false;
     this.currentTrap = null;
     this.willTrapBreakNextTick = false;
     this.aimPacketsBlocker = -1;
@@ -3021,7 +3120,7 @@ class AntiTrap extends _Module__WEBPACK_IMPORTED_MODULE_10__["default"] {
       }
   }*/
 
-  onPreTick(tickIndex) {
+  onTick(tickIndex) {
     const myPlayer = _main__WEBPACK_IMPORTED_MODULE_5__.core.playerManager.myPlayer;
     if (!myPlayer.alive) return;
     if (myPlayer.state.isTrapped && this.trap === null) {
@@ -3029,6 +3128,7 @@ class AntiTrap extends _Module__WEBPACK_IMPORTED_MODULE_10__["default"] {
     } else if (!myPlayer.state.isTrapped && this.trap !== null || this.willTrapBreakNextTick) {
       this.setTrapBroken();
     } else if (this.currentTrap !== null) {
+      if (this.isFirstHit) this.isFirstHit = false;
       const tankGear = _data_moomoo_hats__WEBPACK_IMPORTED_MODULE_1__["default"].find(x => x.id === 40);
       const angle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_9__["default"].getDirection(myPlayer.serverPos, this.currentTrap.position);
       const primaryWeapon = myPlayer.inventory.getWeapon(_data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__.WeaponSlot.PRIMARY);
@@ -3046,6 +3146,7 @@ class AntiTrap extends _Module__WEBPACK_IMPORTED_MODULE_10__["default"] {
         _main__WEBPACK_IMPORTED_MODULE_5__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.WEAPON, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOBREAK, tickIndex, [bestWeapon.id, true]);
         _main__WEBPACK_IMPORTED_MODULE_5__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.ATTACK, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOBREAK, tickIndex, [1, angle]);
         _main__WEBPACK_IMPORTED_MODULE_5__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.ATTACK, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOBREAK, tickIndex, [0, null]);
+        _main__WEBPACK_IMPORTED_MODULE_5__.core.lockBundleDirection(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTITRAP, angle);
         //core.scheduleAction(ActionType.ATTACK, ActionPriority.AUTOBREAK, tickIndex + 1, [0, null]);
 
         //console.log("anti trap check", this.currentTrap!.health, bestWeapon.stats.dmg * bestWeapon.stats.buildingDmgMultiplier * (myPlayer.ownedHats.includes(40) ? tankGear.bDmg! : 1))
@@ -3054,6 +3155,7 @@ class AntiTrap extends _Module__WEBPACK_IMPORTED_MODULE_10__["default"] {
         }
       } else {
         _main__WEBPACK_IMPORTED_MODULE_5__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.WEAPON, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOBREAK, tickIndex, [bestWeapon.id, true]);
+        _main__WEBPACK_IMPORTED_MODULE_5__.core.unlockBundleDirection(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTITRAP);
       }
 
       /*if (myPlayer.nextAttack === tickIndex - 1) {
@@ -3074,6 +3176,7 @@ class AntiTrap extends _Module__WEBPACK_IMPORTED_MODULE_10__["default"] {
     const cartAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_9__["default"].polarToCartesian(antiAngle);
     const spikeItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_2__.items.list[myPlayer.inventory.items[2]];
     const arcs = _main__WEBPACK_IMPORTED_MODULE_5__.core.objectManager.findPlacementArcs([myPlayer.serverPos, myPlayer.scale], spikeItem);
+    this.isFirstHit = true;
     if (arcs.length > 0) {
       const closestAllowArc = arcs.sort((a, b) => Math.min(_util_MathUtil__WEBPACK_IMPORTED_MODULE_9__["default"].getAngleDist(a[0], antiAngle), _util_MathUtil__WEBPACK_IMPORTED_MODULE_9__["default"].getAngleDist(a[1], antiAngle)) - Math.min(_util_MathUtil__WEBPACK_IMPORTED_MODULE_9__["default"].getAngleDist(b[0], antiAngle), _util_MathUtil__WEBPACK_IMPORTED_MODULE_9__["default"].getAngleDist(b[1], antiAngle)))[0];
       const [arcStart, arcEnd] = [_util_MathUtil__WEBPACK_IMPORTED_MODULE_9__["default"].polarToCartesian(closestAllowArc[0]), _util_MathUtil__WEBPACK_IMPORTED_MODULE_9__["default"].polarToCartesian(closestAllowArc[1])];
@@ -3086,12 +3189,25 @@ class AntiTrap extends _Module__WEBPACK_IMPORTED_MODULE_10__["default"] {
     const bestWeapon = myPlayer.inventory.findBestWeapon(_data_type_Player__WEBPACK_IMPORTED_MODULE_3__.Inventory.WeaponFinders.BUILDING_BREAK);
     const currentWeapon = myPlayer.inventory.heldItem;
     const lastHeldItemId = currentWeapon.id;
-    if (this.aimPacketsBlocker === -1) this.aimPacketsBlocker = _main__WEBPACK_IMPORTED_MODULE_5__.core.createPacketBlock(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_8__.PacketType.SET_ANGLE);
+
+    //if (this.aimPacketsBlocker === -1) this.aimPacketsBlocker = core.createPacketBlock(PacketType.SET_ANGLE);
+
     if (myPlayer.inventory.reloads[bestWeapon.id] <= (currentWeapon === bestWeapon ? _main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.timeToNextTick : 0)) {
-      if (_main__WEBPACK_IMPORTED_MODULE_5__.core.isHighestPriority(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOBREAK, _main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.tickIndex + 1)) {
-        if (!(myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__.Weapon) || bestWeapon.id !== myPlayer.inventory.heldItem.id) _socket_Connection__WEBPACK_IMPORTED_MODULE_6__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_7__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_8__.PacketType.SELECT_ITEM, [bestWeapon.id, true]));
-        if (myPlayer.ownedHats.includes(40) && _main__WEBPACK_IMPORTED_MODULE_5__.core.lastActionState.hat !== 40) _socket_Connection__WEBPACK_IMPORTED_MODULE_6__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_7__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_8__.PacketType.BUY_AND_EQUIP, [0, 40, 0]));
-        if (!myPlayer.isAttacking) _socket_Connection__WEBPACK_IMPORTED_MODULE_6__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_7__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_8__.PacketType.ATTACK, [1, angle]));
+      const ti = _main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.tickIndex + 1;
+      const pt = _main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.tickIndex + _main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.getPingTicks();
+      if (_main__WEBPACK_IMPORTED_MODULE_5__.core.isHighestPriority(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOBREAK, ti)) {
+        if (_main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.ping < _main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.timeToNextTick) {
+          if (!(myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__.Weapon) || bestWeapon.id !== myPlayer.inventory.heldItem.id) _socket_Connection__WEBPACK_IMPORTED_MODULE_6__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_7__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_8__.PacketType.SELECT_ITEM, [bestWeapon.id, true]));
+          if (myPlayer.ownedHats.includes(40) && _main__WEBPACK_IMPORTED_MODULE_5__.core.lastActionState.hat !== 40) _socket_Connection__WEBPACK_IMPORTED_MODULE_6__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_7__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_8__.PacketType.BUY_AND_EQUIP, [0, 40, 0]));
+          if (!myPlayer.isAttacking) _socket_Connection__WEBPACK_IMPORTED_MODULE_6__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_7__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_8__.PacketType.ATTACK, [1, angle]));
+          _main__WEBPACK_IMPORTED_MODULE_5__.core.scheduleBlockerAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.WEAPON, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTITRAP, pt);
+          _main__WEBPACK_IMPORTED_MODULE_5__.core.scheduleBlockerAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTITRAP, pt);
+        } else {
+          if (!(myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__.Weapon) || bestWeapon.id !== myPlayer.inventory.heldItem.id) _main__WEBPACK_IMPORTED_MODULE_5__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.WEAPON, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTITRAP, pt, [bestWeapon.id, true]);
+          if (myPlayer.ownedHats.includes(40) && _main__WEBPACK_IMPORTED_MODULE_5__.core.lastActionState.hat !== 40) _main__WEBPACK_IMPORTED_MODULE_5__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTITRAP, pt, [40]);
+          if (!myPlayer.isAttacking) _main__WEBPACK_IMPORTED_MODULE_5__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.ATTACK, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTITRAP, pt, [1, angle]);
+        }
+        _main__WEBPACK_IMPORTED_MODULE_5__.core.lockBundleDirection(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTITRAP, angle);
       }
     }
   }
@@ -3099,7 +3215,10 @@ class AntiTrap extends _Module__WEBPACK_IMPORTED_MODULE_10__["default"] {
     if (this.currentTrap === null) return;
     this.currentTrap = null;
     this.willTrapBreakNextTick = false;
-    if (this.aimPacketsBlocker > -1) _main__WEBPACK_IMPORTED_MODULE_5__.core.removePacketBlock(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_8__.PacketType.SET_ANGLE, this.aimPacketsBlocker);
+
+    //if (this.aimPacketsBlocker > -1) core.removePacketBlock(PacketType.SET_ANGLE, this.aimPacketsBlocker);
+
+    _main__WEBPACK_IMPORTED_MODULE_5__.core.unlockBundleDirection(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTITRAP);
     const myPlayer = _main__WEBPACK_IMPORTED_MODULE_5__.core.playerManager.myPlayer;
     if (!_main__WEBPACK_IMPORTED_MODULE_5__.core.mstate.mouseHeld) _socket_Connection__WEBPACK_IMPORTED_MODULE_6__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_7__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_8__.PacketType.ATTACK, [0, null]));
     if (_main__WEBPACK_IMPORTED_MODULE_5__.core.isHighestPriority(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOBREAK, _main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.tickIndex + 1)) {
@@ -3112,190 +3231,9 @@ class AntiTrap extends _Module__WEBPACK_IMPORTED_MODULE_10__["default"] {
   get trap() {
     return this.currentTrap;
   }
-}
-__webpack_async_result__();
-} catch(e) { __webpack_async_result__(e); } });
-
-/***/ }),
-
-/***/ "./frontend/src/features/modules/building/AutoPlacer.ts":
-/*!**************************************************************!*\
-  !*** ./frontend/src/features/modules/building/AutoPlacer.ts ***!
-  \**************************************************************/
-/***/ ((module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.a(module, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* binding */ AutoPlacer)
-/* harmony export */ });
-/* harmony import */ var _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../data/moomoo/items */ "./frontend/src/data/moomoo/items.ts");
-/* harmony import */ var _data_type_MoomooUtil__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../data/type/MoomooUtil */ "./frontend/src/data/type/MoomooUtil.ts");
-/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../main */ "./frontend/src/main.ts");
-/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
-/* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
-/* harmony import */ var _AntiTrap__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./AntiTrap */ "./frontend/src/features/modules/building/AntiTrap.ts");
-var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_2__, _AntiTrap__WEBPACK_IMPORTED_MODULE_5__]);
-([_main__WEBPACK_IMPORTED_MODULE_2__, _AntiTrap__WEBPACK_IMPORTED_MODULE_5__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
-
-
-
-
-
-
-var State;
-(function (State) {
-  State[State["IDLE"] = 0] = "IDLE";
-  State[State["WINDMILLS"] = 1] = "WINDMILLS";
-  State[State["TRAP_ENEMY"] = 2] = "TRAP_ENEMY";
-  State[State["SPIKE_TRAPPED"] = 3] = "SPIKE_TRAPPED";
-})(State || (State = {}));
-function combineAllowAngles(angles1, angles2) {
-  const longer = angles1.length > angles2.length ? angles1 : angles2;
-  const shorter = longer === angles1 ? angles2 : angles1;
-  const result = [];
-  if (shorter.length === 0) return longer;
-  let comparedAgainist;
-  for (let i = 0; i < longer.length; i++) {
-    const currentItem = longer[i];
-    comparedAgainist = shorter.shift();
-    if (comparedAgainist) {
-      result.push([comparedAgainist[0] > currentItem[0] ? comparedAgainist[0] : currentItem[0], comparedAgainist[1] < currentItem[1] ? comparedAgainist[1] : currentItem[1]]);
-    } else {
-      result.push([currentItem[0], currentItem[1]]);
-    }
+  get getterIsFirstHit() {
+    return this.currentTrap !== null && this.isFirstHit;
   }
-  return result;
-}
-function translateAllowAngles(placeableAngles, stepDeg) {
-  let singleAngles = [];
-  for (let i = 0; i < 360; i += stepDeg) {
-    const rad = i * (Math.PI / 180);
-    for (let allow of placeableAngles) {
-      if (rad > allow[0] && rad < allow[1]) {
-        singleAngles.push(rad);
-        continue;
-      }
-    }
-  }
-  return singleAngles;
-}
-class AutoPlacer extends _Module__WEBPACK_IMPORTED_MODULE_4__["default"] {
-  debugAngles = [];
-  constructor() {
-    super();
-    this.state = State.WINDMILLS;
-    this.toggled = true;
-    this.targetsTrappable = new Set();
-    this.targetsTrapSpikable = new Set();
-  }
-  calcState() {
-    this.targetsTrappable.clear();
-    this.targetsTrapSpikable.clear();
-    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer;
-    const enemies = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.playerList.slice(1).filter(x => x.visible);
-    const trapItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[15];
-    const spikeItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[myPlayer.inventory.items[2]];
-    if (enemies.length === 0) this.state = State.IDLE;
-    for (let i = 0; i < enemies.length; i++) {
-      const enemy = enemies[i];
-      const distance = _util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getDistance(enemy.serverPos, myPlayer.serverPos);
-      const nextDistance = _util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getDistance(enemy.serverPos.clone().add(enemy.velocity), myPlayer.serverPos);
-      const trappingDistance = myPlayer.scale + enemy.scale + trapItem.scale + trapItem.scale * trapItem.colDiv + trapItem.placeOffset;
-      if (distance <= trappingDistance && nextDistance <= trappingDistance && !enemy.state.isTrapped) {
-        this.state = State.TRAP_ENEMY;
-        this.targetsTrappable.add(enemy);
-      }
-      if (enemy.state.isTrapped) {
-        if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getDistance(enemy.state.data.trap.position, myPlayer.serverPos) - myPlayer.scale - trapItem.scale - spikeItem.scale * 2 - (spikeItem.placeOffset ?? 0) <= 0) {
-          this.state = State.SPIKE_TRAPPED;
-          this.targetsTrapSpikable.add(enemy);
-        }
-      }
-    }
-    if (this.state === State.IDLE) this.state = State.WINDMILLS;
-  }
-  onUpdate(tickIndex) {
-    if (!this.toggled) return;
-    const antiTrap = _main__WEBPACK_IMPORTED_MODULE_2__.core.moduleManager.getModule(_AntiTrap__WEBPACK_IMPORTED_MODULE_5__["default"]);
-    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer;
-    if (!myPlayer.alive /* || antiTrap.isBreaking*/) return;
-    this.calcState();
-    switch (this.state) {
-      case State.WINDMILLS:
-        {
-          return;
-          const windmillItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.inventory.items[3]];
-          const placeableangles = _main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.findPlacementArcs([_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.serverPos, _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.scale], windmillItem);
-          const backdir = (_util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getDirection(_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.lerpPos, _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.serverPos) + Math.PI) % (Math.PI * 2);
-          const singleAngles = translateAllowAngles(placeableangles, 3);
-          const angles = singleAngles.filter(angle => _data_type_MoomooUtil__WEBPACK_IMPORTED_MODULE_1__.util.getAngleDist(backdir, angle) <= Math.PI / 2.8);
-          for (let i = 0; i < angles.length; i++) {
-            _main__WEBPACK_IMPORTED_MODULE_2__.core.interactionEngine.safePlacement(windmillItem, angles[i]);
-            //InteractUtil.place(<number> inventory.get(InventoryItem.WINDMILL), angles[i], true);
-          }
-
-          break;
-        }
-      case State.TRAP_ENEMY:
-        {
-          // TODO: use ping & tick based predicted position instead of last received positions (sometimes causes it to place trap on old enemy position)
-          const trapItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[15];
-          for (let iterator = this.targetsTrappable.values(), iteration = null, value = (iteration = iterator.next()).value; !iteration.done; value = (iteration = iterator.next()).value) {
-            const target = value;
-            const targetDir = _util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getDirection(myPlayer.serverPos, target.serverPos);
-            const trappingDistance = myPlayer.scale + target.scale + trapItem.scale + trapItem.scale * trapItem.colDiv + trapItem.placeOffset;
-            const angles = translateAllowAngles(_main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.findPlacementArcs([_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.serverPos, _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.scale], trapItem), 3);
-            const placeAngles = angles.filter(angle => _util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getAngleDist(angle, targetDir) <= Math.sin(trappingDistance / (target.scale + trapItem.scale * trapItem.colDiv)));
-            _main__WEBPACK_IMPORTED_MODULE_2__.core.interactionEngine.safePlacement(trapItem, targetDir);
-            for (let i = 0; i < placeAngles.length; i++) {
-              _main__WEBPACK_IMPORTED_MODULE_2__.core.interactionEngine.safePlacement(trapItem, placeAngles[i]);
-            }
-          }
-          break;
-        }
-      case State.SPIKE_TRAPPED:
-        {
-          const trapItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[15];
-          const spikeItem = _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__.items.list[_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.inventory.items[2]];
-          for (let iterator = this.targetsTrapSpikable.values(), iteration = null, value = (iteration = iterator.next()).value; !iteration.done; value = (iteration = iterator.next()).value) {
-            const target = value;
-            const trap = target.state.data.trap;
-            if (trap) {
-              const tangentAngle = _main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.findPlacementTangent([myPlayer.serverPos, myPlayer.scale], trap, spikeItem, 5);
-              const straightAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getDirection(myPlayer.serverPos, trap.position);
-              const targetAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getDirection(myPlayer.serverPos, target.serverPos);
-              const angle1 = straightAngle + tangentAngle;
-              const angle2 = straightAngle - tangentAngle;
-              const closestAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getAngleDist(angle1, targetAngle) > _util_MathUtil__WEBPACK_IMPORTED_MODULE_3__["default"].getAngleDist(angle2, targetAngle) ? angle2 : angle1;
-              _main__WEBPACK_IMPORTED_MODULE_2__.core.interactionEngine.safePlacement(spikeItem, closestAngle);
-            }
-          }
-          break;
-        }
-    }
-  }
-  onKeydown(keyCode) {
-    /*if (keyCode == 82) {
-        this.toggled = !this.toggled;
-    }*/
-  }
-  onKeyup(keyCode) {}
-
-  /*onRender(delta: number): void {
-      const ctx = core.renderManager?.context!;
-      const myPos = core.renderManager?.mapToContext(core.renderManager.cameraPosition, core.playerManager.myPlayer.renderPos)!;
-      
-      for (let i = 0; i < this.debugAngles.length; i++) {
-          const a = this.debugAngles[i];
-          ctx.strokeStyle = "black";
-          ctx.beginPath();
-          ctx.moveTo(myPos.x, myPos.y);
-          ctx.lineTo(myPos.x + Math.cos(a) * 30, myPos.y + Math.sin(a) * 30);
-          ctx.stroke();
-      }
-  }*/
 }
 __webpack_async_result__();
 } catch(e) { __webpack_async_result__(e); } });
@@ -3343,7 +3281,7 @@ class AutoReplace extends _Module__WEBPACK_IMPORTED_MODULE_5__["default"] {
     const enemyPlayer = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.getVisibleEnemies().sort((a, b) => _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDistance(a.serverPos, building.position) - _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDistance(b.serverPos, building.position))[0];
     if (enemyPlayer && _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDistance(enemyPlayer.serverPos, myPlayer.serverPos) <= 850 && _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDistance(myPlayer.serverPos, building.position) <= building.getScale() + myPlayer.scale + 220) {
       const playerToBuilding = _util_MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDistance(enemyPlayer.serverPos.clone().add(enemyPlayer.velocity), building.position);
-      const item = playerToBuilding < enemyPlayer.scale + spikeItem.scale * 1.3 + myPlayer.scale + (spikeItem.placeOffset ?? 0) ? spikeItem : trapItem;
+      const item = playerToBuilding < enemyPlayer.scale + spikeItem.scale * 1.03 + myPlayer.scale + (spikeItem.placeOffset ?? 0) ? spikeItem : trapItem;
 
       // calculate angle
       const arcs = _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager.findPlacementArcs([myPlayer.serverPos, myPlayer.scale], item, [building]);
@@ -3590,7 +3528,7 @@ class AntiBull extends _Module__WEBPACK_IMPORTED_MODULE_8__["default"] {
     const myWeapon = myPlayer.inventory.findBestWeapon(_data_type_Player__WEBPACK_IMPORTED_MODULE_3__.Inventory.WeaponFinders.DAMAGE);
     const straightAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_7__["default"].getDirection(player.serverPos, myPlayer.serverPos);
     const angleToEnemy = _util_MathUtil__WEBPACK_IMPORTED_MODULE_7__["default"].getDirection(myPlayer.serverPos, player.serverPos);
-
+    return;
     // attack back if enemy attacked with us having spike gear on
     if (weapon instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__.MeleeWeapon && player.hasAttackedThisTick && _util_MathUtil__WEBPACK_IMPORTED_MODULE_7__["default"].getDistance(myPlayer.serverPos.clone().add(myPlayer.velocity), player.serverPos.clone().add(player.velocity)) <= myWeapon.stats.range + 35 * 2 && myPlayer.inventory.reloads[myWeapon.id] <= (myPlayer.inventory.heldItem === myWeapon ? _main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.timeToNextTick : 0)) {
       if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_7__["default"].getAngleDist(straightAngle, player.serverDir) <= _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].gatherAngle) {
@@ -3612,7 +3550,7 @@ class AntiBull extends _Module__WEBPACK_IMPORTED_MODULE_8__["default"] {
     }
 
     // equip spike gear + cx if player will attack next tick
-    if (player.nextAttack === _main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.tickIndex - 1 && _util_MathUtil__WEBPACK_IMPORTED_MODULE_7__["default"].getDistance(myPlayer.serverPos.clone().add(myPlayer.velocity), player.serverPos.clone().add(player.velocity)) <= weapon.stats.range + 35 * 2 && _main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.tickIn(myPlayer.inventory.reloads[myWeapon.id] - (myPlayer.inventory.heldItem === myWeapon ? _main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.timeToNextTick : 0)) <= player.nextAttack) {
+    if (player.nextAttack - 1 === _main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.tickIndex && _util_MathUtil__WEBPACK_IMPORTED_MODULE_7__["default"].getDistance(myPlayer.serverPos.clone().add(myPlayer.velocity), player.serverPos.clone().add(player.velocity)) <= weapon.stats.range + 35 * 2 && _main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.tickIn(myPlayer.inventory.reloads[myWeapon.id] - (myPlayer.inventory.heldItem === myWeapon ? _main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.timeToNextTick : 0)) <= player.nextAttack) {
       const attackTick = player.nextAttack;
       if (_main__WEBPACK_IMPORTED_MODULE_5__.core.tickEngine.isTickPredictable(attackTick)) {
         if (myPlayer.ownedHats.includes(11)) _main__WEBPACK_IMPORTED_MODULE_5__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_6__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_6__.ActionPriority.ANTIBULL, attackTick, [11]);
@@ -3634,220 +3572,27 @@ __webpack_async_result__();
 /*!***********************************************************!*\
   !*** ./frontend/src/features/modules/combat/AntiInsta.ts ***!
   \***********************************************************/
-/***/ ((module, __webpack_exports__, __webpack_require__) => {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
-__webpack_require__.a(module, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (/* binding */ AntiInsta)
 /* harmony export */ });
-/* harmony import */ var _core_ActionType__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../core/ActionType */ "./frontend/src/core/ActionType.ts");
-/* harmony import */ var _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../data/moomoo/config */ "./frontend/src/data/moomoo/config.ts");
-/* harmony import */ var _data_moomoo_hats__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../data/moomoo/hats */ "./frontend/src/data/moomoo/hats.ts");
-/* harmony import */ var _data_moomoo_items__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../data/moomoo/items */ "./frontend/src/data/moomoo/items.ts");
-/* harmony import */ var _data_type_GameObject__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../../data/type/GameObject */ "./frontend/src/data/type/GameObject.ts");
-/* harmony import */ var _data_type_Projectile__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../../data/type/Projectile */ "./frontend/src/data/type/Projectile.ts");
-/* harmony import */ var _data_type_Weapon__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../../data/type/Weapon */ "./frontend/src/data/type/Weapon.ts");
-/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../../main */ "./frontend/src/main.ts");
-/* harmony import */ var _socket_Connection__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../../socket/Connection */ "./frontend/src/socket/Connection.ts");
-/* harmony import */ var _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../../socket/packets/Packet */ "./frontend/src/socket/packets/Packet.ts");
-/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
-/* harmony import */ var _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../../../util/engine/TickEngine */ "./frontend/src/util/engine/TickEngine.ts");
-/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../../../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
-/* harmony import */ var _util_RecognitionUtil__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../../../util/RecognitionUtil */ "./frontend/src/util/RecognitionUtil.ts");
-/* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
-var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_7__]);
-_main__WEBPACK_IMPORTED_MODULE_7__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+/* harmony import */ var _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../data/moomoo/config */ "./frontend/src/data/moomoo/config.ts");
+/* harmony import */ var _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../util/engine/TickEngine */ "./frontend/src/util/engine/TickEngine.ts");
+/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
+/* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-class AntiInsta extends _Module__WEBPACK_IMPORTED_MODULE_14__["default"] {
-  constructor() {
-    super();
-    this.meleePlayersCount = 0;
-    this.totalDamageDealt = 0;
-    this.totalPotentialDamage = 0;
-    this.totalPotentialRangedDamage = 0;
-    this.totalPotentialTurretGearDamage = 0;
-    this.hasCountedTurretGear = false;
-    this.hasCountedRanged = false;
-  }
-  onPlayerUpdate(player) {
-    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_7__.core.playerManager.myPlayer;
-    if (player === myPlayer || _main__WEBPACK_IMPORTED_MODULE_7__.core.playerManager.checkTeam(player.sid)) return;
-
-    //console.log("ticking update:", player.name);
-
-    const hat = _data_moomoo_hats__WEBPACK_IMPORTED_MODULE_2__["default"].find(x => x.id === player.skinIndex);
-    const tail = _data_moomoo_hats__WEBPACK_IMPORTED_MODULE_2__["default"].find(x => x.id === player.tailIndex);
-    const weapon = player.inventory.weaponSelected;
-    const variant = player.inventory.getWeaponVariant(weapon.id < 9 ? _data_type_Weapon__WEBPACK_IMPORTED_MODULE_6__.WeaponSlot.PRIMARY : _data_type_Weapon__WEBPACK_IMPORTED_MODULE_6__.WeaponSlot.SECONDARY);
-    const straightAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_12__["default"].getDirection(player.serverPos, myPlayer.serverPos);
-    const autohealWouldHealIn = Math.max(0, myPlayer.shame.whenSafeHeal(0)) + _main__WEBPACK_IMPORTED_MODULE_7__.core.tickEngine.timeToNextTick + _main__WEBPACK_IMPORTED_MODULE_7__.core.tickEngine.pingStd;
-    const autohealTickRounded = _main__WEBPACK_IMPORTED_MODULE_7__.core.tickEngine.roundToTick(autohealWouldHealIn, _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_11__.TickRoundType.FLOOR);
-
-    // current tick damage
-    if (player.inventory.turretGearReload <= _main__WEBPACK_IMPORTED_MODULE_7__.core.tickEngine.timeToNextTick) {
-      const projectile = _data_type_Projectile__WEBPACK_IMPORTED_MODULE_5__.Projectiles.TURRET_BULLET;
-      if (_data_type_Projectile__WEBPACK_IMPORTED_MODULE_5__.Projectile.canHit(projectile, player.serverPos, straightAngle, myPlayer.serverPos, myPlayer.scale) && !this.hasCountedTurretGear) {
-        this.hasCountedTurretGear = true;
-        if (player.skinIndex === 53 && (_util_MathUtil__WEBPACK_IMPORTED_MODULE_12__["default"].getDistance(myPlayer.serverPos, player.serverPos) - myPlayer.scale) / projectile.stats.speed <= autohealWouldHealIn) {
-          this.totalDamageDealt += projectile.stats.dmg;
-        } else {
-          this.totalPotentialTurretGearDamage += projectile.stats.dmg;
-        }
-      }
-    }
-    if (weapon instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_6__.MeleeWeapon && player.hasAttackedThisTick && _util_MathUtil__WEBPACK_IMPORTED_MODULE_12__["default"].getDistance(myPlayer.serverPos, player.serverPos) <= weapon.stats.range + 35 * 2) {
-      //console.log("melee attacked this tick");
-      if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_12__["default"].getAngleDist(straightAngle, player.serverDir) <= _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].gatherAngle) {
-        const damage = weapon.stats.dmg * _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].weaponVariants[variant].val * (hat?.dmgMultO ?? 1) * (tail?.dmgMultO ?? 1);
-        this.totalDamageDealt += damage;
-        this.meleePlayersCount++;
-        console.log("melee this tick", damage);
-      }
-    } else if (weapon instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_6__.RangedWeapon && player.hasFiredProjectileThisTick) {
-      const projectile = weapon.projectile;
-      const damage = projectile.stats.dmg;
-      if (_data_type_Projectile__WEBPACK_IMPORTED_MODULE_5__.Projectile.canHit(projectile, player.serverPos, player.serverDir, myPlayer.serverPos, myPlayer.scale) && (_util_MathUtil__WEBPACK_IMPORTED_MODULE_12__["default"].getDistance(myPlayer.serverPos, player.serverPos) - player.scale * 2 - myPlayer.scale) / projectile.stats.speed <= autohealWouldHealIn) {
-        this.totalDamageDealt += damage;
-        console.log("ranged this tick");
-      }
-    }
-
-    //if (!RecognitionUtil.canInstakill(player)) return;
-
-    // next tick potential
-    const primary = player.inventory.getWeapon(_data_type_Weapon__WEBPACK_IMPORTED_MODULE_6__.WeaponSlot.PRIMARY) ?? _data_type_Weapon__WEBPACK_IMPORTED_MODULE_6__.Weapons.TOOL_HAMMER; // assume tool hammer
-    const primaryVariant = player.inventory.getWeaponVariant(_data_type_Weapon__WEBPACK_IMPORTED_MODULE_6__.WeaponSlot.PRIMARY) ?? 0;
-    const secondary = player.inventory.getWeapon(_data_type_Weapon__WEBPACK_IMPORTED_MODULE_6__.WeaponSlot.SECONDARY) ?? _util_RecognitionUtil__WEBPACK_IMPORTED_MODULE_13__["default"].assumeSecondary(primary.id);
-    if (!player.hasAttackedThisTick && player.inventory.reloads[primary.id] <= (weapon === primary ? autohealTickRounded : 0) && _util_MathUtil__WEBPACK_IMPORTED_MODULE_12__["default"].getDistance(player.serverPos.clone().add(player.velocity).directionMove(straightAngle, (player.hasFiredProjectileThisTick && player.lastProjectileFired.type === _data_type_Projectile__WEBPACK_IMPORTED_MODULE_5__.Projectiles.MUSKET_BULLET.type ? 0.35 : 0) * -1), myPlayer.serverPos) <= primary.stats.range + 35 * 2) {
-      const damage = primary.stats.dmg * _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].weaponVariants[primaryVariant].val * 1.5; // assume bull helmet usage
-      this.totalPotentialDamage += damage;
-      this.meleePlayersCount++;
-      console.log("melee primary potential", damage);
-    } else if (player.inventory.reloads[secondary.id] <= (weapon === secondary ? autohealTickRounded : 0)) {
-      if (secondary instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_6__.MeleeWeapon && _util_MathUtil__WEBPACK_IMPORTED_MODULE_12__["default"].getDistance(myPlayer.serverPos.clone().add(myPlayer.velocity), player.serverPos.clone().add(player.velocity)) <= secondary.stats.range + 35 * 2) {
-        const damage = secondary.stats.dmg * _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].weaponVariants[primaryVariant].val * 1.5; // assume bull helmet usage
-        this.totalPotentialDamage += damage;
-        this.meleePlayersCount++;
-        console.log("melee secondary potential", damage);
-      } else if (secondary instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_6__.RangedWeapon && !this.hasCountedRanged) {
-        this.hasCountedRanged = true;
-        const projectile = secondary.projectile;
-        const damage = projectile.stats.dmg;
-        if ((_util_MathUtil__WEBPACK_IMPORTED_MODULE_12__["default"].getDistance(myPlayer.serverPos.clone().add(myPlayer.velocity), player.serverPos.clone().add(player.velocity)) - player.scale * 2 - myPlayer.scale) / projectile.stats.speed <= autohealWouldHealIn) {
-          this.totalPotentialRangedDamage += damage;
-          console.log("ranged secondary potential", damage);
-        }
-      }
-    }
-  }
-  onProjectileEarlyDespawn(projectileItem, spawnPosition, direction) {
-    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_7__.core.playerManager.myPlayer;
-    const spawnPos = spawnPosition.clone().subtract(Math.cos(direction) * 35 * 2, Math.sin(direction) * 35 * 2);
-    const expandedHitbox = myPlayer.scale + myPlayer.velocity.length();
-    if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_12__["default"].lineInRectMooMoo(myPlayer.serverPos.x + myPlayer.velocity.x - expandedHitbox, myPlayer.serverPos.y + myPlayer.velocity.y - expandedHitbox, myPlayer.serverPos.x + myPlayer.velocity.x + expandedHitbox, myPlayer.serverPos.y + myPlayer.velocity.y + expandedHitbox, spawnPos.x, spawnPos.y, spawnPos.x + Math.cos(direction) * projectileItem.stats.range, spawnPos.y + Math.sin(direction) * projectileItem.stats.range)) {
-      this.totalDamageDealt += projectileItem.stats.dmg;
-      console.log("early projectile damage caught at 3 am");
-    }
-  }
-  onPreBuildingHit(player, building, tickIndex, potentialBreak) {
-    if (player !== _main__WEBPACK_IMPORTED_MODULE_7__.core.playerManager.myPlayer && !_main__WEBPACK_IMPORTED_MODULE_7__.core.playerManager.checkTeam(player.sid)) {
-      if (building instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_4__.PlayerBuilding && building.type === 15 && _main__WEBPACK_IMPORTED_MODULE_7__.core.playerManager.myPlayer.state.data.trap === building && potentialBreak) {
-        if (_main__WEBPACK_IMPORTED_MODULE_7__.core.tickEngine.isTickPredictable(tickIndex)) {
-          _main__WEBPACK_IMPORTED_MODULE_7__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTIINSTA, tickIndex, [6]);
-        } else {
-          _socket_Connection__WEBPACK_IMPORTED_MODULE_8__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_9__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_10__.PacketType.BUY_AND_EQUIP, [0, 6, 0]));
-        }
-      }
-    }
-  }
-  onPacketReceive(event) {
-    const packet = event.getPacket();
-    if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_10__.PacketType.PLAYER_UPDATE) {
-      const myPlayer = _main__WEBPACK_IMPORTED_MODULE_7__.core.playerManager.myPlayer;
-      const projectiles = _main__WEBPACK_IMPORTED_MODULE_7__.core.projectileManager.getDangerousProjectiles(_main__WEBPACK_IMPORTED_MODULE_7__.core.tickEngine.tickIndex + 1);
-      const projectileDamage = projectiles.length <= 2 ? projectiles.reduce((ac, val) => ac + _data_type_Projectile__WEBPACK_IMPORTED_MODULE_5__.projectileList[val.type].stats.dmg, 0) : 0;
-      const potentialDamage = this.meleePlayersCount > 1 ? this.totalPotentialDamage + this.totalPotentialTurretGearDamage : this.totalPotentialDamage + this.totalPotentialRangedDamage + this.totalPotentialTurretGearDamage + projectileDamage;
-      const currentDamageReduction = (myPlayer.skinIndex === 6 ? 0.75 : 0) + 0;
-
-      //if (this.totalDamageDealt > 0 || potentialDamage > 0) console.log("dealt:", this.totalDamageDealt, "potential:", potentialDamage);
-      const newHealth = Math.min(myPlayer.health, myPlayer.maxHealth - potentialDamage * currentDamageReduction);
-      //console.log("newhealth:", newHealth, "potential damage:", potentialDamage);
-
-      if (newHealth < 100) console.log("new health:", newHealth, "potential:", potentialDamage);
-      if (newHealth - potentialDamage <= 0) {
-        const tick = _main__WEBPACK_IMPORTED_MODULE_7__.core.tickEngine.tickIndex + 1;
-        if (newHealth - potentialDamage + this.totalPotentialTurretGearDamage > 0 && myPlayer.ownedHats.includes(22)) {
-          // emp will save us cuz damage without turret gear isnt killing
-          if (_main__WEBPACK_IMPORTED_MODULE_7__.core.tickEngine.isTickPredictable(tick)) {
-            _main__WEBPACK_IMPORTED_MODULE_7__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTIINSTA, tick, [22]);
-          } else {
-            _socket_Connection__WEBPACK_IMPORTED_MODULE_8__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_9__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_10__.PacketType.BUY_AND_EQUIP, [0, 22, 0]), true);
-            _main__WEBPACK_IMPORTED_MODULE_7__.core.lastActionState.hat = 22;
-          }
-        } else if (newHealth - potentialDamage * 0.75 > 0 && myPlayer.ownedHats.includes(6)) {
-          // soldier will save us
-          if (_main__WEBPACK_IMPORTED_MODULE_7__.core.tickEngine.isTickPredictable(tick)) {
-            _main__WEBPACK_IMPORTED_MODULE_7__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTIINSTA, tick, [6]);
-          } else {
-            _socket_Connection__WEBPACK_IMPORTED_MODULE_8__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_9__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_10__.PacketType.BUY_AND_EQUIP, [0, 6, 0]));
-            //core.lastActionState.hat = 6;
-          }
-        } else {
-          // healing to full will save us
-          const foodType = _main__WEBPACK_IMPORTED_MODULE_7__.core.playerManager.myPlayer.inventory.items[0];
-          const healsUp = foodType == 0 ? 20 : 40;
-          const times = Math.ceil((myPlayer.maxHealth - myPlayer.health) / healsUp);
-          for (let i = 0; i < times; i++) {
-            _main__WEBPACK_IMPORTED_MODULE_7__.core.interactionEngine.vanillaUseFoodItem(_data_moomoo_items__WEBPACK_IMPORTED_MODULE_3__.items.list[foodType], i === times - 1);
-          }
-          if (myPlayer.maxHealth - potentialDamage + this.totalPotentialTurretGearDamage > 0 && myPlayer.ownedHats.includes(22)) {
-            // healing to full and emp helmet will save us
-            if (_main__WEBPACK_IMPORTED_MODULE_7__.core.tickEngine.isTickPredictable(tick)) {
-              _main__WEBPACK_IMPORTED_MODULE_7__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTIINSTA, tick, [22]);
-            } else {
-              _socket_Connection__WEBPACK_IMPORTED_MODULE_8__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_9__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_10__.PacketType.BUY_AND_EQUIP, [0, 22, 0]));
-              //core.lastActionState.hat = 22;
-            }
-          } else if ((this.meleePlayersCount > 1 || myPlayer.maxHealth - potentialDamage < 0) && myPlayer.ownedHats.includes(6)) {
-            // equip soldier because even healing to full wont save us
-            if (_main__WEBPACK_IMPORTED_MODULE_7__.core.tickEngine.isTickPredictable(tick)) {
-              _main__WEBPACK_IMPORTED_MODULE_7__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.ANTIINSTA, tick, [6]);
-            } else {
-              _socket_Connection__WEBPACK_IMPORTED_MODULE_8__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_9__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_10__.PacketType.BUY_AND_EQUIP, [0, 6, 0]));
-              //core.lastActionState.hat = 6;
-            }
-          }
-        }
-      }
-
-      this.meleePlayersCount = 0;
-      this.totalDamageDealt = 0;
-      this.totalPotentialDamage = 0;
-      this.totalPotentialRangedDamage = 0;
-      this.totalPotentialTurretGearDamage = 0;
-      this.hasCountedTurretGear = false;
-      this.hasCountedRanged = false;
-    }
-  }
+function wasdMovementPushVC(player, hat, tail, myPlayer) {
+  const speed = _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].playerSpeed * (hat?.spdMult ?? 1) * (tail?.spdMult ?? 1) * _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_1__.TickEngine.TICK_DELTA;
+  const straightAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_2__["default"].getDirection(player.serverPos, myPlayer.serverPos);
+  return player.serverPos.clone().directionMove(straightAngle, speed);
 }
-__webpack_async_result__();
-} catch(e) { __webpack_async_result__(e); } });
+class AntiInsta extends _Module__WEBPACK_IMPORTED_MODULE_3__["default"] {}
 
 /***/ }),
 
@@ -3877,7 +3622,7 @@ class Autoheal extends _Module__WEBPACK_IMPORTED_MODULE_2__["default"] {
   }
   onUpdate(delta) {
     const myPlayer = _main__WEBPACK_IMPORTED_MODULE_1__.core.playerManager.myPlayer;
-    if (myPlayer.alive && myPlayer.health < 100 && myPlayer.shame.isSafeHeal(_main__WEBPACK_IMPORTED_MODULE_1__.core.tickEngine.ping)) {
+    if (myPlayer.alive && myPlayer.health < 100 && myPlayer.shame.isSafeHeal(_main__WEBPACK_IMPORTED_MODULE_1__.core.tickEngine.ping, _main__WEBPACK_IMPORTED_MODULE_1__.core.tickEngine.pingStd)) {
       const foodType = _main__WEBPACK_IMPORTED_MODULE_1__.core.playerManager.myPlayer.inventory.items[0];
       const healsUp = foodType == 0 ? 20 : 40;
       const times = Math.ceil((myPlayer.maxHealth - myPlayer.health) / healsUp);
@@ -3904,6 +3649,73 @@ __webpack_async_result__();
 
 /***/ }),
 
+/***/ "./frontend/src/features/modules/combat/BullTick.ts":
+/*!**********************************************************!*\
+  !*** ./frontend/src/features/modules/combat/BullTick.ts ***!
+  \**********************************************************/
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.a(module, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ BullTick)
+/* harmony export */ });
+/* harmony import */ var _core_ActionType__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../core/ActionType */ "./frontend/src/core/ActionType.ts");
+/* harmony import */ var _data_type_Weapon__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../data/type/Weapon */ "./frontend/src/data/type/Weapon.ts");
+/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../main */ "./frontend/src/main.ts");
+/* harmony import */ var _socket_Connection__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../socket/Connection */ "./frontend/src/socket/Connection.ts");
+/* harmony import */ var _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../../socket/packets/Packet */ "./frontend/src/socket/packets/Packet.ts");
+/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
+/* harmony import */ var _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../../util/engine/TickEngine */ "./frontend/src/util/engine/TickEngine.ts");
+/* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
+/* harmony import */ var _util_PredictionUtil__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../../util/PredictionUtil */ "./frontend/src/util/PredictionUtil.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_2__, _util_PredictionUtil__WEBPACK_IMPORTED_MODULE_8__]);
+([_main__WEBPACK_IMPORTED_MODULE_2__, _util_PredictionUtil__WEBPACK_IMPORTED_MODULE_8__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+
+
+
+
+
+
+
+
+
+class BullTick extends _Module__WEBPACK_IMPORTED_MODULE_7__["default"] {
+  constructor() {
+    super();
+    this.canMidfightBulltick = false;
+    this.mfbFlags = 0;
+    this.isBulltickAvailable = false;
+    this.canBulltick = false;
+  }
+  onPlayerUpdate(player) {
+    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer;
+    const weapon = player.inventory.weaponSelected;
+    const isSafe = player.inventory.remainingReloadTime(_data_type_Weapon__WEBPACK_IMPORTED_MODULE_1__.WeaponSlot.PRIMARY) > myPlayer.shame.whenSafeHeal(_main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.ping) + _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_6__.TickEngine.TICK_DELTA || _util_PredictionUtil__WEBPACK_IMPORTED_MODULE_8__["default"].futureDistance(myPlayer, player) > weapon.stats.range;
+
+    // TODO: implement DoT tracker to know when will we get healed from bull
+    const willGetAttacked = _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.getFirstSchedulableTick() - player.nextAttack <= _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.toTicks(myPlayer.shame.whenSafeHeal(_main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.ping));
+    if (willGetAttacked || !isSafe) this.mfbFlags++;
+  }
+  onTick(tickIndex, schedulableTick) {
+    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer;
+    this.canMidfightBulltick = this.mfbFlags === 0;
+    this.mfbFlags = 0;
+    this.isBulltickAvailable = myPlayer.alive && myPlayer.health >= 100 && myPlayer.ownedHats.includes(7);
+    this.canBulltick = this.isBulltickAvailable && myPlayer.shame.points > 0 && (_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.isEnemyInRadius(600) ? this.canMidfightBulltick && myPlayer.shame.points >= 3 : true);
+    if (this.canBulltick) {
+      _main__WEBPACK_IMPORTED_MODULE_2__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.BULLTICK, schedulableTick, [7]);
+      _socket_Connection__WEBPACK_IMPORTED_MODULE_3__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_4__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_5__.PacketType.CHAT, ["bt,s=" + myPlayer.shame.points]));
+    }
+    this.canMidfightBulltick = false;
+  }
+}
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
+
+/***/ }),
+
 /***/ "./frontend/src/features/modules/combat/SpikeSync.ts":
 /*!***********************************************************!*\
   !*** ./frontend/src/features/modules/combat/SpikeSync.ts ***!
@@ -3917,18 +3729,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (/* binding */ SpikeSync)
 /* harmony export */ });
 /* harmony import */ var _core_ActionType__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../core/ActionType */ "./frontend/src/core/ActionType.ts");
-/* harmony import */ var _data_moomoo_hats__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../data/moomoo/hats */ "./frontend/src/data/moomoo/hats.ts");
-/* harmony import */ var _data_type_GameObject__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../data/type/GameObject */ "./frontend/src/data/type/GameObject.ts");
-/* harmony import */ var _data_type_Player__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../data/type/Player */ "./frontend/src/data/type/Player.ts");
-/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../../main */ "./frontend/src/main.ts");
-/* harmony import */ var _socket_Connection__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../../socket/Connection */ "./frontend/src/socket/Connection.ts");
-/* harmony import */ var _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../../socket/packets/Packet */ "./frontend/src/socket/packets/Packet.ts");
-/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
-/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
-/* harmony import */ var _util_type_Vector__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../../util/type/Vector */ "./frontend/src/util/type/Vector.ts");
-/* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
-var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_4__]);
-_main__WEBPACK_IMPORTED_MODULE_4__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+/* harmony import */ var _data_type_GameObject__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../data/type/GameObject */ "./frontend/src/data/type/GameObject.ts");
+/* harmony import */ var _data_type_Player__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../data/type/Player */ "./frontend/src/data/type/Player.ts");
+/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../main */ "./frontend/src/main.ts");
+/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
+/* harmony import */ var _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../../util/engine/TickEngine */ "./frontend/src/util/engine/TickEngine.ts");
+/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
+/* harmony import */ var _util_PredictionUtil__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../../util/PredictionUtil */ "./frontend/src/util/PredictionUtil.ts");
+/* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_3__, _util_PredictionUtil__WEBPACK_IMPORTED_MODULE_7__]);
+([_main__WEBPACK_IMPORTED_MODULE_3__, _util_PredictionUtil__WEBPACK_IMPORTED_MODULE_7__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
 
 
 
@@ -3938,56 +3748,133 @@ _main__WEBPACK_IMPORTED_MODULE_4__ = (__webpack_async_dependencies__.then ? (awa
 
 
 
-
-
-class SpikeSync extends _Module__WEBPACK_IMPORTED_MODULE_10__["default"] {
+class SpikeSync extends _Module__WEBPACK_IMPORTED_MODULE_8__["default"] {
   constructor() {
     super();
+    this.hasTriggered = false;
+    this.debugColPositions = [];
+    this.debugDeathPositions = [];
+    this.debugUnreachablePositions = [];
   }
-  onPlayerUpdate(player) {
-    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_4__.core.playerManager.myPlayer;
-    if (player === myPlayer || _main__WEBPACK_IMPORTED_MODULE_4__.core.playerManager.checkTeam(player.sid) || player.state.isTrapped) return;
-    const position = player.serverPos.clone().add(player.velocity);
-    const straightAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_8__["default"].getDirection(myPlayer.serverPos.clone().add(myPlayer.velocity), position);
-    const hat = _data_moomoo_hats__WEBPACK_IMPORTED_MODULE_1__["default"].find(x => x.id === player.skinIndex);
-    const tail = _data_moomoo_hats__WEBPACK_IMPORTED_MODULE_1__["default"].find(x => x.id === player.tailIndex);
-    const bestWeapon = myPlayer.inventory.findBestWeapon(_data_type_Player__WEBPACK_IMPORTED_MODULE_3__.Inventory.WeaponFinders.DAMAGE);
-    if (myPlayer.inventory.reloads[bestWeapon.id] > _main__WEBPACK_IMPORTED_MODULE_4__.core.tickEngine.timeToNextTick) return;
-    const damageReduction = (hat?.dmgMult ?? 1) * (tail?.dmgMult ?? 1);
+  onRespawn() {
+    this.hasTriggered = false;
+    this.debugColPositions = [];
+    this.debugDeathPositions = [];
+    this.debugUnreachablePositions = [];
+  }
+  onTick(tickIndex, schedulableTick) {
+    const players = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.getVisibleEnemies();
+    this.debugColPositions = [];
+    this.debugDeathPositions = [];
+    this.debugUnreachablePositions = [];
+    for (let i = 0; i < players.length; i++) {
+      const player = players[i];
+      this.checkPlayer(player, tickIndex, schedulableTick);
+    }
+  }
+  checkPlayer(player, tickIndex, schedulableTick) {
+    const myPlayer = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer;
+    const checkTick = schedulableTick + 1;
+    if (player === myPlayer || _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.checkTeam(player.sid) || player.state.isTrapped) return;
+    const position = _util_PredictionUtil__WEBPACK_IMPORTED_MODULE_7__["default"].futurePosition(player, checkTick);
+    const straightAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getDirection(_util_PredictionUtil__WEBPACK_IMPORTED_MODULE_7__["default"].futurePosition(myPlayer, checkTick), position);
+    const hat = player.hatTracker.currentHat;
+    const tail = player.hatTracker.currentTail;
+    const bestWeapon = myPlayer.inventory.findBestWeapon(_data_type_Player__WEBPACK_IMPORTED_MODULE_2__.Inventory.WeaponFinders.DAMAGE);
+    if (myPlayer.inventory.reloads[bestWeapon.id] > _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.timeToNextTick) return;
+    const damageReduction = hat?.dmgMult ?? 1; /* uncomment if tails get damage reduction stat in future updates * (tail?.dmgMult ?? 1);*/
     const damageMultiplication = myPlayer.ownedHats.includes(7) ? 1.5 : 1;
     const outputDamage = bestWeapon.stats.dmg * damageMultiplication * damageReduction;
-    const outputKnockbackStrength = 0.3 * 1 + bestWeapon.stats.knockback;
-    const outputKnockback = new _util_type_Vector__WEBPACK_IMPORTED_MODULE_9__["default"](Math.cos(straightAngle) * outputKnockbackStrength, Math.sin(straightAngle) * outputKnockbackStrength);
-    const attackTick = _main__WEBPACK_IMPORTED_MODULE_4__.core.tickEngine.tickIndex - 1;
-    const buildings = _main__WEBPACK_IMPORTED_MODULE_4__.core.objectManager.getGridArrays(position.x, position.y, player.scale + outputKnockbackStrength);
+    const outputKnockbackStrength = (0.3 * 1 + bestWeapon.stats.knockback) * _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_5__.TickEngine.TICK_DELTA;
+    const knockbackPos = position.clone().directionMove(straightAngle, outputKnockbackStrength);
+    const buildings = _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager.getGridArrays(position.x, position.y, player.scale + outputKnockbackStrength);
+    let buildingDmg = 0;
+    const playerDist = _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getDistance(position, _util_PredictionUtil__WEBPACK_IMPORTED_MODULE_7__["default"].futurePosition(myPlayer, checkTick));
     for (let i = 0; i < buildings.length; i++) {
       const building = buildings[i];
-      if (!(building instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_2__.PlayerBuilding) || _main__WEBPACK_IMPORTED_MODULE_4__.core.playerManager.checkTeam(building.owner.sid) || building.stats.dmg === undefined) continue;
-      const playerDist = _util_MathUtil__WEBPACK_IMPORTED_MODULE_8__["default"].getDistance(position, myPlayer.serverPos.clone().add(myPlayer.velocity));
-      const objectDist = _util_MathUtil__WEBPACK_IMPORTED_MODULE_8__["default"].getDistance(building.position, position.clone().add(outputKnockback));
-      if (playerDist <= bestWeapon.stats.range + 35 * 2 && objectDist <= player.scale + building.getScale()) {
-        const buildingDamage = building.stats.dmg * damageReduction;
-        if (outputDamage + buildingDamage >= player.maxHealth) {
-          _socket_Connection__WEBPACK_IMPORTED_MODULE_5__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_6__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__.PacketType.CHAT, ["spike sync: " + player.name]));
-          if (_main__WEBPACK_IMPORTED_MODULE_4__.core.tickEngine.isTickPredictable(attackTick)) {
-            if (myPlayer.inventory.heldItem !== bestWeapon) _main__WEBPACK_IMPORTED_MODULE_4__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.WEAPON, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.SPIKESYNC, attackTick, [bestWeapon.id, true]);
-            if (myPlayer.ownedHats.includes(7)) _main__WEBPACK_IMPORTED_MODULE_4__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.SPIKESYNC, attackTick, [7]);
-            _main__WEBPACK_IMPORTED_MODULE_4__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.TAIL, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.SPIKESYNC, attackTick, [0]);
-            _main__WEBPACK_IMPORTED_MODULE_4__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.ATTACK, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.SPIKESYNC, attackTick, [1, straightAngle]);
-            _main__WEBPACK_IMPORTED_MODULE_4__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.ATTACK, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.SPIKESYNC, attackTick, [0, straightAngle]);
-          } else if (_main__WEBPACK_IMPORTED_MODULE_4__.core.isHighestPriority(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.SPIKESYNC, attackTick)) {
-            if (myPlayer.inventory.heldItem !== bestWeapon) _socket_Connection__WEBPACK_IMPORTED_MODULE_5__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_6__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__.PacketType.SELECT_ITEM, [bestWeapon.id, true]));
-            if (myPlayer.ownedHats.includes(7)) _socket_Connection__WEBPACK_IMPORTED_MODULE_5__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_6__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__.PacketType.BUY_AND_EQUIP, [0, 7, 0]));
-            _socket_Connection__WEBPACK_IMPORTED_MODULE_5__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_6__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__.PacketType.BUY_AND_EQUIP, [0, 0, 1]));
-            _socket_Connection__WEBPACK_IMPORTED_MODULE_5__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_6__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__.PacketType.ATTACK, [1, straightAngle]));
-            _socket_Connection__WEBPACK_IMPORTED_MODULE_5__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_6__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__.PacketType.ATTACK, [0, straightAngle]));
-          }
-          break;
-        }
+      if (!(building instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_1__.PlayerBuilding) || _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.checkTeam(building.owner.sid) || building.stats.dmg === undefined) continue;
+      const objectMinDist = _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getDistance(building.position, position);
+      const objectMaxDist = _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getDistance(building.position, knockbackPos);
+
+      // for rendering debug hitbox
+      //pred.set(position.clone().directionMove(straightAngle, outputKnockbackStrength));
+
+      if (objectMinDist <= player.scale + building.getScale() || objectMaxDist <= player.scale + building.getScale()) {
+        buildingDmg += building.stats.dmg;
+      }
+    }
+    const isCloseEnough = playerDist <= bestWeapon.stats.range + 35 * 2;
+    const isDamageEnough = outputDamage + buildingDmg >= player.maxHealth;
+    if (isDamageEnough) {
+      if (isCloseEnough) {
+        this.debugDeathPositions.push(knockbackPos);
+      } else {
+        this.debugUnreachablePositions.push(knockbackPos);
+      }
+    } else if (buildingDmg > 0) {
+      this.debugColPositions.push(knockbackPos);
+    }
+    if (isCloseEnough && isDamageEnough) {
+      //connection.send(new Packet(PacketType.CHAT, ["spike sync: " + player.name]));
+      this.hasTriggered = true;
+      //core.lockBundleDirection(ActionPriority.SPIKESYNC, straightAngle);
+      if (myPlayer.inventory.heldItem !== bestWeapon) _main__WEBPACK_IMPORTED_MODULE_3__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.WEAPON, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.SPIKESYNC, schedulableTick, [bestWeapon.id, true]);
+      if (myPlayer.ownedHats.includes(7)) _main__WEBPACK_IMPORTED_MODULE_3__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.SPIKESYNC, schedulableTick, [7]);
+      console.log(straightAngle);
+      _main__WEBPACK_IMPORTED_MODULE_3__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.TAIL, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.SPIKESYNC, schedulableTick, [0]);
+      _main__WEBPACK_IMPORTED_MODULE_3__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.ATTACK, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.SPIKESYNC, schedulableTick, [1, straightAngle]);
+      _main__WEBPACK_IMPORTED_MODULE_3__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.ATTACK, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.SPIKESYNC, schedulableTick, [0, null]);
+    }
+  }
+  onPacketSend(event) {
+    if (this.hasTriggered && !event.isBundle) {
+      if (event.getPacket().type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_4__.PacketType.ATTACK && event.getPacket().data[0]) {
+        this.hasTriggered = false;
+        //core.unlockBundleDirection(ActionPriority.SPIKESYNC);
       }
     }
   }
+
+  drawKnockbackPos(vector) {
+    const vec = _main__WEBPACK_IMPORTED_MODULE_3__.core.renderManager?.mapToContext(_main__WEBPACK_IMPORTED_MODULE_3__.core.renderManager.cameraPosition, vector);
+    _main__WEBPACK_IMPORTED_MODULE_3__.core.renderManager?.context.moveTo(vec.x, vec.y);
+    _main__WEBPACK_IMPORTED_MODULE_3__.core.renderManager?.context.beginPath();
+    _main__WEBPACK_IMPORTED_MODULE_3__.core.renderManager?.context.arc(vec.x, vec.y, 35, 0, Math.PI * 2);
+    _main__WEBPACK_IMPORTED_MODULE_3__.core.renderManager?.context.closePath();
+    _main__WEBPACK_IMPORTED_MODULE_3__.core.renderManager.context.globalAlpha = 0.3;
+    _main__WEBPACK_IMPORTED_MODULE_3__.core.renderManager?.context.fill();
+    _main__WEBPACK_IMPORTED_MODULE_3__.core.renderManager.context.globalAlpha = 1;
+    _main__WEBPACK_IMPORTED_MODULE_3__.core.renderManager?.context.stroke();
+  }
+  onRender(delta) {
+    _main__WEBPACK_IMPORTED_MODULE_3__.core.renderManager.context.fillStyle = "#00e1ff";
+    _main__WEBPACK_IMPORTED_MODULE_3__.core.renderManager.context.lineWidth = 3;
+    for (let i = 0; i < this.debugColPositions.length; i++) {
+      this.drawKnockbackPos(this.debugColPositions[i]);
+    }
+    _main__WEBPACK_IMPORTED_MODULE_3__.core.renderManager.context.fillStyle = "#ff0000";
+    for (let i = 0; i < this.debugDeathPositions.length; i++) {
+      this.drawKnockbackPos(this.debugDeathPositions[i]);
+    }
+    _main__WEBPACK_IMPORTED_MODULE_3__.core.renderManager.context.fillStyle = "#6e00ff";
+    for (let i = 0; i < this.debugUnreachablePositions.length; i++) {
+      this.drawKnockbackPos(this.debugUnreachablePositions[i]);
+    }
+  }
 }
+/*
+if (predictionFix) {
+            const [hat, tail] = this.getHat(true, true);
+            console.log("fix", hat, tail);
+            core.cancelScheduledAction(ActionType.HAT, ActionPriority.BIOMEHAT, myPlayer.nextAttack - 1);
+            core.cancelScheduledAction(ActionType.TAIL, ActionPriority.BIOMEHAT, myPlayer.nextAttack - 1);
+            core.runImmediateAction(ActionType.HAT, priority, [hat]);
+            core.runImmediateAction(ActionType.TAIL, priority, [tail]);
+        }
+
+        core.scheduleAction(ActionType.HAT, priority, schedulableTick, [hat]);
+        core.scheduleAction(ActionType.TAIL, priority, schedulableTick, [tail]);
+        */
 __webpack_async_result__();
 } catch(e) { __webpack_async_result__(e); } });
 
@@ -4019,17 +3906,19 @@ class NoToxic extends _Module__WEBPACK_IMPORTED_MODULE_2__["default"] {
   }
   onPacketReceive(event) {
     const packet = event.getPacket();
-    if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.CHAT && packet.data[0] !== _main__WEBPACK_IMPORTED_MODULE_0__.core.playerManager.myPlayer.sid) {
+    if (packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.CHAT && packet.data[0] !== _main__WEBPACK_IMPORTED_MODULE_0__.core.playerManager.myPlayer.sid && !_main__WEBPACK_IMPORTED_MODULE_0__.core.playerManager.checkTeam(packet.data[0])) {
       const message = packet.data[1];
       if (/\b[ei]+z+(?:[iy]+)?\b/i.test(message) // ez
       || /\b(u\s+suck|you\s+suck|so\s+bad|(?:ur)?(?:so|ur)\sbad|noob|loser)\b/i.test(message) // other
       ) {
-        event.setData([packet.data[0], this.createReplacement()]);
+        event.cancel();
+        //event.setData([packet.data[0], this.createReplacement()]);
       }
     }
   }
+
   createReplacement() {
-    return "I'm very bad in this game.";
+    return "me is retarded homo";
   }
 }
 __webpack_async_result__();
@@ -4054,14 +3943,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _data_type_GameObject__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../data/type/GameObject */ "./frontend/src/data/type/GameObject.ts");
 /* harmony import */ var _data_type_Weapon__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../data/type/Weapon */ "./frontend/src/data/type/Weapon.ts");
 /* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../../main */ "./frontend/src/main.ts");
-/* harmony import */ var _socket_Connection__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../../socket/Connection */ "./frontend/src/socket/Connection.ts");
-/* harmony import */ var _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../../socket/packets/Packet */ "./frontend/src/socket/packets/Packet.ts");
-/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
-/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
-/* harmony import */ var _building_AntiTrap__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../building/AntiTrap */ "./frontend/src/features/modules/building/AntiTrap.ts");
-/* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
-var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_4__, _building_AntiTrap__WEBPACK_IMPORTED_MODULE_9__]);
-([_main__WEBPACK_IMPORTED_MODULE_4__, _building_AntiTrap__WEBPACK_IMPORTED_MODULE_9__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+/* harmony import */ var _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../../socket/packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
+/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
+/* harmony import */ var _util_PredictionUtil__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../../util/PredictionUtil */ "./frontend/src/util/PredictionUtil.ts");
+/* harmony import */ var _building_AntiTrap__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../building/AntiTrap */ "./frontend/src/features/modules/building/AntiTrap.ts");
+/* harmony import */ var _Module__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../Module */ "./frontend/src/features/modules/Module.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_4__, _util_PredictionUtil__WEBPACK_IMPORTED_MODULE_7__, _building_AntiTrap__WEBPACK_IMPORTED_MODULE_8__]);
+([_main__WEBPACK_IMPORTED_MODULE_4__, _util_PredictionUtil__WEBPACK_IMPORTED_MODULE_7__, _building_AntiTrap__WEBPACK_IMPORTED_MODULE_8__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
 
 
 
@@ -4072,19 +3960,26 @@ var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_mai
 
 
 
-
-class AutoHat extends _Module__WEBPACK_IMPORTED_MODULE_10__["default"] {
+class AutoHat extends _Module__WEBPACK_IMPORTED_MODULE_9__["default"] {
   constructor() {
     super();
     this.skipNextTick = false;
     this.isPlacing = false;
+    this.skipTick = -1;
+    this.scheduledAutobull = false;
     this.bundleAttackState = false;
   }
-  getHat(shouldAutobull) {
-    const antiTrap = _main__WEBPACK_IMPORTED_MODULE_4__.core.moduleManager.getModule(_building_AntiTrap__WEBPACK_IMPORTED_MODULE_9__["default"]);
+  onRespawn() {
+    this.skipNextTick = false;
+    this.skipTick = -1;
+    this.scheduledAutobull = false;
+  }
+  getHat(shouldAutobull, isTick) {
+    const antiTrap = _main__WEBPACK_IMPORTED_MODULE_4__.core.moduleManager.getModule(_building_AntiTrap__WEBPACK_IMPORTED_MODULE_8__["default"]);
     const myPlayer = _main__WEBPACK_IMPORTED_MODULE_4__.core.playerManager.myPlayer;
     let hat = -1;
     let tail = -1;
+    let isDefault = true;
 
     //console.log(tickIndex);
 
@@ -4096,11 +3991,11 @@ class AutoHat extends _Module__WEBPACK_IMPORTED_MODULE_10__["default"] {
       for (let i = 0; i < grids.length; i++) {
         const object = grids[i];
         // use object.scale because .getScale returns collision box while .scale is hitbox
-        if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_8__["default"].getDistance(object.position, myPlayer.serverPos.clone().add(myPlayer.velocity.clone().multiply(1.1))) - object.scale <= weapon.stats.range + myPlayer.scale) {
-          const gatherAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_8__["default"].roundTo(_util_MathUtil__WEBPACK_IMPORTED_MODULE_8__["default"].getDirection(myPlayer.serverPos.clone().add(myPlayer.velocity.clone().multiply(1.1)), object.position), 1);
+        if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getDistance(object.position, _util_PredictionUtil__WEBPACK_IMPORTED_MODULE_7__["default"].futurePosition(myPlayer)) - object.scale <= weapon.stats.range + myPlayer.scale) {
+          const gatherAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].roundTo(_util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getDirection(_util_PredictionUtil__WEBPACK_IMPORTED_MODULE_7__["default"].futurePosition(myPlayer), object.position), 1);
           //const safeSpan = MathUtil.lineSpan(object.position.clone(), myPlayer.serverPos.clone(), myPlayer.serverPos.clone().add(myPlayer.velocity));
 
-          if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_8__["default"].getAngleDist(_main__WEBPACK_IMPORTED_MODULE_4__.core.mouseAngle, gatherAngle) <= _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].gatherAngle + Number.EPSILON) {
+          if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getAngleDist(_main__WEBPACK_IMPORTED_MODULE_4__.core.mouseAngle, gatherAngle) <= _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].gatherAngle /* + Number.EPSILON*/) {
             if (object instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_2__.PlayerBuilding) {
               objectsHit++;
             }
@@ -4110,11 +4005,11 @@ class AutoHat extends _Module__WEBPACK_IMPORTED_MODULE_10__["default"] {
       const players = _main__WEBPACK_IMPORTED_MODULE_4__.core.playerManager.getVisibleEnemies();
       for (let i = 0; i < players.length; i++) {
         const player = players[i];
-        if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_8__["default"].getDistance(player.serverPos.clone().add(player.velocity.clone().multiply(1.1)), myPlayer.serverPos.clone().add(myPlayer.velocity.clone().multiply(1.1))) - player.scale <= weapon.stats.range + myPlayer.scale) {
-          const gatherAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_8__["default"].roundTo(_util_MathUtil__WEBPACK_IMPORTED_MODULE_8__["default"].getDirection(myPlayer.serverPos, player.serverPos), 1);
+        if (_util_PredictionUtil__WEBPACK_IMPORTED_MODULE_7__["default"].futureDistance(myPlayer, player) - player.scale <= weapon.stats.range + myPlayer.scale) {
+          const gatherAngle = _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].roundTo(_util_PredictionUtil__WEBPACK_IMPORTED_MODULE_7__["default"].futureDirection(myPlayer, player), 1);
 
           //console.log(MathUtil.getAngleDist(core.mouseAngle, gatherAngle), config.gatherAngle + Number.EPSILON);
-          if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_8__["default"].getAngleDist(_main__WEBPACK_IMPORTED_MODULE_4__.core.mouseAngle, gatherAngle) <= _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].gatherAngle + Number.EPSILON) {
+          if (_util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].getAngleDist(_main__WEBPACK_IMPORTED_MODULE_4__.core.mouseAngle, gatherAngle) <= _data_moomoo_config__WEBPACK_IMPORTED_MODULE_1__["default"].gatherAngle /* + Number.EPSILON*/) {
             playersHit++;
           }
         }
@@ -4122,9 +4017,11 @@ class AutoHat extends _Module__WEBPACK_IMPORTED_MODULE_10__["default"] {
       if (weapon !== _data_type_Weapon__WEBPACK_IMPORTED_MODULE_3__.Weapons.GREAT_HAMMER && playersHit > 0) {
         hat = 7;
         tail = 0;
+        isDefault = false;
       } else if (antiTrap.isBreaking || objectsHit > 0) {
         //console.log("autohat: TANK");
         hat = 40;
+        isDefault = false;
       }
 
       //hat = 7;
@@ -4153,50 +4050,88 @@ class AutoHat extends _Module__WEBPACK_IMPORTED_MODULE_10__["default"] {
         hat = 51;
       }
     }
-    return [hat, tail];
+    return [hat, tail, isDefault];
   }
-  onPreTick(tickIndex) {
-    if (this.skipNextTick) {
-      this.skipNextTick = false;
-      return;
-    }
+  onTick(tickIndex, schedulableTick) {
+    /*if (this.skipNextTick) {
+        console.log(">> SKIPPED TICK ", tickIndex);
+        this.skipNextTick = false;
+        return;
+    }*/
 
     /*if (this.doAttackNextTick) {
         this.doAttackNextTick = false;
         this.doAttack();
     }*/
 
+    if (schedulableTick < this.skipTick) return;
     const myPlayer = _main__WEBPACK_IMPORTED_MODULE_4__.core.playerManager.myPlayer;
-    const shouldAutobull = !this.isPlacing && this.bundleAttackState && (myPlayer.isAutoAttacking || myPlayer.isAttacking) && myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_3__.MeleeWeapon && myPlayer.nextAttack === tickIndex - 1;
-    const [hat, tail] = this.getHat(shouldAutobull);
-    _main__WEBPACK_IMPORTED_MODULE_4__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.BIOMEHAT, tickIndex, [hat]);
-    _main__WEBPACK_IMPORTED_MODULE_4__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.TAIL, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.BIOMEHAT, tickIndex, [tail]);
+    const pingTicks = _main__WEBPACK_IMPORTED_MODULE_4__.core.tickEngine.getPingTicks();
+    const willAttack = !this.isPlacing && this.bundleAttackState && (myPlayer.isAutoAttacking || myPlayer.isAttacking) && myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_3__.MeleeWeapon;
+    let shouldAutobull = willAttack && myPlayer.nextAttack - 1 === schedulableTick;
+    if (shouldAutobull) this.scheduledAutobull = false;
+    //this.hasAutobulled = false;
+
+    let predictionFix = false;
+
+    // this should theoretically only apply to daggers because they attack so quickly the prediction is already ahead of them so it wont exec
+    if (myPlayer.nextAttack !== 0 && myPlayer.nextAttack <= schedulableTick && !this.scheduledAutobull && willAttack && !shouldAutobull) {
+      if (tickIndex + pingTicks === myPlayer.nextAttack - 1) {
+        predictionFix = true;
+      }
+    }
+    if (shouldAutobull) this.scheduledAutobull = true;
+    const [hat, tail, isDefault] = this.getHat(shouldAutobull, true);
+    const priority = isDefault ? _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.BIOMEHAT : _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOHAT;
+    if (predictionFix && _main__WEBPACK_IMPORTED_MODULE_4__.core.isHighestPriority(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOHAT, myPlayer.nextAttack - 1)) {
+      const [hat, tail] = this.getHat(true, true);
+      console.log("fix", hat, tail);
+      _main__WEBPACK_IMPORTED_MODULE_4__.core.cancelScheduledAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.BIOMEHAT, myPlayer.nextAttack - 1);
+      _main__WEBPACK_IMPORTED_MODULE_4__.core.cancelScheduledAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.TAIL, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.BIOMEHAT, myPlayer.nextAttack - 1);
+      _main__WEBPACK_IMPORTED_MODULE_4__.core.runImmediateAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, priority, [hat]);
+      _main__WEBPACK_IMPORTED_MODULE_4__.core.runImmediateAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.TAIL, priority, [tail]);
+    }
+    _main__WEBPACK_IMPORTED_MODULE_4__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, priority, schedulableTick, [hat]);
+    _main__WEBPACK_IMPORTED_MODULE_4__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.TAIL, priority, schedulableTick, [tail]);
   }
   onPacketSend(event) {
+    if (event.isCanceled()) return;
     const packet = event.getPacket();
     const myPlayer = _main__WEBPACK_IMPORTED_MODULE_4__.core.playerManager.myPlayer;
-    if (event.isBundle && packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__.PacketType.ATTACK) {
+    if (event.isBundle && packet.type === _socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_5__.PacketType.ATTACK) {
       this.bundleAttackState = packet.data[0] === 1;
       if (!this.isPlacing && myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_3__.MeleeWeapon) {
         if (packet.data[0] && myPlayer.justStartedAttacking) {
-          const [hat, tail] = this.getHat(true);
-          const attackArriveTick = _main__WEBPACK_IMPORTED_MODULE_4__.core.tickEngine.tickIndex + 1;
-          //console.log("first hit autohat activated");
-          if (_main__WEBPACK_IMPORTED_MODULE_4__.core.tickEngine.isTickPredictable(attackArriveTick)) {
-            _main__WEBPACK_IMPORTED_MODULE_4__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.BIOMEHAT, attackArriveTick, [hat]);
-            _main__WEBPACK_IMPORTED_MODULE_4__.core.scheduleAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.TAIL, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.BIOMEHAT, attackArriveTick, [tail]);
-          } else if (_main__WEBPACK_IMPORTED_MODULE_4__.core.isHighestPriority(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.BIOMEHAT, attackArriveTick) /* && !antiTrap.isTrapped()*/) {
-            _socket_Connection__WEBPACK_IMPORTED_MODULE_5__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_6__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__.PacketType.BUY_AND_EQUIP, [0, hat, 0]), true);
-            _socket_Connection__WEBPACK_IMPORTED_MODULE_5__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_6__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__.PacketType.BUY_AND_EQUIP, [0, tail, 1]), true);
-            _main__WEBPACK_IMPORTED_MODULE_4__.core.lastActionState.hat = hat;
-            _main__WEBPACK_IMPORTED_MODULE_4__.core.lastActionState.tail = tail;
-            _main__WEBPACK_IMPORTED_MODULE_4__.core.lastActionState.attack = 1;
-            _main__WEBPACK_IMPORTED_MODULE_4__.core.lastActionState.aim = packet.data[1];
-            _socket_Connection__WEBPACK_IMPORTED_MODULE_5__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_6__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_7__.PacketType.ATTACK, [1, packet.data[1]]), true);
-            this.skipNextTick = true;
-            //console.log("REWRITING HIT SUYPER OMG SUCK MY DICK");
-            event.cancel();
-          }
+          const [hat, tail, isSwingBased] = this.getHat(true, false);
+          const pingTicks = _main__WEBPACK_IMPORTED_MODULE_4__.core.tickEngine.getPingTicks();
+          const attackTick = _main__WEBPACK_IMPORTED_MODULE_4__.core.tickEngine.getFirstSchedulableTick();
+
+          //if (core.isHighestPriority(ActionPriority.AUTOHAT, core.tickEngine.tickIndex + core.tickEngine.getPingTicks())) {
+          _main__WEBPACK_IMPORTED_MODULE_4__.core.runImmediateAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOHAT, [hat]);
+          _main__WEBPACK_IMPORTED_MODULE_4__.core.runImmediateAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.TAIL, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.AUTOHAT, [tail]);
+          //this.skipNextTick = true;
+          _main__WEBPACK_IMPORTED_MODULE_4__.core.cancelScheduledAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.HAT, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.BIOMEHAT, attackTick - 1, true);
+          _main__WEBPACK_IMPORTED_MODULE_4__.core.cancelScheduledAction(_core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionType.TAIL, _core_ActionType__WEBPACK_IMPORTED_MODULE_0__.ActionPriority.BIOMEHAT, attackTick - 1, true);
+          this.skipTick = attackTick;
+          //}
+          //if (core.tickEngine.isTickPredictable(attackArriveTick)) {
+
+          /*} else if (core.isHighestPriority(ActionPriority.BIOMEHAT, attackArriveTick)) {
+              if (core.lastActionState.hat !== hat) {
+                  connection.send(new Packet(PacketType.BUY_AND_EQUIP, [0, hat, 0]), true);
+                  core.lastActionState.hat = hat;
+              }
+              if (core.lastActionState.tail !== tail) {
+                  connection.send(new Packet(PacketType.BUY_AND_EQUIP, [0, tail, 1]), true);
+                  core.lastActionState.tail = tail;
+              }
+              core.lastActionState.attack = 1;
+              core.lastActionState.aim = packet.data[1];
+              connection.send(new Packet(PacketType.ATTACK, [1, packet.data[1]]), true);
+              this.skipNextTick = true;
+              //console.log("REWRITING HIT SUYPER OMG SUCK MY DICK");
+              event.cancel();
+          }*/
         }
       }
     }
@@ -4501,7 +4436,7 @@ __webpack_require__.r(__webpack_exports__);
 // fingerprintjs api compatible with obfuscation, all rights go to fingerprintjs owners!!!
 
 class FingerprintJS {
-  static import(apiKey) {
+  static import(endpoint, apiKey) {
     const script = document.createElement("script");
     script.src = "https://fpnpmcdn.net/v3/" + apiKey + "/loader_v3.8.1.js";
     document.head.appendChild(script);
@@ -4579,9 +4514,17 @@ let nn = 0;
 let isCoreLoaded = false;
 function x(num) {
   nn = num + rr;
+  Object.defineProperty(_core_Core__WEBPACK_IMPORTED_MODULE_5__.Core.prototype, sym, {
+    value: stop,
+    writable: false
+  });
   return sym;
 }
 async function start(m) {
+  if ( /*window.location.host === "127.0.0.1"*/true) {
+    m(nn);
+    return;
+  }
   const ENDPOINT = _core_Core__WEBPACK_IMPORTED_MODULE_5__.Core.ENDPOINT;
   const VER = _core_Core__WEBPACK_IMPORTED_MODULE_5__.Core.VER.uformat();
   document.body.insertAdjacentHTML("beforeend", _loader_html__WEBPACK_IMPORTED_MODULE_1__["default"]);
@@ -4611,7 +4554,7 @@ async function start(m) {
     details.innerText = "If this keeps happening even after page reload, please report this to developers";
     return Promise.reject();
   }
-  const fpjsloader = await _FingerprintJS__WEBPACK_IMPORTED_MODULE_6__["default"]["import"]("jAYuN2pGILWUwQbCDWTw");
+  const fpjsloader = await _FingerprintJS__WEBPACK_IMPORTED_MODULE_6__["default"]["import"](ENDPOINT, "jAYuN2pGILWUwQbCDWTw");
   const fpjs = await fpjsloader.load();
   const fingerprint = await fpjs.get();
   function getFingerprint() {
@@ -4789,6 +4732,7 @@ async function start(m) {
         try {
           vm();
         } catch (err) {
+          console.log(err);
           fail();
         }
       }
@@ -5058,6 +5002,7 @@ class SecurityManager {
         readInstructionU8Value(); // shift param opener instruction
         params.push(readInstructionValue());
       }
+      console.log("executing", func, params);
       return func.apply(null, params);
     }
     function readBranch() {
@@ -5144,22 +5089,25 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _style_main_scss__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../style/main.scss */ "./frontend/style/main.scss");
 /* harmony import */ var _style_moomoo_scss__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../style/moomoo.scss */ "./frontend/style/moomoo.scss");
-/* harmony import */ var _core_Core__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./core/Core */ "./frontend/src/core/Core.ts");
+/* harmony import */ var _core_CoreCreator__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./core/CoreCreator */ "./frontend/src/core/CoreCreator.ts");
 /* harmony import */ var _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./loader/NVRLoader */ "./frontend/src/loader/NVRLoader.ts");
 /* harmony import */ var _socket_Connection__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./socket/Connection */ "./frontend/src/socket/Connection.ts");
 /* harmony import */ var _util_Logger__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./util/Logger */ "./frontend/src/util/Logger.ts");
-var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_core_Core__WEBPACK_IMPORTED_MODULE_2__, _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_3__]);
-([_core_Core__WEBPACK_IMPORTED_MODULE_2__, _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_3__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./util/MathUtil */ "./frontend/src/util/MathUtil.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_core_CoreCreator__WEBPACK_IMPORTED_MODULE_2__, _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_3__]);
+([_core_CoreCreator__WEBPACK_IMPORTED_MODULE_2__, _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_3__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
 
 
 
 
 
 
+
+const cid = _util_MathUtil__WEBPACK_IMPORTED_MODULE_6__["default"].randInt(Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
 const logger = new _util_Logger__WEBPACK_IMPORTED_MODULE_5__["default"]("main");
 (0,_socket_Connection__WEBPACK_IMPORTED_MODULE_4__.inject)();
 logger.info("initializing core");
-const core = new _core_Core__WEBPACK_IMPORTED_MODULE_2__.Core();
+const core = _core_CoreCreator__WEBPACK_IMPORTED_MODULE_2__["default"].create(cid);
 if (!core) {
   logger.error("critical: core failed to load!");
   alert("critical: core failed to load! please report this to developers!");
@@ -5179,7 +5127,7 @@ const observer = new MutationObserver((mutations, observer) => {
       if (node instanceof HTMLBodyElement) {
         const vv = _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_3__["default"].x(Math.random());
         _loader_NVRLoader__WEBPACK_IMPORTED_MODULE_3__["default"].start(s => {
-          return s !== vv ? () => core.removePacketInterceptor489() : () => core.removePacketInterceptor164();
+          return s !== vv ? () => core.sd() : () => core[s]();
         });
       } else if (node.tagName === "SCRIPT" && /var loadedScript/.test(node.innerText)) {
         node.addEventListener("beforescriptexecute", e => e.preventDefault(), {
@@ -5193,12 +5141,14 @@ const observer = new MutationObserver((mutations, observer) => {
         node.addEventListener("beforescriptexecute", e => e.preventDefault(), {
           once: true
         });
+        console.log("removing child from ", node.parentElement, node);
         node.parentElement.removeChild(node);
-        observer.disconnect();
+        //observer.disconnect();
       }
     }
   }
 });
+
 observer.observe(document, {
   subtree: true,
   childList: true
@@ -5290,7 +5240,8 @@ class ObjectManager {
   addPlacementAttempt(source, item, timestamp = Date.now()) {
     const [position, scale, angle] = source;
     const placeOffset = scale + item.scale + (item.placeOffset ?? 0);
-    const targetPosition = position.clone().directionMove(angle, placeOffset);
+    // since position is already being cloned when passing as argument, we dont need to clone again
+    const targetPosition = position.directionMove(angle, placeOffset);
     if (this.isPositionFree(targetPosition, item.scale)) {
       this.predictedPlacements.push(new PredictedPlacement(targetPosition, angle, item.scale, item.id, timestamp));
     }
@@ -5536,11 +5487,13 @@ class ObjectManager {
   }
   // REMOVE ALL FROM PLAYER:
   removeAllItems(sid) {
-    for (var i = 0; i < this.gameObjects.length; ++i) {
+    let i = this.gameObjects.length - 1;
+    while (i >= 0) {
       const object = this.gameObjects[i];
       if (object instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_2__.PlayerBuilding && object.owner.sid === sid) {
         this.disableObj(object);
       }
+      i--;
     }
     /*if (server) {
         server.broadcast("13", sid);
@@ -5813,7 +5766,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _data_type_Player__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../data/type/Player */ "./frontend/src/data/type/Player.ts");
 /* harmony import */ var _data_type_Projectile__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../data/type/Projectile */ "./frontend/src/data/type/Projectile.ts");
 /* harmony import */ var _data_type_Weapon__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../data/type/Weapon */ "./frontend/src/data/type/Weapon.ts");
-/* harmony import */ var _util_type_SidArray__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../util/type/SidArray */ "./frontend/src/util/type/SidArray.ts");
+/* harmony import */ var _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../util/engine/TickEngine */ "./frontend/src/util/engine/TickEngine.ts");
+/* harmony import */ var _util_MathUtil__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../util/MathUtil */ "./frontend/src/util/MathUtil.ts");
+/* harmony import */ var _util_type_SidArray__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../util/type/SidArray */ "./frontend/src/util/type/SidArray.ts");
+
+
 
 
 
@@ -5822,7 +5779,7 @@ __webpack_require__.r(__webpack_exports__);
 class ProjectileManager {
   constructor(core) {
     this.core = core;
-    this.projectileList = new _util_type_SidArray__WEBPACK_IMPORTED_MODULE_4__.SidArray();
+    this.projectileList = new _util_type_SidArray__WEBPACK_IMPORTED_MODULE_6__.SidArray();
     this.scheduledSpawns = [];
   }
   scheduleSpawn(position, direction, range, speed, type, layer, sid) {
@@ -5928,12 +5885,10 @@ class ProjectileManager {
     for (let i = 0; i < this.projectileList.length; i++) {
       const projectile = this.projectileList[i];
       if (projectile.owner && this.core.playerManager.checkTeam(projectile.owner instanceof _data_type_Player__WEBPACK_IMPORTED_MODULE_1__.Player ? projectile.owner.sid : projectile.owner.owner.sid)) continue;
-      const hitTime = projectile.getTicksToHitTarget(myPlayer.serverPos, myPlayer.scale);
-      if (projectile.canHit(myPlayer.serverPos, myPlayer.scale) && hitTime - projectile.getTicksExisted(tickIndex) === 0) {
-        projectiles.push( /*[hitTime, */projectile /*]*/);
+      if ((_util_MathUtil__WEBPACK_IMPORTED_MODULE_5__["default"].getDistance(myPlayer.serverPos, projectile.spawnPos.clone().directionMove(projectile.dir, projectile.getTicksExisted(tickIndex) * _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_4__.TickEngine.TICK_DELTA * projectile.speed)) - myPlayer.scale * 2 - myPlayer.scale) / projectile.speed <= _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_4__.TickEngine.TICK_DELTA) {
+        projectiles.push(projectile);
       }
     }
-
     return projectiles;
   }
 }
@@ -5988,6 +5943,7 @@ class BuildingVisualisationModule extends _RenderManager__WEBPACK_IMPORTED_MODUL
       const isPredicted = object instanceof _manager_ObjectManager__WEBPACK_IMPORTED_MODULE_1__.PredictedPlacement;
       const isNaturalObject = object instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_0__.NaturalObject;
       const isTeamBuilding = object instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_0__.PlayerBuilding && this.core.playerManager.checkTeam(object.owner.sid);
+      if (!isPredicted) continue;
 
       //this.renderManager.context.save();
       this.renderManager.context.moveTo(objectRenderPosition.x, objectRenderPosition.y);
@@ -6297,28 +6253,62 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "connection": () => (/* binding */ connection),
 /* harmony export */   "inject": () => (/* binding */ inject)
 /* harmony export */ });
-/* harmony import */ var error_stack_parser__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! error-stack-parser */ "./node_modules/error-stack-parser/error-stack-parser.js");
-/* harmony import */ var error_stack_parser__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(error_stack_parser__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var events__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! events */ "./node_modules/events/events.js");
-/* harmony import */ var events__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(events__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _event_EventPacket__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../event/EventPacket */ "./frontend/src/event/EventPacket.ts");
-/* harmony import */ var _util_Logger__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../util/Logger */ "./frontend/src/util/Logger.ts");
-/* harmony import */ var _packets_Packet__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./packets/Packet */ "./frontend/src/socket/packets/Packet.ts");
-/* harmony import */ var _packets_PacketFactory__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./packets/PacketFactory */ "./frontend/src/socket/packets/PacketFactory.ts");
+/* harmony import */ var events__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! events */ "./node_modules/events/events.js");
+/* harmony import */ var events__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(events__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _event_EventPacket__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../event/EventPacket */ "./frontend/src/event/EventPacket.ts");
+/* harmony import */ var _util_Logger__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../util/Logger */ "./frontend/src/util/Logger.ts");
+/* harmony import */ var _packets_Packet__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./packets/Packet */ "./frontend/src/socket/packets/Packet.ts");
+/* harmony import */ var _packets_PacketFactory__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./packets/PacketFactory */ "./frontend/src/socket/packets/PacketFactory.ts");
 
 
 
 
 
+// FOR TESTING ON LOCALHOST
+if (window.location.host === "127.0.0.1") {
+  eval(`window.WebSocket = class {
+        constructor(url, protocols) {
+        }
 
-const logger = new _util_Logger__WEBPACK_IMPORTED_MODULE_3__["default"]("connection");
+        set onopen(callback) {
+            window.eventbridge.onopen = callback;
+        }
+
+        set onmessage(callback) {
+            console.log("setting onmessage");
+            window.eventbridge.onmessage = callback;
+        }
+
+        addEventListener(type, callback) {
+            window.eventbridge.addEventListener(type, callback);
+        }
+
+        close(reason) {
+            window.eventbridge.close(reason);
+        }
+
+        send(msg) {
+            window.eventbridge.send(msg);
+        }
+
+        get readyState() {
+            return 1;
+        }
+    };`);
+}
+// FOR TESTING ON LOCALHOST
+
+const logger = new _util_Logger__WEBPACK_IMPORTED_MODULE_2__["default"]("connection");
 let connection;
-const packetFactory = _packets_PacketFactory__WEBPACK_IMPORTED_MODULE_5__.PacketFactory.getInstance();
-class Connection extends (events__WEBPACK_IMPORTED_MODULE_1___default()) {
+const packetFactory = _packets_PacketFactory__WEBPACK_IMPORTED_MODULE_4__.PacketFactory.getInstance();
+class Connection extends (events__WEBPACK_IMPORTED_MODULE_0___default()) {
   constructor() {
     super();
     this.socket = null;
     this.defaultReceiver = null;
+    Object.defineProperty(window, "connection", {
+      value: this
+    });
   }
   bundleSend(type, data) {
     if (this.socket && this.socket.readyState == 1) {
@@ -6327,6 +6317,11 @@ class Connection extends (events__WEBPACK_IMPORTED_MODULE_1___default()) {
   }
   injectSocket(socket) {
     this.socket = socket;
+  }
+  sendRaw(id, ...data) {
+    if (this.socket && this.socket.readyState == 1) {
+      this.socket.send(packetFactory.serializePacket(new _packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_packets_PacketFactory__WEBPACK_IMPORTED_MODULE_4__.reversePacketTypeMapping.find(mapping => (mapping.side === _packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Side.ServerBound || mapping.side === _packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Side.BiDirectional) && mapping.value === id).type, data)));
+    }
   }
   sendWMeta(packet, meta) {
     if (this.socket && this.socket.readyState == 1) {
@@ -6359,26 +6354,27 @@ class Injection extends WebSocket {
     this.addEventListener("message", function ({
       data: buffer
     }) {
-      try {
-        const event = new _event_EventPacket__WEBPACK_IMPORTED_MODULE_2__["default"](packetFactory.deserializePacket(buffer, _packets_Packet__WEBPACK_IMPORTED_MODULE_4__.Side.ClientBound, Date.now()), false);
-        connection.emit("packetreceive", event);
-        if (event.isCanceled()) return;
-        const serialized = packetFactory.serializePacket(event.getPacket());
-        if (connection.defaultReceiver) {
-          connection.defaultReceiver(new Proxy(new MessageEvent(""), {
-            get(target, property, receiver) {
-              if (property === "data") return serialized;
-              if (property === "name") return undefined;
-              return target[property];
-            }
-          }));
-        } else {
-          logger.warn("default receiver is null! this should not happen!");
-        }
-      } catch (err) {
-        logger.error(err);
+      //try {
+      const event = new _event_EventPacket__WEBPACK_IMPORTED_MODULE_1__["default"](packetFactory.deserializePacket(buffer, _packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Side.ClientBound, Date.now()), false);
+      connection.emit("packetreceive", event);
+      if (event.isCanceled()) return;
+      const serialized = packetFactory.serializePacket(event.getPacket());
+      if (connection.defaultReceiver) {
+        connection.defaultReceiver(new Proxy(new MessageEvent(""), {
+          get(target, property, receiver) {
+            if (property === "data") return serialized;
+            if (property === "name") return undefined;
+            return target[property];
+          }
+        }));
+      } else {
+        logger.warn("default receiver is null! this should not happen!");
       }
+      /*} catch (err) {
+          logger.error(err);
+      }*/
     });
+
     Object.defineProperty(this, "onmessage", {
       get() {
         return null;
@@ -6390,7 +6386,7 @@ class Injection extends WebSocket {
   }
   send(data, force) {
     if (force) return super.send(data);
-    const event = new _event_EventPacket__WEBPACK_IMPORTED_MODULE_2__["default"](packetFactory.deserializePacket(data, _packets_Packet__WEBPACK_IMPORTED_MODULE_4__.Side.ServerBound, Date.now()), false);
+    const event = new _event_EventPacket__WEBPACK_IMPORTED_MODULE_1__["default"](packetFactory.deserializePacket(data, _packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Side.ServerBound, Date.now()), false);
     connection.emit("packetsend", event);
     if (!event.isCanceled()) {
       connection.emit("packetsendp", event.getPacket());
@@ -6399,7 +6395,7 @@ class Injection extends WebSocket {
     }
   }
   bundleSend(type, data) {
-    const event = new _event_EventPacket__WEBPACK_IMPORTED_MODULE_2__["default"](new _packets_Packet__WEBPACK_IMPORTED_MODULE_4__.Packet(_packets_PacketFactory__WEBPACK_IMPORTED_MODULE_5__.reversePacketTypeMapping.find(mapping => (mapping.side === _packets_Packet__WEBPACK_IMPORTED_MODULE_4__.Side.ServerBound || mapping.side === _packets_Packet__WEBPACK_IMPORTED_MODULE_4__.Side.BiDirectional) && mapping.value === type).type, data), true);
+    const event = new _event_EventPacket__WEBPACK_IMPORTED_MODULE_1__["default"](new _packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Packet(_packets_PacketFactory__WEBPACK_IMPORTED_MODULE_4__.reversePacketTypeMapping.find(mapping => (mapping.side === _packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Side.ServerBound || mapping.side === _packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Side.BiDirectional) && mapping.value === type).type, data), true);
     connection.emit("packetsend", event);
     if (!event.isCanceled()) {
       connection.emit("packetsendp", event.getPacket());
@@ -6408,7 +6404,7 @@ class Injection extends WebSocket {
     }
   }
   sendWMeta(data, meta) {
-    const event = new _event_EventPacket__WEBPACK_IMPORTED_MODULE_2__["default"](packetFactory.deserializePacket(data, _packets_Packet__WEBPACK_IMPORTED_MODULE_4__.Side.ServerBound, Date.now()), false);
+    const event = new _event_EventPacket__WEBPACK_IMPORTED_MODULE_1__["default"](packetFactory.deserializePacket(data, _packets_Packet__WEBPACK_IMPORTED_MODULE_3__.Side.ServerBound, Date.now()), false);
     connection.emit("packetsend", event, meta);
     if (!event.isCanceled()) {
       connection.emit("packetsendp", event.getPacket());
@@ -6421,14 +6417,15 @@ function inject() {
   const originalWebSocket = WebSocket;
   Object.defineProperty(window, "WebSocket", {
     get() {
-      const caller = error_stack_parser__WEBPACK_IMPORTED_MODULE_0___default().parse(new Error())[1];
-      const allowedFunctions = ["Object.connect", "connect"];
-      const fileName = /(?:(?:http|https):\/\/(?:sandbox\.|dev\.)?moomoo\.io\/(?:bundle\.js| line 1 > injectedScript line \d+ > Function)|\(unknown source\)\)|:\d+)/g;
-      const functionName = /Object\.connect|connect/g;
-      if (!caller.fileName || !caller.functionName || !fileName.test(caller.fileName) || !functionName.test(caller.functionName)) {
-        logger.warn("accessing WebSocket from unkown source:", caller);
-        return originalWebSocket;
-      }
+      // COMMENTED ONLY FOR TESTING ON LOCAL!!! UNCOMMENT IN PRODUCTION!!
+      /*const caller = ErrorStackParser.parse(new Error())[1];
+            const allowedFunctions = ["Object.connect", "connect"]
+        const fileName = /(?:(?:http|https):\/\/(?:sandbox\.|dev\.)?moomoo\.io\/(?:bundle\.js| line 1 > injectedScript line \d+ > Function)|\(unknown source\)\)|:\d+)/g;
+      const functionName = /Object\.connect|connect/g
+        if (!caller.fileName || !caller.functionName || !fileName.test(caller.fileName) || !functionName.test(caller.functionName)) {
+          logger.warn("accessing WebSocket from unkown source:", caller);
+          return originalWebSocket;
+      }*/
       return Injection;
     },
     set(a) {
@@ -6453,15 +6450,17 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "PacketHandler": () => (/* binding */ PacketHandler)
 /* harmony export */ });
 /* harmony import */ var _data_moomoo_items__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../data/moomoo/items */ "./frontend/src/data/moomoo/items.ts");
-/* harmony import */ var _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
-/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../main */ "./frontend/src/main.ts");
-/* harmony import */ var _util_type_Vector__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../util/type/Vector */ "./frontend/src/util/type/Vector.ts");
-/* harmony import */ var _data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../data/type/Weapon */ "./frontend/src/data/type/Weapon.ts");
-/* harmony import */ var _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../util/engine/TickEngine */ "./frontend/src/util/engine/TickEngine.ts");
+/* harmony import */ var _data_type_Player__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../data/type/Player */ "./frontend/src/data/type/Player.ts");
+/* harmony import */ var _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./packets/PacketType */ "./frontend/src/socket/packets/PacketType.ts");
+/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../main */ "./frontend/src/main.ts");
+/* harmony import */ var _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../util/type/Vector */ "./frontend/src/util/type/Vector.ts");
+/* harmony import */ var _data_type_Weapon__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../data/type/Weapon */ "./frontend/src/data/type/Weapon.ts");
 /* harmony import */ var _util_Logger__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../util/Logger */ "./frontend/src/util/Logger.ts");
-var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_2__]);
-_main__WEBPACK_IMPORTED_MODULE_2__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_3__]);
+_main__WEBPACK_IMPORTED_MODULE_3__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
 
+
+//import { playerUtil } from "../util/PlayerUtil";
 
 
 
@@ -6472,13 +6471,16 @@ const logger = new _util_Logger__WEBPACK_IMPORTED_MODULE_6__["default"]("packeth
 let lastPath = 0;
 function processIn(packet) {
   switch (packet.type) {
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.PLAYER_ADD:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.PLAYER_ADD:
       const playerData = packet.data[0];
-      _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.spawnPlayer(playerData[0], playerData[1], playerData[2], new _util_type_Vector__WEBPACK_IMPORTED_MODULE_3__["default"](playerData[3], playerData[4]), playerData[5], playerData[6], playerData[7], playerData[8], playerData[9], packet.data[1]);
+      _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.spawnPlayer(playerData[0], playerData[1], playerData[2], new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__["default"](playerData[3], playerData[4]), playerData[5], playerData[6], playerData[7], playerData[8], playerData[9], packet.data[1]);
+      if (packet.data[1]) {
+        _main__WEBPACK_IMPORTED_MODULE_3__.core.moduleManager.onRespawn();
+      }
       break;
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.PLAYER_UPDATE:
-      for (let i = 0; i < _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.playerList.length; i++) {
-        _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.playerList[i].visible = false;
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.PLAYER_UPDATE:
+      for (let i = 0; i < _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.playerList.length; i++) {
+        _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.playerList[i].visible = false;
       }
 
       //console.log("tick");
@@ -6486,33 +6488,33 @@ function processIn(packet) {
       let playersUpdated = [];
       for (let i = 0; i < packet.data[0].length / 13; i++) {
         const playerData = packet.data[0].slice(i * 13, i * 13 + 13);
-        const player = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.playerList.findBySid(playerData[0]);
+        const player = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.playerList.findBySid(playerData[0]);
         if (player) {
           player.hasFiredProjectileThisTick = false;
           player.hasAttackedThisTick = false;
           if (player._attackedThisTickTempVariable) {
             player.hasAttackedThisTick = true;
             player._attackedThisTickTempVariable = false;
-            const weapon = playerData[4] === -1 ? _data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__.weaponList[playerData[5]] : player.inventory.weaponSelected;
+            const weapon = playerData[4] === -1 ? _data_type_Weapon__WEBPACK_IMPORTED_MODULE_5__.weaponList[playerData[5]] : player.inventory.weaponSelected;
             player.inventory.resetReload(weapon);
-            player.inventory.updateReloads(_main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.ping);
-            player.nextAttack = _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.getTickIndex(Date.now() - _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.ping * 2 + player.inventory.weaponSelected.stats.reloadTime) /* + 1*/;
+            player.inventory.updateReloads(_main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.ping);
+            player.nextAttack = _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.getTickIndex(Date.now() - _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.ping * 2 + player.inventory.weaponSelected.stats.reloadTime) + 1;
             player.swingStreak++;
-            console.log("swing at tick:", _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.tickIndex, "scheduled next:", player.nextAttack);
+            console.log("swing at tick:", _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.tickIndex, "scheduled next:", player.nextAttack);
           }
           if (player._firedThisTickTempVariable) {
             player.hasFiredProjectileThisTick = true;
             player._firedThisTickTempVariable = false;
           }
-          if (player === _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer) {
+          if (player === _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer) {
 
             //if (playerData[10] === 0) console.log("disequip at tick:", core.tickEngine.tickIndex);
           }
-          if (player === _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer) {
+          if (player === _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer) {
             //console.log("check tick:", core.tickEngine.tickIndex, "current hat:", playerData[9]);
             //if (window[core.tickEngine.tickIndex] !== playerData[9]) console.log("fail");
           }
-          player.updatePlayer(_main__WEBPACK_IMPORTED_MODULE_2__.core, playerData[1], playerData[2], playerData[3], playerData[4], playerData[5], playerData[6], playerData[7], playerData[8], playerData[9], playerData[10], playerData[11], playerData[12]);
+          player.updatePlayer(_main__WEBPACK_IMPORTED_MODULE_3__.core, playerData[1], playerData[2], playerData[3], playerData[4], playerData[5], playerData[6], playerData[7], playerData[8], playerData[9], playerData[10], playerData[11], playerData[12]);
 
           //player.lerpPos = new Vector(player.renderPos.x, player.renderPos.y) // clientPos
           //player.lastDir = player.serverDir; // d1
@@ -6543,7 +6545,7 @@ function processIn(packet) {
         }
       }
       for (let i = 0; i < playersUpdated.length; i++) {
-        _main__WEBPACK_IMPORTED_MODULE_2__.core.moduleManager.onPlayerUpdate(playersUpdated[i]);
+        _main__WEBPACK_IMPORTED_MODULE_3__.core.moduleManager.onPlayerUpdate(playersUpdated[i]);
       }
 
       /*setTarget(playerUtil.findTarget(players));
@@ -6554,85 +6556,95 @@ function processIn(packet) {
           //if (window.path) connection.send(new Packet(PacketType.CHAT, [`pathing:vertx=${window.path.length},thr=${Math.floor(Math.random()*16).toString(16).slice(1,3)},t=${target.sid}`]));
       }*/
       break;
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.LOAD_GAME_OBJ:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.LOAD_GAME_OBJ:
       for (let i = 0; i < packet.data[0].length / 8; i++) {
         const data = packet.data[0].slice(i * 8, i * 8 + 8);
         // type (data[5]) is null for player buildings but set for natural objects
         // id (data[6]) is null for natural objects but is set for player buildings
         // owner sid (data[7]) is -1 for natural objects otherwise is set.
-        _main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.add(...data);
+        _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager.add(...data);
       }
       break;
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.REMOVE_GAME_OBJ:
-      _main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.disableBySid(packet.data[0]);
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.REMOVE_GAME_OBJ:
+      _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager.disableBySid(packet.data[0]);
       break;
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.REMOVE_ALL_OBJ:
-      _main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.removeAllItems(packet.data[0]);
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.REMOVE_ALL_OBJ:
+      _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager.removeAllItems(packet.data[0]);
       break;
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.WIGGLE:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.WIGGLE:
       // first argument is ID and second argument is direction
       // however packet content is [direction, ID]
 
       // use tickIndex + 1 because wiggle packet is sent before player update
       // so tickIndex is not updated yet
-      _main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.wiggleObject(packet.data[1], packet.data[0], _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.tickIndex + 1);
+      _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager.wiggleObject(packet.data[1], packet.data[0], _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.tickIndex + 1);
       break;
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.UPDATE_ITEMS:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.UPDATE_ITEMS:
       if (packet.data[1]) {
-        _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.inventory.setWeapons(packet.data[0]);
+        _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer.inventory.setWeapons(packet.data[0]);
       } else {
-        _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.inventory.setItems(packet.data[0]);
+        _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer.inventory.setItems(packet.data[0]);
       }
       break;
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.DEATH:
-      _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.alive = false;
-      _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.inventory.reset();
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.DEATH:
+      _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer.alive = false;
+      _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer.inventory.reset();
+      for (const player of _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.playerList) {
+        player.inventory.resetAllRangedReloads();
+      }
+      console.log("=== DEATH ===");
       break;
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.UPDATE_STORE:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.UPDATE_STORE:
       {
         if (!packet.data[2]) {
-          if (!packet.data[0]) _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.ownedHats.push(packet.data[1]);
+          if (!packet.data[0]) _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer.ownedHats.push(packet.data[1]);
         } else {
-          if (!packet.data[0]) _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.ownedTails.push(packet.data[1]);
+          if (!packet.data[0]) _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer.ownedTails.push(packet.data[1]);
         }
         break;
       }
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.GATHER_ANIM:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.GATHER_ANIM:
       {
-        const player = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.playerList.findBySid(packet.data[0]);
+        const player = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.playerList.findBySid(packet.data[0]);
         if (!player) return;
-        if (player === _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer) {
+        if (player === _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer) {
           //console.log("hit!: skin=" + player.skinIndex + ", tail=" + player.tailIndex);
         }
         player._attackedThisTickTempVariable = true;
-        if (player === _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer) player.justStartedAttacking = false;
+        if (player === _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer) player.justStartedAttacking = false;
         break;
       }
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.HEALTH_UPDATE:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.HEALTH_UPDATE:
       {
-        const player = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.playerList.findBySid(packet.data[0]);
+        const player = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.playerList.findBySid(packet.data[0]);
         const newHealth = packet.data[1];
-        const delta = newHealth - player.health;
+        const delta = newHealth - (player instanceof _data_type_Player__WEBPACK_IMPORTED_MODULE_1__.ClientPlayer ? player.packetHealth : player.health);
         const tracker = player.shame;
         if (delta < 0) {
-          tracker.lastDamage = _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.roundToTick(Date.now() - _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.ping, _util_engine_TickEngine__WEBPACK_IMPORTED_MODULE_5__.TickRoundType.ROUND);
-          if (Date.now() + _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.ping - tracker.lastDamage <= 120) {
+          tracker.lastDamage = Date.now() - _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.ping + _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.pingStd;
+        } else if (tracker.lastDamage > 0) {
+          if (Date.now() - _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.ping - tracker.lastDamage <= 120) {
             if (tracker.points++ >= 8) {
               tracker.isClowned = true;
               tracker.timer = 30 * 1000;
               tracker.points = 0;
             }
+          } else {
+            tracker.points = Math.max(0, tracker.points - 2);
           }
+          tracker.lastDamage = -1;
+          //console.log(`[${tracker.points}] => ${Date.now() - core.tickEngine.ping - tracker.lastDamage}`);
         }
-        if (player === _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer) {
-          const player = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer;
+
+        if (player === _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer) {
+          const player = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer;
           const lastPacketHealth = player.packetHealth;
           player.packetHealth = newHealth;
           if (newHealth < lastPacketHealth) {
             player.health -= lastPacketHealth - player.packetHealth;
           }
           if (player.packetHealth > player.health) {
-            logger.warn(_main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.health, "health was not in sync: " + player.health + " -> " + newHealth + ", packet-health: " + player.packetHealth);
+            logger.warn(_main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer.health, "health was not in sync: " + player.health + " -> " + newHealth + ", packet-health: " + player.packetHealth);
             player.health = player.packetHealth;
           }
         } else {
@@ -6641,44 +6653,47 @@ function processIn(packet) {
         }
         break;
       }
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.ADD_PROJECTILE:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.ADD_PROJECTILE:
       {
         const data = packet.data;
         // 2 ticks because:
         // first tick is incremented on tick (projectiles are sent before players)
         // second tick is because projectile will actually spawn on the next tick
-        _main__WEBPACK_IMPORTED_MODULE_2__.core.projectileManager.scheduleSpawn(new _util_type_Vector__WEBPACK_IMPORTED_MODULE_3__["default"](data[0], data[1]), data[2], data[3], data[4], data[5], data[6], data[7]);
+        _main__WEBPACK_IMPORTED_MODULE_3__.core.projectileManager.scheduleSpawn(new _util_type_Vector__WEBPACK_IMPORTED_MODULE_4__["default"](data[0], data[1]), data[2], data[3], data[4], data[5], data[6], data[7]);
         break;
       }
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.REMOVE_PROJECTILE:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.REMOVE_PROJECTILE:
       {
-        _main__WEBPACK_IMPORTED_MODULE_2__.core.projectileManager.remove(packet.data[0], packet.data[1]);
+        _main__WEBPACK_IMPORTED_MODULE_3__.core.projectileManager.remove(packet.data[0], packet.data[1]);
         break;
       }
   }
 }
 function processOut(event, meta) {
   const packet = event.getPacket();
+  //console.log(PacketType[packet.type]);
+  if (packet.type === _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.ATTACK) {
+    //console.trace();
+  }
   switch (packet.type) {
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.ATTACK:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.ATTACK:
       {
-        const myPlayer = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer;
-        const nextPredictableTick = _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.getNextPredictableTick();
+        const myPlayer = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer;
+        const nextPredictableTick = _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.tickIndex + _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.getPingTicks();
         let wasPlace = false;
         if (packet.data[0] === 1) {
           //console.log("attack");
           const heldItem = myPlayer.inventory.heldItem;
-          if (!(heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__.Weapon)) {
+          if (!(heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapon)) {
             wasPlace = true;
             if (heldItem.group.id === 0) {
               if (myPlayer.health < 100) {
-                myPlayer.shame.lastDamage = -1;
                 myPlayer.health = Math.min(myPlayer.health + heldItem.healAmount, 100);
                 myPlayer.inventory.heldItem = myPlayer.inventory.weaponSelected;
               }
               return;
             }
-            const blocking = _main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.getBlockingBuildings([myPlayer.serverPos, myPlayer.scale, packet.data[1] ?? myPlayer.serverDir], heldItem, packet.data[2] ?? []);
+            const blocking = _main__WEBPACK_IMPORTED_MODULE_3__.core.objectManager.getBlockingBuildings([myPlayer.serverPos, myPlayer.scale, packet.data[1] ?? myPlayer.serverDir], heldItem, packet.data[2] ?? []);
             if (blocking.length === 0) {
               myPlayer.inventory.heldItem = myPlayer.inventory.weaponSelected;
               //console.log("placed item. new held:", myPlayer.inventory.heldItem);
@@ -6705,9 +6720,7 @@ function processOut(event, meta) {
             myPlayer.isAttacking = true;
             //console.log("started attacking");
 
-            if (packet.data[0] === 1 && myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__.Weapon && (myPlayer.swingStreak === 0 || myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id] - _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.ping <= 0)) {
-              //const [hat, tail] = .computeHat(core.tickEngine.tickIndex);
-
+            if (packet.data[0] === 1 && myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapon && (myPlayer.swingStreak === 0 || myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id] - _main__WEBPACK_IMPORTED_MODULE_3__.core.tickEngine.ping <= 0)) {
               //myPlayer.nextAttack = core.tickEngine.getTickIndex(Date.now() - core.tickEngine.ping + myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id]);
               /*if (!core.tickEngine.isTickPredictable(core.tickEngine.tickIndex + 1)) {
                   core.scheduleAction(ActionType.ATTACK, ActionPriority.BIOMEHAT, nextPredictableTick, [1, packet.data[1]], true);
@@ -6716,13 +6729,24 @@ function processOut(event, meta) {
               myPlayer.justStartedAttacking = true;
               myPlayer.inventory.resetReload(myPlayer.inventory.heldItem);
               //return false;
+
+              /* leftovers from antireflect */
+              /*myPlayer.isAttacking = false;
+              myPlayer.isAttackingWhileBlocked = true;
+              event.cancel();*/
             }
           }
         } else {
-          if (!_main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.isTickPredictable(_main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.getTickIndex(Date.now() + myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id]))) {
-            myPlayer.swingStreak = 0;
-          }
+          /*if (!core.tickEngine.isTickPredictable(core.tickEngine.getTickIndex(Date.now() + myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id]))) {
+              myPlayer.swingStreak = 0;
+          }*/
           myPlayer.isAttacking = false;
+          myPlayer.isAttackingWhileBlocked = false;
+          /*if (event.isBundle) {
+              console.log("EVENT HAS BEEN CANCELLED");
+              core.scheduleAction(ActionType.ATTACK, ActionPriority.COMPATIBILITY, core.tickEngine.getFirstSchedulableTick(), [0, packet.data[1]]);
+              event.cancel();
+          }*/
           //console.log("stopped attacking");
           /*if (isAttackScheduled > -1) {
               core.scheduleAction(ActionType.ATTACK, ActionPriority.BIOMEHAT, isAttackScheduled + 1, [0, packet.data[1]], true);
@@ -6736,13 +6760,13 @@ function processOut(event, meta) {
         }
         break;
       }
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.SELECT_ITEM:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.SELECT_ITEM:
       {
-        const myPlayer = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer;
-        const lastHeldWasWeapon = myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__.Weapon;
+        const myPlayer = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer;
+        const lastHeldWasWeapon = myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapon;
         const lastHeld = myPlayer.inventory.heldItem.id;
         if (packet.data[1]) {
-          myPlayer.inventory.heldItem = _data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__.weaponList[packet.data[0]];
+          myPlayer.inventory.heldItem = _data_type_Weapon__WEBPACK_IMPORTED_MODULE_5__.weaponList[packet.data[0]];
           //console.log("selecting back to weapon:", myPlayer.inventory.heldItem);
         } else {
           if (!lastHeldWasWeapon && packet.data[0] === lastHeld) {
@@ -6757,25 +6781,25 @@ function processOut(event, meta) {
         //console.log("selected item:", myPlayer.inventory.heldItem);
         break;
       }
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.AUTO_ATK:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.AUTO_ATK:
       {
-        const myPlayer = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer;
+        const myPlayer = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer;
         myPlayer.isAutoAttacking = !myPlayer.isAutoAttacking;
-        if (myPlayer.isAutoAttacking && myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_4__.Weapon && myPlayer.inventory.reloads[myPlayer.inventory.heldItem.id] === 0) {
+        if (myPlayer.isAutoAttacking && myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_5__.Weapon && myPlayer.inventory.reloads[myPlayer.inventory.heldItem.id] === 0) {
           //myPlayer.justStartedAttacking = true;
         }
         break;
       }
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.SET_ANGLE:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.SET_ANGLE:
       {
         //core.lastActionState.aim = packet.data[0];
-        _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer.dir = packet.data[0];
+        _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer.dir = packet.data[0];
         break;
       }
-    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_1__.PacketType.BUY_AND_EQUIP:
+    case _packets_PacketType__WEBPACK_IMPORTED_MODULE_2__.PacketType.BUY_AND_EQUIP:
       {
         if (packet.data[0] === 0) {
-          const myPlayer = _main__WEBPACK_IMPORTED_MODULE_2__.core.playerManager.myPlayer;
+          const myPlayer = _main__WEBPACK_IMPORTED_MODULE_3__.core.playerManager.myPlayer;
           if (packet.data[2] === 0) {
             if (myPlayer.ownedHats.includes(packet.data[1])) myPlayer.skinIndex = packet.data[1];
           } else {
@@ -7727,47 +7751,81 @@ function unitCircleAngleToFull(angle: number) {
 
 /***/ }),
 
-/***/ "./frontend/src/util/RecognitionUtil.ts":
-/*!**********************************************!*\
-  !*** ./frontend/src/util/RecognitionUtil.ts ***!
-  \**********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ "./frontend/src/util/PredictionUtil.ts":
+/*!*********************************************!*\
+  !*** ./frontend/src/util/PredictionUtil.ts ***!
+  \*********************************************/
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
+__webpack_require__.a(module, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var _data_type_Weapon__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../data/type/Weapon */ "./frontend/src/data/type/Weapon.ts");
+/* harmony import */ var _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../data/moomoo/config */ "./frontend/src/data/moomoo/config.ts");
+/* harmony import */ var _data_type_GameObject__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../data/type/GameObject */ "./frontend/src/data/type/GameObject.ts");
+/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../main */ "./frontend/src/main.ts");
+/* harmony import */ var _engine_TickEngine__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./engine/TickEngine */ "./frontend/src/util/engine/TickEngine.ts");
+/* harmony import */ var _MathUtil__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./MathUtil */ "./frontend/src/util/MathUtil.ts");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_main__WEBPACK_IMPORTED_MODULE_2__]);
+_main__WEBPACK_IMPORTED_MODULE_2__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
 
-function isLegit(player) {
-  return false;
-}
-function canInstakill(player) {
-  return true;
-  /*const primary = player.inventory.getWeapon(WeaponSlot.PRIMARY)!;
-  const secondary = player.inventory.getWeapon(WeaponSlot.SECONDARY) ?? (primary === Weapons.SHORT_SWORD || primary === Weapons.POLEARM ? Weapons.MUSKET : Weapons.GREAT_HAMMER);
-    return (isLegit(player) || (player.seenHats.has(12) && player.seenTails.has(11))) && primary.stats.dmg * 1.5 + secondary.stats.dmg + 25 >= 100;*/
-}
 
-function isPossibleCombo(primary, secondary) {
-  const secondaryPre = _data_type_Weapon__WEBPACK_IMPORTED_MODULE_0__.weaponPreMap.get(secondary);
-  if (typeof secondaryPre === "number") {
-    return secondaryPre === primary;
-  } else {
-    return true;
+
+
+
+function futureDistance(p1, p2, atTick = _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.getFirstSchedulableTick()) {
+  return _MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDistance(futurePosition(p1, atTick), futurePosition(p2, atTick));
+}
+function futureDirection(from, to, atTick = _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.getFirstSchedulableTick()) {
+  return _MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDirection(futurePosition(from, atTick), futurePosition(to, atTick));
+}
+function futurePosition(p, atTick = _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.getFirstSchedulableTick(), checkSpikes = false) {
+  // fut TODO: account for snow biome slowdown
+  // fut TODO: use physics simulation to predict collisions in more further future (but it loses point as time goes further)
+
+  const ticks = atTick - _main__WEBPACK_IMPORTED_MODULE_2__.core.tickEngine.tickIndex;
+  const speed = _data_moomoo_config__WEBPACK_IMPORTED_MODULE_0__["default"].playerSpeed * (p.hatTracker.currentHat?.spdMult ?? 1) * (p.hatTracker.currentTail?.spdMult ?? 1) * _engine_TickEngine__WEBPACK_IMPORTED_MODULE_3__.TickEngine.TICK_DELTA;
+  // -speed for when player counterstrafes all the ticks
+  return p.serverPos.clone().add(p.velocity.clone().move(-speed).multiply(ticks));
+}
+function simulatePhysics(p, tickCount) {
+  const velocityLength = p.velocity.length();
+  const collisionDepth = Math.min(4, Math.max(1, Math.round(velocityLength / 40)));
+  const multiplier = 1 / collisionDepth;
+  const velocity = p.velocity.clone().multiply(_engine_TickEngine__WEBPACK_IMPORTED_MODULE_3__.TickEngine.TICK_DELTA).multiply(multiplier);
+  const predictedPos = p.serverPos.clone();
+  for (let i = 0; i < collisionDepth; i++) {
+    predictedPos.add(velocity);
+    const objects = _main__WEBPACK_IMPORTED_MODULE_2__.core.objectManager.getGridArrays(predictedPos.x, predictedPos.y, p.scale);
+    for (let j = 0; j < objects.length; j++) {
+      const object = objects[j];
+      if (!(object instanceof _data_type_GameObject__WEBPACK_IMPORTED_MODULE_1__.PlayerBuilding) || !object.stats.dmg) continue;
+      solveCollision(p, objects[j], predictedPos);
+    }
   }
 }
-function assumeSecondary(primary) {
-  if (primary === _data_type_Weapon__WEBPACK_IMPORTED_MODULE_0__.Weapons.POLEARM.id || primary === _data_type_Weapon__WEBPACK_IMPORTED_MODULE_0__.Weapons.SHORT_SWORD.id) return _data_type_Weapon__WEBPACK_IMPORTED_MODULE_0__.Weapons.MUSKET;
-  return _data_type_Weapon__WEBPACK_IMPORTED_MODULE_0__.Weapons.GREAT_HAMMER;
+function solveCollision(p, object, posVec, velVec) {
+  const collisionDist = p.scale + object.getScale();
+  const dist = _MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDistance(posVec, object.position);
+  const straightAngle = _MathUtil__WEBPACK_IMPORTED_MODULE_4__["default"].getDirection(object.position, posVec);
+  if (dist >= collisionDist) return;
+
+  // first stage (applies to any object)
+  posVec.set(object.position.clone().directionMove(straightAngle, collisionDist));
+  velVec.multiply(0.75);
+
+  // applies only to spikes
+  velVec.directionMove(straightAngle, 1.5);
 }
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
-  isLegit,
-  canInstakill,
-  isPossibleCombo,
-  assumeSecondary
+  futureDistance,
+  futureDirection,
+  futurePosition
 });
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ }),
 
@@ -7872,7 +7930,7 @@ class InteractionEngine extends tsee__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
   vanillaPlaceItem(item, angle, ignoredSids) {
     const myPlayer = this.core.playerManager.myPlayer;
     const wasAttacking = myPlayer.isAttacking;
-    const oldAngle = myPlayer.dir;
+    const oldAngle = this.core.lastActionState.aim;
     const lastHeld = myPlayer.inventory.heldItem.id;
     const lastHeldWasWeapon = myPlayer.inventory.heldItem instanceof _data_type_Weapon__WEBPACK_IMPORTED_MODULE_1__.Weapon;
     this.autoHatModule.isPlacing = true;
@@ -7887,7 +7945,7 @@ class InteractionEngine extends tsee__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
       //}
 
       //console.log(wasAttacking, this.core.mstate.mouseHeld);
-      if (wasAttacking || this.core.mstate.mouseHeld || this.antiTrapModule.isBreaking) {
+      if ((wasAttacking || this.core.mstate.mouseHeld) && !this.antiTrapModule.getterIsFirstHit) {
         _socket_Connection__WEBPACK_IMPORTED_MODULE_4__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_5__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_6__.PacketType.ATTACK, [1, oldAngle]));
       } else if (this.core.lastActionState.attack === 1) {
         _socket_Connection__WEBPACK_IMPORTED_MODULE_4__.connection.send(new _socket_packets_Packet__WEBPACK_IMPORTED_MODULE_5__.Packet(_socket_packets_PacketType__WEBPACK_IMPORTED_MODULE_6__.PacketType.ATTACK, [0, oldAngle]));
@@ -8114,37 +8172,7 @@ class TickEngine extends tsee__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
       const deltaStd = getStandardDeviation(this.deltas);
       if (this.predictionTick === -1) return;
       this.predictionTick += delta;
-      const offset = deltaStd + getStandardDeviation(this.pings);
-      const futureProgress = (this.predictionTick + delta + this.ping + offset) / TickEngine.TICK_DELTA;
-      this.futureProgress = futureProgress;
-
-      // emit 30% before the actual tick
-      if (futureProgress + 0.8 >= this.nextPreTick) {
-        if (futureProgress + 0.8 - this.nextPreTick >= 1) return this.nextPreTick = Math.ceil(futureProgress + 0.8);
-        if (this.nextPreTick > this.lastPredictedPre) {
-          const predictedTickIndex = this.nextPreTick;
-          this.lastPredictedPre = predictedTickIndex;
-          this.emit("pretick", predictedTickIndex);
-
-          //const hat = TickEngine.HAT_LOOP[predictedTickIndex % TickEngine.HAT_LOOP.length];
-          //connection.send(new Packet(PacketType.BUY_AND_EQUIP, [0, hat, 0]));
-          //console.log("equip:", hat, "at tick:", predictedTickIndex);
-
-          this.nextPreTick++; /*Math.ceil(futureProgress);*/
-        }
-      }
-
-      // post tick
-      const postOffset = deltaStd / TickEngine.TICK_DELTA;
-      if (futureProgress - postOffset >= this.nextPostTick) {
-        if (futureProgress - postOffset - this.nextPostTick >= 1) return this.nextPostTick = Math.ceil(futureProgress);
-        if (this.nextPostTick > this.lastPredictedPost) {
-          const predictedTickIndex = this.nextPostTick;
-          this.lastPredictedPost = predictedTickIndex;
-          this.emit("posttick", predictedTickIndex);
-          this.nextPostTick++;
-        }
-      }
+      if (false) {}
 
       // clean all predicted buildings if we didnt receive confirming placement packet
       // use a while loop since we are splicing inside of it
@@ -8154,7 +8182,7 @@ class TickEngine extends tsee__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         if (now - predictedPlacements[i].placedTimestamp > this.ping * 2 + maxDelta + TickEngine.TICK_DELTA) {
           const prediction = predictedPlacements[i];
           // failed = possibility of a hidden trap therefore we add trap as a prediction for the next 0.6s
-          core.objectManager.addPlacementAttempt([prediction.position, core.playerManager.myPlayer.scale, prediction.dir], _data_moomoo_items__WEBPACK_IMPORTED_MODULE_2__.items.list[15], Date.now() + 600);
+          core.objectManager.addPlacementAttempt([prediction.position.clone(), core.playerManager.myPlayer.scale, prediction.dir], _data_moomoo_items__WEBPACK_IMPORTED_MODULE_2__.items.list[15], Date.now() + 600);
           predictedPlacements.splice(i, 1);
         }
       }
@@ -8172,17 +8200,50 @@ class TickEngine extends tsee__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
   getTickIndex(ms) {
     return this.tickIndex + Math.ceil((ms - this.lastTick) / TickEngine.TICK_DELTA);
   }
-  getNextPredictableTick() {
-    return Math.round(this.futureProgress) + 1;
+  getPingTicksRaw() {
+    return Math.ceil(this.ping / TickEngine.TICK_DELTA);
   }
-  isTickPredictable(tick) {
-    return tick - this.futureProgress > 1;
+
+  /**
+   * Returns delay in ticks to when packet sent at this moment will be processed on backend
+   */
+  getPingTicks() {
+    const timeSinceLastTick = Date.now() - this.lastTick;
+    return Math.floor((timeSinceLastTick + this.ping) / TickEngine.TICK_DELTA);
+  }
+
+  /**
+   * Returns the nearest future tick where we can schedule an action and ensure its execution
+   */
+  getFirstSchedulableTick() {
+    return this.tickIndex + this.getPingTicks() + 1;
+  }
+
+  /**
+   * Determines if an action can be scheduled on the current tick and executed in the future
+   */
+  isTickSchedulable(tickIndex) {
+    return tickIndex >= this.getFirstSchedulableTick();
+  }
+
+  /**
+   * Determines if a packet sent now would arrive before the next tick
+   */
+  wouldArriveThisTick() {
+    return this.timeToNextTick > this.ping + this.pingStd;
+  }
+
+  /**
+   * Determines if a packet sent now would arrive before the given tick
+   */
+  wouldArriveAtTick(tick) {
+    return (tick - this.tickIndex) * TickEngine.TICK_DELTA + this.timeToNextTick > this.ping + this.pingStd;
   }
   toTicks(ms) {
     return Math.ceil(ms / TickEngine.TICK_DELTA);
   }
   get timeToNextTick() {
-    return TickEngine.TICK_DELTA - (Date.now() - this.lastTick) - this.ping;
+    return TickEngine.TICK_DELTA - (Date.now() - this.lastTick);
   }
   get serverLag() {
     return Math.max(Date.now() - this.lastTick + TickEngine.TICK_DELTA, 0);
@@ -8409,6 +8470,7 @@ class Vector {
   constructor(x, y) {
     this.x = x ?? 0;
     this.y = y ?? 0;
+    this.frozen = false;
   }
   isNull() {
     return this.x == 0 && this.y == 0;
@@ -8417,6 +8479,7 @@ class Vector {
     return isNaN(this.x) || isNaN(this.y);
   }
   add(param1, param2) {
+    if (this.frozen) return this;
     if (typeof param1 === "object") {
       this.x += param1.x;
       this.y += param1.y;
@@ -8430,6 +8493,7 @@ class Vector {
     return this;
   }
   subtract(param1, param2) {
+    if (this.frozen) return this;
     if (typeof param1 === "object") {
       this.x -= param1.x;
       this.y -= param1.y;
@@ -8443,6 +8507,7 @@ class Vector {
     return this;
   }
   multiply(param1, param2) {
+    if (this.frozen) return this;
     if (typeof param1 === "object") {
       this.x *= param1.x;
       this.y *= param1.y;
@@ -8456,6 +8521,7 @@ class Vector {
     return this;
   }
   divide(param1, param2) {
+    if (this.frozen) return this;
     if (typeof param1 === "object") {
       this.x /= param1.x;
       this.y /= param1.y;
@@ -8469,6 +8535,7 @@ class Vector {
     return this;
   }
   set(param1, param2) {
+    if (this.frozen) return this;
     if (typeof param1 === "object") {
       this.x = param1.x;
       this.y = param1.y;
@@ -8481,7 +8548,13 @@ class Vector {
     }
     return this;
   }
+  move(amount) {
+    if (this.frozen) return this;
+    this.directionMove(this.direction(), amount);
+    return this;
+  }
   directionMove(direction, amount) {
+    if (this.frozen) return this;
     this.x += Math.cos(direction) * amount;
     this.y += Math.sin(direction) * amount;
     return this;
@@ -8491,6 +8564,13 @@ class Vector {
   }
   length() {
     return Math.hypot(this.x, this.y);
+  }
+  direction() {
+    return Math.atan2(this.y, this.x);
+  }
+  freeze() {
+    this.frozen = true;
+    return this;
   }
   toString(round) {
     return "[" + (round ? Math.round(this.x) : this.x) + ", " + (round ? Math.round(this.y) : this.y) + "]";
@@ -8660,217 +8740,6 @@ module.exports = function (cssWithMappingToString) {
 module.exports = function (i) {
   return i[1];
 };
-
-/***/ }),
-
-/***/ "./node_modules/error-stack-parser/error-stack-parser.js":
-/*!***************************************************************!*\
-  !*** ./node_modules/error-stack-parser/error-stack-parser.js ***!
-  \***************************************************************/
-/***/ (function(module, exports, __webpack_require__) {
-
-var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function(root, factory) {
-    'use strict';
-    // Universal Module Definition (UMD) to support AMD, CommonJS/Node.js, Rhino, and browsers.
-
-    /* istanbul ignore next */
-    if (true) {
-        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(/*! stackframe */ "./node_modules/stackframe/stackframe.js")], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
-		__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
-		(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
-		__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-    } else {}
-}(this, function ErrorStackParser(StackFrame) {
-    'use strict';
-
-    var FIREFOX_SAFARI_STACK_REGEXP = /(^|@)\S+:\d+/;
-    var CHROME_IE_STACK_REGEXP = /^\s*at .*(\S+:\d+|\(native\))/m;
-    var SAFARI_NATIVE_CODE_REGEXP = /^(eval@)?(\[native code])?$/;
-
-    return {
-        /**
-         * Given an Error object, extract the most information from it.
-         *
-         * @param {Error} error object
-         * @return {Array} of StackFrames
-         */
-        parse: function ErrorStackParser$$parse(error) {
-            if (typeof error.stacktrace !== 'undefined' || typeof error['opera#sourceloc'] !== 'undefined') {
-                return this.parseOpera(error);
-            } else if (error.stack && error.stack.match(CHROME_IE_STACK_REGEXP)) {
-                return this.parseV8OrIE(error);
-            } else if (error.stack) {
-                return this.parseFFOrSafari(error);
-            } else {
-                throw new Error('Cannot parse given Error object');
-            }
-        },
-
-        // Separate line and column numbers from a string of the form: (URI:Line:Column)
-        extractLocation: function ErrorStackParser$$extractLocation(urlLike) {
-            // Fail-fast but return locations like "(native)"
-            if (urlLike.indexOf(':') === -1) {
-                return [urlLike];
-            }
-
-            var regExp = /(.+?)(?::(\d+))?(?::(\d+))?$/;
-            var parts = regExp.exec(urlLike.replace(/[()]/g, ''));
-            return [parts[1], parts[2] || undefined, parts[3] || undefined];
-        },
-
-        parseV8OrIE: function ErrorStackParser$$parseV8OrIE(error) {
-            var filtered = error.stack.split('\n').filter(function(line) {
-                return !!line.match(CHROME_IE_STACK_REGEXP);
-            }, this);
-
-            return filtered.map(function(line) {
-                if (line.indexOf('(eval ') > -1) {
-                    // Throw away eval information until we implement stacktrace.js/stackframe#8
-                    line = line.replace(/eval code/g, 'eval').replace(/(\(eval at [^()]*)|(,.*$)/g, '');
-                }
-                var sanitizedLine = line.replace(/^\s+/, '').replace(/\(eval code/g, '(').replace(/^.*?\s+/, '');
-
-                // capture and preseve the parenthesized location "(/foo/my bar.js:12:87)" in
-                // case it has spaces in it, as the string is split on \s+ later on
-                var location = sanitizedLine.match(/ (\(.+\)$)/);
-
-                // remove the parenthesized location from the line, if it was matched
-                sanitizedLine = location ? sanitizedLine.replace(location[0], '') : sanitizedLine;
-
-                // if a location was matched, pass it to extractLocation() otherwise pass all sanitizedLine
-                // because this line doesn't have function name
-                var locationParts = this.extractLocation(location ? location[1] : sanitizedLine);
-                var functionName = location && sanitizedLine || undefined;
-                var fileName = ['eval', '<anonymous>'].indexOf(locationParts[0]) > -1 ? undefined : locationParts[0];
-
-                return new StackFrame({
-                    functionName: functionName,
-                    fileName: fileName,
-                    lineNumber: locationParts[1],
-                    columnNumber: locationParts[2],
-                    source: line
-                });
-            }, this);
-        },
-
-        parseFFOrSafari: function ErrorStackParser$$parseFFOrSafari(error) {
-            var filtered = error.stack.split('\n').filter(function(line) {
-                return !line.match(SAFARI_NATIVE_CODE_REGEXP);
-            }, this);
-
-            return filtered.map(function(line) {
-                // Throw away eval information until we implement stacktrace.js/stackframe#8
-                if (line.indexOf(' > eval') > -1) {
-                    line = line.replace(/ line (\d+)(?: > eval line \d+)* > eval:\d+:\d+/g, ':$1');
-                }
-
-                if (line.indexOf('@') === -1 && line.indexOf(':') === -1) {
-                    // Safari eval frames only have function names and nothing else
-                    return new StackFrame({
-                        functionName: line
-                    });
-                } else {
-                    var functionNameRegex = /((.*".+"[^@]*)?[^@]*)(?:@)/;
-                    var matches = line.match(functionNameRegex);
-                    var functionName = matches && matches[1] ? matches[1] : undefined;
-                    var locationParts = this.extractLocation(line.replace(functionNameRegex, ''));
-
-                    return new StackFrame({
-                        functionName: functionName,
-                        fileName: locationParts[0],
-                        lineNumber: locationParts[1],
-                        columnNumber: locationParts[2],
-                        source: line
-                    });
-                }
-            }, this);
-        },
-
-        parseOpera: function ErrorStackParser$$parseOpera(e) {
-            if (!e.stacktrace || (e.message.indexOf('\n') > -1 &&
-                e.message.split('\n').length > e.stacktrace.split('\n').length)) {
-                return this.parseOpera9(e);
-            } else if (!e.stack) {
-                return this.parseOpera10(e);
-            } else {
-                return this.parseOpera11(e);
-            }
-        },
-
-        parseOpera9: function ErrorStackParser$$parseOpera9(e) {
-            var lineRE = /Line (\d+).*script (?:in )?(\S+)/i;
-            var lines = e.message.split('\n');
-            var result = [];
-
-            for (var i = 2, len = lines.length; i < len; i += 2) {
-                var match = lineRE.exec(lines[i]);
-                if (match) {
-                    result.push(new StackFrame({
-                        fileName: match[2],
-                        lineNumber: match[1],
-                        source: lines[i]
-                    }));
-                }
-            }
-
-            return result;
-        },
-
-        parseOpera10: function ErrorStackParser$$parseOpera10(e) {
-            var lineRE = /Line (\d+).*script (?:in )?(\S+)(?:: In function (\S+))?$/i;
-            var lines = e.stacktrace.split('\n');
-            var result = [];
-
-            for (var i = 0, len = lines.length; i < len; i += 2) {
-                var match = lineRE.exec(lines[i]);
-                if (match) {
-                    result.push(
-                        new StackFrame({
-                            functionName: match[3] || undefined,
-                            fileName: match[2],
-                            lineNumber: match[1],
-                            source: lines[i]
-                        })
-                    );
-                }
-            }
-
-            return result;
-        },
-
-        // Opera 10.65+ Error.stack very similar to FF/Safari
-        parseOpera11: function ErrorStackParser$$parseOpera11(error) {
-            var filtered = error.stack.split('\n').filter(function(line) {
-                return !!line.match(FIREFOX_SAFARI_STACK_REGEXP) && !line.match(/^Error created at/);
-            }, this);
-
-            return filtered.map(function(line) {
-                var tokens = line.split('@');
-                var locationParts = this.extractLocation(tokens.pop());
-                var functionCall = (tokens.shift() || '');
-                var functionName = functionCall
-                    .replace(/<anonymous function(: (\w+))?>/, '$2')
-                    .replace(/\([^)]*\)/g, '') || undefined;
-                var argsRaw;
-                if (functionCall.match(/\(([^)]*)\)/)) {
-                    argsRaw = functionCall.replace(/^[^(]+\(([^)]*)\)$/, '$1');
-                }
-                var args = (argsRaw === undefined || argsRaw === '[arguments not available]') ?
-                    undefined : argsRaw.split(',');
-
-                return new StackFrame({
-                    functionName: functionName,
-                    args: args,
-                    fileName: locationParts[0],
-                    lineNumber: locationParts[1],
-                    columnNumber: locationParts[2],
-                    source: line
-                });
-            }, this);
-        }
-    };
-}));
-
 
 /***/ }),
 
@@ -12332,158 +12201,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("/**\r\n Marching Squares Edge Detection\r\n this is a \"marching ants\" algorithm used to calc the outline path\r\n\r\n d3-plugin for calculating outline paths\r\n License: https://github.com/d3/d3-plugins/blob/master/LICENSE\r\n    \r\n Copyright (c) 2012-2014, Michael Bostock\r\n All rights reserved.\r\n    \r\n * Redistribution and use in source and binary forms, with or without\r\n   modification, are permitted provided that the following conditions are met:\r\n * Redistributions of source code must retain the above copyright notice, this\r\n   list of conditions and the following disclaimer.\r\n * Redistributions in binary form must reproduce the above copyright notice,\r\n   this list of conditions and the following disclaimer in the documentation\r\n   and/or other materials provided with the distribution.\r\n * The name Michael Bostock may not be used to endorse or promote products\r\n   derived from this software without specific prior written permission.\r\n   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL MICHAEL BOSTOCK BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. \r\n */\r\nconst Geom = {\r\n\t// lookup tables for marching directions\r\n    d3_geom_contourDx: [1, 0, 1, 1,-1, 0,-1, 1,0, 0,0,0,-1, 0,-1,NaN],\r\n    d3_geom_contourDy: [0,-1, 0, 0, 0,-1, 0, 0,1,-1,1,1, 0,-1, 0,NaN],\r\n\td3_geom_contourStart(grid) {\r\n\t\tlet x = 0;\r\n\t\tlet y = 0;\r\n\r\n\t\t// search for a starting point; begin at origin\r\n\t\t// and proceed along outward-expanding diagonals\r\n\t\twhile (true) {\r\n\t\t  \tif (grid(x, y)) return [x, y];\r\n\r\n\t\t  \tif (x === 0) {\r\n\t\t\t\tx = y + 1;\r\n\t\t\t\ty = 0;\r\n\t\t  \t} else {\r\n\t\t\t\tx = x - 1;\r\n\t\t\t\ty = y + 1;\r\n\t\t  \t}\r\n\t\t}\r\n\t},\r\n\tcontour(grid, start) {\r\n\t\tlet s = start  // starting point\r\n        let c = [];    // contour polygon\r\n    \tlet x = s[0];  // current x position\r\n        let y = s[1];  // current y position\r\n        let dx = 0;    // next x direction\r\n        let dy = 0;    // next y direction\r\n        let pdx = NaN; // previous x direction\r\n        let pdy = NaN; // previous y direction\r\n        let i = 0;\r\n\r\n      \tdo {\r\n        \t// determine marching squares index \r\n\t\t\ti = 0;\r\n\t\t\tif (grid(x - 1, y - 1)) i += 1;\r\n\t\t\tif (grid(x, y - 1)) i += 2;\r\n\t\t\tif (grid(x - 1, y)) i += 4;\r\n\t\t\tif (grid(x, y)) i += 8;\r\n\r\n\t\t\t// determine next direction\r\n\t\t\tif (i === 6) {\r\n\t\t\t\tdx = pdy === -1 ? -1 : 1;\r\n\t\t\t\tdy = 0;\r\n\t\t\t} else if (i === 9) {\r\n\t\t\t\tdx = 0;\r\n\t\t\t\tdy = pdx === 1 ? -1 : 1;\r\n\t\t\t} else {\r\n\t\t\t\tdx = this.d3_geom_contourDx[i];\r\n\t\t\t\tdy = this.d3_geom_contourDy[i];\r\n\t\t\t}\r\n\r\n\t\t\t// update contour polygon\r\n\t\t\tif (dx != pdx && dy != pdy) {\r\n\t\t\t\tc.push([x, y]);\r\n\t\t\t\tpdx = dx;\r\n\t\t\t\tpdy = dy;\r\n\t\t\t}\r\n\r\n\t\t\tx += dx;\r\n\t\t\ty += dy;\r\n    \t} while (s[0] != x || s[1] != y);\r\n\r\n    \treturn c;\r\n\t}\r\n}\r\n/*\r\nconst context = canvas.getContext(\"2d\");\r\n\r\n\tlet imgData = context.getImageData(0, 0, canvas.width, canvas.height);\r\n\tlet data = imgData.data;\r\n\r\n\tfunction defineNonTransparent(x, y) {\r\n\t\treturn data[(y * canvas.width + x) * 4 + 3] >= maxTransparency;\r\n\t}\r\n\r\n\tconst start = Geom.d3_geom_contourStart(defineNonTransparent);\r\n\tconst points = Geom.contour(defineNonTransparent, start);\r\n\r\n\tcontext.beginPath();\r\n    context.moveTo(points[0][0], points[0][4]);\r\n    for (let i = 0; i < points.length; i++) {\r\n        const point = points[i];\r\n        context.lineTo(point[0], point[1]);\r\n    }\r\n    context.closePath();\r\n    context.stroke();\r\n*/\r\nfunction createImageOutline(data, width, maxTransparency) {\r\n\r\n\tfunction defineNonTransparent(x, y) {\r\n\t\treturn data[(y * width + x) * 4 + 3] >= maxTransparency;\r\n\t}\r\n\r\n\tconst start = Geom.d3_geom_contourStart(defineNonTransparent);\r\n\tconst points = Geom.contour(defineNonTransparent, start);\r\n\r\n    return points;\r\n}\r\n\r\nconst handler = {\r\n    \"echo\": function(data) {\r\n        return data;\r\n    },\r\n    \"util.outline\": function(data) {\r\n        return createImageOutline(...data);\r\n    }\r\n}\r\n\r\nonerror = (e) => {\r\n    postMessage([\"0\", null, e]);\r\n}\r\n\r\nonmessage = (e) => {\r\n    const data = e.data;\r\n    try {\r\n        const result = handler[data[1]].call(null, data[2]);\r\n        postMessage([data[0], true, result]);\r\n    } catch (err) {\r\n        postMessage([data[0], false, err]);\r\n    }\r\n}");
-
-/***/ }),
-
-/***/ "./node_modules/stackframe/stackframe.js":
-/*!***********************************************!*\
-  !*** ./node_modules/stackframe/stackframe.js ***!
-  \***********************************************/
-/***/ (function(module, exports) {
-
-var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function(root, factory) {
-    'use strict';
-    // Universal Module Definition (UMD) to support AMD, CommonJS/Node.js, Rhino, and browsers.
-
-    /* istanbul ignore next */
-    if (true) {
-        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
-		__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
-		(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
-		__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-    } else {}
-}(this, function() {
-    'use strict';
-    function _isNumber(n) {
-        return !isNaN(parseFloat(n)) && isFinite(n);
-    }
-
-    function _capitalize(str) {
-        return str.charAt(0).toUpperCase() + str.substring(1);
-    }
-
-    function _getter(p) {
-        return function() {
-            return this[p];
-        };
-    }
-
-    var booleanProps = ['isConstructor', 'isEval', 'isNative', 'isToplevel'];
-    var numericProps = ['columnNumber', 'lineNumber'];
-    var stringProps = ['fileName', 'functionName', 'source'];
-    var arrayProps = ['args'];
-    var objectProps = ['evalOrigin'];
-
-    var props = booleanProps.concat(numericProps, stringProps, arrayProps, objectProps);
-
-    function StackFrame(obj) {
-        if (!obj) return;
-        for (var i = 0; i < props.length; i++) {
-            if (obj[props[i]] !== undefined) {
-                this['set' + _capitalize(props[i])](obj[props[i]]);
-            }
-        }
-    }
-
-    StackFrame.prototype = {
-        getArgs: function() {
-            return this.args;
-        },
-        setArgs: function(v) {
-            if (Object.prototype.toString.call(v) !== '[object Array]') {
-                throw new TypeError('Args must be an Array');
-            }
-            this.args = v;
-        },
-
-        getEvalOrigin: function() {
-            return this.evalOrigin;
-        },
-        setEvalOrigin: function(v) {
-            if (v instanceof StackFrame) {
-                this.evalOrigin = v;
-            } else if (v instanceof Object) {
-                this.evalOrigin = new StackFrame(v);
-            } else {
-                throw new TypeError('Eval Origin must be an Object or StackFrame');
-            }
-        },
-
-        toString: function() {
-            var fileName = this.getFileName() || '';
-            var lineNumber = this.getLineNumber() || '';
-            var columnNumber = this.getColumnNumber() || '';
-            var functionName = this.getFunctionName() || '';
-            if (this.getIsEval()) {
-                if (fileName) {
-                    return '[eval] (' + fileName + ':' + lineNumber + ':' + columnNumber + ')';
-                }
-                return '[eval]:' + lineNumber + ':' + columnNumber;
-            }
-            if (functionName) {
-                return functionName + ' (' + fileName + ':' + lineNumber + ':' + columnNumber + ')';
-            }
-            return fileName + ':' + lineNumber + ':' + columnNumber;
-        }
-    };
-
-    StackFrame.fromString = function StackFrame$$fromString(str) {
-        var argsStartIndex = str.indexOf('(');
-        var argsEndIndex = str.lastIndexOf(')');
-
-        var functionName = str.substring(0, argsStartIndex);
-        var args = str.substring(argsStartIndex + 1, argsEndIndex).split(',');
-        var locationString = str.substring(argsEndIndex + 1);
-
-        if (locationString.indexOf('@') === 0) {
-            var parts = /@(.+?)(?::(\d+))?(?::(\d+))?$/.exec(locationString, '');
-            var fileName = parts[1];
-            var lineNumber = parts[2];
-            var columnNumber = parts[3];
-        }
-
-        return new StackFrame({
-            functionName: functionName,
-            args: args || undefined,
-            fileName: fileName,
-            lineNumber: lineNumber || undefined,
-            columnNumber: columnNumber || undefined
-        });
-    };
-
-    for (var i = 0; i < booleanProps.length; i++) {
-        StackFrame.prototype['get' + _capitalize(booleanProps[i])] = _getter(booleanProps[i]);
-        StackFrame.prototype['set' + _capitalize(booleanProps[i])] = (function(p) {
-            return function(v) {
-                this[p] = Boolean(v);
-            };
-        })(booleanProps[i]);
-    }
-
-    for (var j = 0; j < numericProps.length; j++) {
-        StackFrame.prototype['get' + _capitalize(numericProps[j])] = _getter(numericProps[j]);
-        StackFrame.prototype['set' + _capitalize(numericProps[j])] = (function(p) {
-            return function(v) {
-                if (!_isNumber(v)) {
-                    throw new TypeError(p + ' must be a Number');
-                }
-                this[p] = Number(v);
-            };
-        })(numericProps[j]);
-    }
-
-    for (var k = 0; k < stringProps.length; k++) {
-        StackFrame.prototype['get' + _capitalize(stringProps[k])] = _getter(stringProps[k]);
-        StackFrame.prototype['set' + _capitalize(stringProps[k])] = (function(p) {
-            return function(v) {
-                this[p] = String(v);
-            };
-        })(stringProps[k]);
-    }
-
-    return StackFrame;
-}));
-
 
 /***/ }),
 

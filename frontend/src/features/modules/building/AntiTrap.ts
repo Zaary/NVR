@@ -14,6 +14,8 @@ import Module from "../Module";
 
 export default class AntiTrap extends Module {
 
+    public isFirstHit: boolean;
+
     private currentTrap: PlayerBuilding | null;
     private willTrapBreakNextTick: boolean;
     private aimPacketsBlocker: number;
@@ -22,6 +24,9 @@ export default class AntiTrap extends Module {
 
     constructor() {
         super();
+
+        this.isFirstHit = false;
+
         this.currentTrap = null;
         this.willTrapBreakNextTick = false;
         this.aimPacketsBlocker = -1;
@@ -88,7 +93,7 @@ export default class AntiTrap extends Module {
         }
     }*/
 
-    onPreTick(tickIndex: number): void {
+    onTick(tickIndex: number): void {
         const myPlayer = core.playerManager.myPlayer;
         if (!myPlayer.alive) return;
         
@@ -97,6 +102,7 @@ export default class AntiTrap extends Module {
         } else if ((!myPlayer.state.isTrapped && this.trap !== null) || this.willTrapBreakNextTick) {
             this.setTrapBroken();
         } else if (this.currentTrap !== null) {
+            if (this.isFirstHit) this.isFirstHit = false;
 
             const tankGear = hats.find(x => x.id === 40)!;
             const angle = MathUtil.getDirection(myPlayer.serverPos, this.currentTrap.position);
@@ -116,6 +122,7 @@ export default class AntiTrap extends Module {
                 core.scheduleAction(ActionType.WEAPON, ActionPriority.AUTOBREAK, tickIndex, [bestWeapon.id, true]);
                 core.scheduleAction(ActionType.ATTACK, ActionPriority.AUTOBREAK, tickIndex, [1, angle]);
                 core.scheduleAction(ActionType.ATTACK, ActionPriority.AUTOBREAK, tickIndex, [0, null]);
+                core.lockBundleDirection(ActionPriority.ANTITRAP, angle);
                 //core.scheduleAction(ActionType.ATTACK, ActionPriority.AUTOBREAK, tickIndex + 1, [0, null]);
 
                 //console.log("anti trap check", this.currentTrap!.health, bestWeapon.stats.dmg * bestWeapon.stats.buildingDmgMultiplier * (myPlayer.ownedHats.includes(40) ? tankGear.bDmg! : 1))
@@ -124,6 +131,7 @@ export default class AntiTrap extends Module {
                 }
             } else {
                 core.scheduleAction(ActionType.WEAPON, ActionPriority.AUTOBREAK, tickIndex, [bestWeapon.id, true]);
+                core.unlockBundleDirection(ActionPriority.ANTITRAP);
             }
             
             /*if (myPlayer.nextAttack === tickIndex - 1) {
@@ -150,6 +158,8 @@ export default class AntiTrap extends Module {
         const spikeItem = items.list[myPlayer.inventory.items[2]];
         const arcs = core.objectManager.findPlacementArcs([myPlayer.serverPos, myPlayer.scale], spikeItem);
 
+        this.isFirstHit = true;
+
         if (arcs.length > 0) {
             const closestAllowArc = arcs.sort((a, b) => Math.min(MathUtil.getAngleDist(a[0], antiAngle), MathUtil.getAngleDist(a[1], antiAngle)) - Math.min(MathUtil.getAngleDist(b[0], antiAngle), MathUtil.getAngleDist(b[1], antiAngle)))[0];
             const [arcStart, arcEnd] = [MathUtil.polarToCartesian(closestAllowArc[0]), MathUtil.polarToCartesian(closestAllowArc[1])];
@@ -164,13 +174,24 @@ export default class AntiTrap extends Module {
         const currentWeapon = <MeleeWeapon> myPlayer.inventory.heldItem;
         const lastHeldItemId = currentWeapon.id;
 
-        if (this.aimPacketsBlocker === -1) this.aimPacketsBlocker = core.createPacketBlock(PacketType.SET_ANGLE);
+        //if (this.aimPacketsBlocker === -1) this.aimPacketsBlocker = core.createPacketBlock(PacketType.SET_ANGLE);
 
         if (myPlayer.inventory.reloads[bestWeapon.id] <= (currentWeapon === bestWeapon ? core.tickEngine.timeToNextTick : 0)) {
-            if (core.isHighestPriority(ActionPriority.AUTOBREAK, core.tickEngine.tickIndex + 1)) {
-                if (!(myPlayer.inventory.heldItem instanceof Weapon) || bestWeapon.id !== myPlayer.inventory.heldItem.id) connection.send(new Packet(PacketType.SELECT_ITEM, [bestWeapon.id, true]));
-                if (myPlayer.ownedHats.includes(40) && core.lastActionState.hat !== 40) connection.send(new Packet(PacketType.BUY_AND_EQUIP, [0, 40, 0]));
-                if (!myPlayer.isAttacking) connection.send(new Packet(PacketType.ATTACK, [1, angle]));
+            const ti = core.tickEngine.tickIndex + 1;
+            const pt = core.tickEngine.tickIndex + core.tickEngine.getPingTicks();
+            if (core.isHighestPriority(ActionPriority.AUTOBREAK, ti)) {
+                if (core.tickEngine.ping < core.tickEngine.timeToNextTick) {
+                    if (!(myPlayer.inventory.heldItem instanceof Weapon) || bestWeapon.id !== myPlayer.inventory.heldItem.id) connection.send(new Packet(PacketType.SELECT_ITEM, [bestWeapon.id, true]));
+                    if (myPlayer.ownedHats.includes(40) && core.lastActionState.hat !== 40) connection.send(new Packet(PacketType.BUY_AND_EQUIP, [0, 40, 0]));
+                    if (!myPlayer.isAttacking) connection.send(new Packet(PacketType.ATTACK, [1, angle]));
+                    core.scheduleBlockerAction(ActionType.WEAPON, ActionPriority.ANTITRAP, pt);
+                    core.scheduleBlockerAction(ActionType.HAT, ActionPriority.ANTITRAP, pt);
+                } else {
+                    if (!(myPlayer.inventory.heldItem instanceof Weapon) || bestWeapon.id !== myPlayer.inventory.heldItem.id) core.scheduleAction(ActionType.WEAPON, ActionPriority.ANTITRAP, pt, [bestWeapon.id, true]);
+                    if (myPlayer.ownedHats.includes(40) && core.lastActionState.hat !== 40) core.scheduleAction(ActionType.HAT, ActionPriority.ANTITRAP, pt, [40]);
+                    if (!myPlayer.isAttacking) core.scheduleAction(ActionType.ATTACK, ActionPriority.ANTITRAP, pt, [1, angle]);
+                }
+                core.lockBundleDirection(ActionPriority.ANTITRAP, angle);
             }
         }
     }
@@ -181,7 +202,9 @@ export default class AntiTrap extends Module {
         this.currentTrap = null;
         this.willTrapBreakNextTick = false;
 
-        if (this.aimPacketsBlocker > -1) core.removePacketBlock(PacketType.SET_ANGLE, this.aimPacketsBlocker);
+        //if (this.aimPacketsBlocker > -1) core.removePacketBlock(PacketType.SET_ANGLE, this.aimPacketsBlocker);
+
+        core.unlockBundleDirection(ActionPriority.ANTITRAP);
 
         const myPlayer = core.playerManager.myPlayer;
 
@@ -198,5 +221,9 @@ export default class AntiTrap extends Module {
 
     get trap() {
         return this.currentTrap;
+    }
+
+    get getterIsFirstHit() {
+        return this.currentTrap !== null && this.isFirstHit;
     }
 }

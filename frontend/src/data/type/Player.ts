@@ -143,12 +143,51 @@ class ShameTracker {
 		this.lastDamage = -1;
 	}
 
-	isSafeHeal(ping: number) {
-		return Date.now() + ping - this.lastDamage > 120;
+	isSafeHeal(ping: number, std: number) {
+		return Date.now() + ping - std - this.lastDamage > 120;
 	}
 
 	whenSafeHeal(ping: number) {
 		return 120 - (Date.now() + ping - this.lastDamage);
+	}
+}
+
+class HatTracker {
+
+	private static BUFFER_LENGTH = config.serverUpdateRate * 3; // track from previous 3 seconds
+
+	public currentHat: Hat | null;
+	public currentTail: Accessory | null;
+	private hatBuffer: number[];
+	private tailBuffer: number[];
+
+	constructor() {
+		this.currentHat = null;
+		this.currentTail = null;
+		this.hatBuffer = [];
+		this.tailBuffer = [];
+	}
+
+	push(hat: number, tail: number) {
+		this.hatBuffer.push(hat);
+		if (this.hatBuffer.length >= HatTracker.BUFFER_LENGTH) this.hatBuffer.shift();
+		this.tailBuffer.push(tail);
+		if (this.tailBuffer.length >= HatTracker.BUFFER_LENGTH) this.tailBuffer.shift();
+	}
+
+	isFull() {
+		return this.hatBuffer.length + this.tailBuffer.length >= HatTracker.BUFFER_LENGTH * 2;
+	}
+
+	// these calculations are fine: array.length - lastIndexOf(lastElement) = 1
+	getLastSeenHat(hat: number) {
+		const lastIndex = this.hatBuffer.lastIndexOf(hat);
+		return lastIndex === -1 ? -1 : HatTracker.BUFFER_LENGTH - lastIndex;
+	}
+
+	getLastSeenTail(tail: number) {
+		const lastIndex = this.tailBuffer.lastIndexOf(tail);
+		return lastIndex === -1 ? -1 : HatTracker.BUFFER_LENGTH - lastIndex;
 	}
 }
 
@@ -195,6 +234,7 @@ class Player {
 	public health: number = this.maxHealth;
 	
 	public shame: ShameTracker;
+	public hatTracker: HatTracker;
 
 	public skinColor: number;
 
@@ -240,6 +280,7 @@ class Player {
 		this.health = health;
 		this.maxHealth = maxHealth;
 		this.shame = new ShameTracker();
+		this.hatTracker = new HatTracker();
 		this.scale = scale;
 		this.skinColor = skinColor;
 		this.skinIndex = 0;
@@ -292,6 +333,12 @@ class Player {
 
 		this.skinIndex = _skinIndex;
 		this.tailIndex = _tailIndex;
+
+		// perf TODO: remake this so it doesnt use .find (very expensive to iterate the entire arr)
+		this.hatTracker.currentHat = hats.find(x => x.id === _skinIndex) ?? null;
+		this.hatTracker.currentTail = accessories.find(x => x.id === _tailIndex) ?? null;
+
+		this.hatTracker.push(_skinIndex, _tailIndex);
 
 		this.seenHats.add(_skinIndex);
 		this.seenTails.add(_tailIndex);
@@ -402,6 +449,7 @@ class ClientPlayer extends Player {
 	public isAttacking: boolean;
 	public isAutoAttacking: boolean;
 	public justStartedAttacking: boolean;
+	public isAttackingWhileBlocked: boolean;
 
 	public ownedHats: number[];
 	public ownedTails: number[];
@@ -413,6 +461,7 @@ class ClientPlayer extends Player {
 		this.isAttacking = false;
 		this.isAutoAttacking = false;
 		this.justStartedAttacking = false;
+		this.isAttackingWhileBlocked = false;
 		this.ownedHats = hats.filter(x => x.price === 0).map(x => x.id);
 		this.ownedTails = accessories.filter(x => x.price === 0).map(x => x.id);
 

@@ -18,7 +18,6 @@ import { connection } from "./Connection";
 import EventPacket from "../event/EventPacket";
 import config from "../data/moomoo/config";
 import hats from "../data/moomoo/hats";
-
 const logger = new Logger("packethandler");
 
 let lastPath = 0;
@@ -28,6 +27,9 @@ function processIn(packet: Packet) {
         case PacketType.PLAYER_ADD:
             const playerData = packet.data[0];
             core.playerManager.spawnPlayer(playerData[0], playerData[1], playerData[2], new Vector(playerData[3], playerData[4]), playerData[5], playerData[6], playerData[7], playerData[8], playerData[9], packet.data[1]);
+            if (packet.data[1]) {
+                core.moduleManager.onRespawn();
+            }
             break;
         case PacketType.PLAYER_UPDATE:
             for (let i = 0; i < core.playerManager.playerList.length; i++) {
@@ -55,8 +57,9 @@ function processIn(packet: Packet) {
                         player.inventory.resetReload(weapon);
                         player.inventory.updateReloads(core.tickEngine.ping);
 
-                        player.nextAttack = core.tickEngine.getTickIndex(Date.now() - core.tickEngine.ping * 2 + player.inventory.weaponSelected.stats.reloadTime)/* + 1*/;
+                        player.nextAttack = core.tickEngine.getTickIndex(Date.now() - core.tickEngine.ping * 2 + player.inventory.weaponSelected.stats.reloadTime) + 1;
                         player.swingStreak++;
+                        
                         console.log("swing at tick:", core.tickEngine.tickIndex, "scheduled next:", player.nextAttack);
                     }
 
@@ -151,6 +154,10 @@ function processIn(packet: Packet) {
         case PacketType.DEATH:
             core.playerManager.myPlayer.alive = false;
             core.playerManager.myPlayer.inventory.reset();
+            for (const player of core.playerManager.playerList) {
+                player.inventory.resetAllRangedReloads();
+            }
+            console.log("=== DEATH ===");
             break;
         case PacketType.UPDATE_STORE: {
             if (!packet.data[2]) {
@@ -176,18 +183,23 @@ function processIn(packet: Packet) {
         case PacketType.HEALTH_UPDATE: {
             const player = core.playerManager.playerList.findBySid(packet.data[0])!;
             const newHealth = packet.data[1];
-            const delta = newHealth - player.health;
+            const delta = newHealth - (player instanceof ClientPlayer ? player.packetHealth : player.health);
             const tracker = player.shame;
 
             if (delta < 0) {
-                tracker.lastDamage = core.tickEngine.roundToTick(Date.now() - core.tickEngine.ping, TickRoundType.ROUND);
-                if (Date.now() + core.tickEngine.ping - tracker.lastDamage <= 120) {
+                tracker.lastDamage = Date.now() - core.tickEngine.ping + core.tickEngine.pingStd;
+            } else if (tracker.lastDamage > 0) {
+                if (Date.now() - core.tickEngine.ping - tracker.lastDamage <= 120) {
                     if (tracker.points++ >= 8) {
                         tracker.isClowned = true;
                         tracker.timer = 30 * 1000;
                         tracker.points = 0;
                     }
+                } else {
+                    tracker.points = Math.max(0, tracker.points - 2);
                 }
+                tracker.lastDamage = -1;
+                //console.log(`[${tracker.points}] => ${Date.now() - core.tickEngine.ping - tracker.lastDamage}`);
             }
 
             if (player === core.playerManager.myPlayer) {
@@ -226,10 +238,14 @@ function processIn(packet: Packet) {
 
 function processOut(event: EventPacket, meta?: any) {
     const packet = event.getPacket();
+    //console.log(PacketType[packet.type]);
+    if (packet.type === PacketType.ATTACK) {
+        //console.trace();
+    }
     switch (packet.type) {
         case PacketType.ATTACK: {
             const myPlayer = core.playerManager.myPlayer;
-            const nextPredictableTick = core.tickEngine.getNextPredictableTick();
+            const nextPredictableTick = core.tickEngine.tickIndex + core.tickEngine.getPingTicks();
             let wasPlace = false;
 
             if (packet.data[0] === 1) {
@@ -240,7 +256,6 @@ function processOut(event: EventPacket, meta?: any) {
 
                     if (heldItem.group.id === 0) {
                         if (myPlayer.health < 100) {
-                            myPlayer.shame.lastDamage = -1;
                             myPlayer.health = Math.min(myPlayer.health + heldItem.healAmount!, 100);
                             myPlayer.inventory.heldItem = myPlayer.inventory.weaponSelected;
                         }
@@ -275,25 +290,35 @@ function processOut(event: EventPacket, meta?: any) {
                     myPlayer.isAttacking = true;
                     //console.log("started attacking");
 
-                    if (packet.data[0] === 1 && myPlayer.inventory.heldItem instanceof Weapon && (myPlayer.swingStreak === 0 || myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id] - core.tickEngine.ping <= 0)) {
-                        //const [hat, tail] = .computeHat(core.tickEngine.tickIndex);
+                    if (packet.data[0] === 1 && myPlayer.inventory.heldItem instanceof Weapon && (myPlayer.swingStreak === 0 || myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id] - core.tickEngine.ping <= 0)) {                        
                         
+                            //myPlayer.nextAttack = core.tickEngine.getTickIndex(Date.now() - core.tickEngine.ping + myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id]);
+                            /*if (!core.tickEngine.isTickPredictable(core.tickEngine.tickIndex + 1)) {
+                                core.scheduleAction(ActionType.ATTACK, ActionPriority.BIOMEHAT, nextPredictableTick, [1, packet.data[1]], true);
+                                isAttackScheduled = nextPredictableTick;
+                            }*/
+                            myPlayer.justStartedAttacking = true;
+                            myPlayer.inventory.resetReload(myPlayer.inventory.heldItem);
+                            //return false;
                         
-                        //myPlayer.nextAttack = core.tickEngine.getTickIndex(Date.now() - core.tickEngine.ping + myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id]);
-                        /*if (!core.tickEngine.isTickPredictable(core.tickEngine.tickIndex + 1)) {
-                            core.scheduleAction(ActionType.ATTACK, ActionPriority.BIOMEHAT, nextPredictableTick, [1, packet.data[1]], true);
-                            isAttackScheduled = nextPredictableTick;
-                        }*/
-                        myPlayer.justStartedAttacking = true;
-                        myPlayer.inventory.resetReload(myPlayer.inventory.heldItem);
-                        //return false;
+                            /* leftovers from antireflect */
+                            /*myPlayer.isAttacking = false;
+                            myPlayer.isAttackingWhileBlocked = true;
+                            event.cancel();*/
+                        
                     }
                 }
             } else {
-                if (!core.tickEngine.isTickPredictable(core.tickEngine.getTickIndex(Date.now() + myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id]))) {
+                /*if (!core.tickEngine.isTickPredictable(core.tickEngine.getTickIndex(Date.now() + myPlayer.inventory.reloads[myPlayer.inventory.weaponSelected.id]))) {
                     myPlayer.swingStreak = 0;
-                }
+                }*/
                 myPlayer.isAttacking = false;
+                myPlayer.isAttackingWhileBlocked = false;
+                /*if (event.isBundle) {
+                    console.log("EVENT HAS BEEN CANCELLED");
+                    core.scheduleAction(ActionType.ATTACK, ActionPriority.COMPATIBILITY, core.tickEngine.getFirstSchedulableTick(), [0, packet.data[1]]);
+                    event.cancel();
+                }*/
                 //console.log("stopped attacking");
                 /*if (isAttackScheduled > -1) {
                     core.scheduleAction(ActionType.ATTACK, ActionPriority.BIOMEHAT, isAttackScheduled + 1, [0, packet.data[1]], true);

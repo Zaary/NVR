@@ -6,6 +6,40 @@ import { Packet, Side } from "./packets/Packet";
 import { PacketFactory, reversePacketTypeMapping } from "./packets/PacketFactory";
 import { PacketType } from "./packets/PacketType";
 
+// FOR TESTING ON LOCALHOST
+if (window.location.host === "127.0.0.1") {
+    eval(`window.WebSocket = class {
+        constructor(url, protocols) {
+        }
+
+        set onopen(callback) {
+            window.eventbridge.onopen = callback;
+        }
+
+        set onmessage(callback) {
+            console.log("setting onmessage");
+            window.eventbridge.onmessage = callback;
+        }
+
+        addEventListener(type, callback) {
+            window.eventbridge.addEventListener(type, callback);
+        }
+
+        close(reason) {
+            window.eventbridge.close(reason);
+        }
+
+        send(msg) {
+            window.eventbridge.send(msg);
+        }
+
+        get readyState() {
+            return 1;
+        }
+    };`);
+}
+// FOR TESTING ON LOCALHOST
+
 const logger = new Logger("connection");
 
 let connection: Connection;
@@ -20,6 +54,10 @@ class Connection extends EventEmitter {
         super();
         this.socket = null;
         this.defaultReceiver = null;
+
+        Object.defineProperty(window, "connection", {
+            value: this
+        });
     }
 
     bundleSend(type: string, data: any) {
@@ -30,6 +68,12 @@ class Connection extends EventEmitter {
 
     injectSocket(socket: Injection) {
         this.socket = socket;
+    }
+
+    sendRaw(id: string, ...data: any[]) {
+        if (this.socket && this.socket.readyState == 1) {
+            this.socket.send(packetFactory.serializePacket(new Packet(reversePacketTypeMapping.find(mapping => (mapping.side === Side.ServerBound ||mapping.side === Side.BiDirectional) && mapping.value === id)!.type, data)));
+        }
     }
 
     sendWMeta(packet: Packet, meta: any[]) {
@@ -66,7 +110,7 @@ class Injection extends WebSocket {
         })
 
         this.addEventListener("message", function({ data: buffer }: { data: ArrayBuffer }) {
-            try {
+            //try {
                 const event = new EventPacket(packetFactory.deserializePacket(buffer, Side.ClientBound, Date.now()), false);
                 connection.emit("packetreceive", event);
 
@@ -85,9 +129,9 @@ class Injection extends WebSocket {
                 } else {
                     logger.warn("default receiver is null! this should not happen!");
                 }
-            } catch (err) {
+            /*} catch (err) {
                 logger.error(err);
-            }
+            }*/
         })
 
         Object.defineProperty(this, "onmessage", {
@@ -144,7 +188,8 @@ function inject() {
 
     Object.defineProperty(window, "WebSocket", {
         get() {
-            const caller = ErrorStackParser.parse(new Error())[1];
+            // COMMENTED ONLY FOR TESTING ON LOCAL!!! UNCOMMENT IN PRODUCTION!!
+            /*const caller = ErrorStackParser.parse(new Error())[1];
     
             const allowedFunctions = ["Object.connect", "connect"]
 
@@ -154,7 +199,7 @@ function inject() {
             if (!caller.fileName || !caller.functionName || !fileName.test(caller.fileName) || !functionName.test(caller.functionName)) {
                 logger.warn("accessing WebSocket from unkown source:", caller);
                 return originalWebSocket;
-            }
+            }*/
             return Injection;
         },
         set(a) {

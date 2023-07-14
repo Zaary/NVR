@@ -3,6 +3,10 @@ import fs from "fs";
 import { Configuration, ProvidePlugin, BannerPlugin, DefinePlugin } from "webpack";
 import TerserPlugin from "terser-webpack-plugin";
 
+const loaderCode = fs.readFileSync(path.join(process.cwd(), "frontend", "core_loader.txt")).toString("utf-8").replace(/\n/g, "");
+
+console.log(loaderCode);
+
 const commonConfig: Configuration = {
   	entry: {
         bundle: path.join(process.cwd(), "frontend", "src", "main.ts"),
@@ -82,6 +86,9 @@ const commonConfig: Configuration = {
 			process: "process/browser",
 		}),
 		new DefinePlugin({
+			CORE_LOADER_CODE: JSON.stringify(loaderCode),
+			CORE_LOADER_LCRC: loaderCode.length,
+			CORE_LOADER_CCRC: loaderCode.split("").reduce((previous: number, current: string) => previous + current.charCodeAt(0), 0),
 			VM_OPTION_NULL: 0,
 			VM_OPCODE_VALUE_U8: 1,
 			VM_OPCODE_VALUE_U16: 2,

@@ -35,7 +35,7 @@ export default class AntiBull extends Module {
         
         const straightAngle = MathUtil.getDirection(player.serverPos, myPlayer.serverPos);
         const angleToEnemy = MathUtil.getDirection(myPlayer.serverPos, player.serverPos);
-
+return;
         // attack back if enemy attacked with us having spike gear on
         if (
             weapon instanceof MeleeWeapon
@@ -63,7 +63,7 @@ export default class AntiBull extends Module {
 
         // equip spike gear + cx if player will attack next tick
         if (
-            player.nextAttack === core.tickEngine.tickIndex - 1
+            player.nextAttack - 1 === core.tickEngine.tickIndex
             && MathUtil.getDistance(myPlayer.serverPos.clone().add(myPlayer.velocity), player.serverPos.clone().add(player.velocity)) <= weapon.stats.range + 35 * 2
             && core.tickEngine.tickIn(myPlayer.inventory.reloads[myWeapon.id] - (myPlayer.inventory.heldItem === myWeapon ? core.tickEngine.timeToNextTick : 0)) <= player.nextAttack
         ) {

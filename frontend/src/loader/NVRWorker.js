@@ -86,28 +86,7 @@ const Geom = {
     	return c;
 	}
 }
-/*
-const context = canvas.getContext("2d");
 
-	let imgData = context.getImageData(0, 0, canvas.width, canvas.height);
-	let data = imgData.data;
-
-	function defineNonTransparent(x, y) {
-		return data[(y * canvas.width + x) * 4 + 3] >= maxTransparency;
-	}
-
-	const start = Geom.d3_geom_contourStart(defineNonTransparent);
-	const points = Geom.contour(defineNonTransparent, start);
-
-	context.beginPath();
-    context.moveTo(points[0][0], points[0][4]);
-    for (let i = 0; i < points.length; i++) {
-        const point = points[i];
-        context.lineTo(point[0], point[1]);
-    }
-    context.closePath();
-    context.stroke();
-*/
 function createImageOutline(data, width, maxTransparency) {
 
 	function defineNonTransparent(x, y) {

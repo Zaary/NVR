@@ -193,6 +193,8 @@ export default class SecurityManager {
                 params.push(readInstructionValue());
             }
 
+            console.log("executing", func, params);
+
             return func.apply(null, params);
         }
 

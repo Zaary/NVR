@@ -9,6 +9,7 @@ import { connection } from "../../../socket/Connection";
 import { Packet } from "../../../socket/packets/Packet";
 import { PacketType } from "../../../socket/packets/PacketType";
 import MathUtil from "../../../util/MathUtil";
+import PredictionUtil from "../../../util/PredictionUtil";
 import AntiTrap from "../building/AntiTrap";
 import Module from "../Module";
 
@@ -17,6 +18,8 @@ export default class AutoHat extends Module {
     private skipNextTick: boolean;
     public isPlacing: boolean;
 
+    private skipTick: number;
+    private scheduledAutobull: boolean;
     private bundleAttackState: boolean;
 
     constructor() {
@@ -24,15 +27,24 @@ export default class AutoHat extends Module {
         this.skipNextTick = false;
         this.isPlacing = false;
 
+        this.skipTick = -1;
+        this.scheduledAutobull = false;
         this.bundleAttackState = false;
     }
 
-    private getHat(shouldAutobull: boolean) {
+    onRespawn(): void {
+        this.skipNextTick = false;
+        this.skipTick = -1;
+        this.scheduledAutobull = false;
+    }
+
+    private getHat(shouldAutobull: boolean, isTick: boolean) {
         const antiTrap = (<AntiTrap> core.moduleManager.getModule(AntiTrap));
         const myPlayer = core.playerManager.myPlayer;
 
         let hat = -1;
         let tail = -1;
+        let isDefault = true;
 
         //console.log(tickIndex);
         
@@ -47,11 +59,11 @@ export default class AutoHat extends Module {
             for (let i = 0; i < grids.length; i++) {
                 const object = grids[i];
                 // use object.scale because .getScale returns collision box while .scale is hitbox
-                if (MathUtil.getDistance(object.position, myPlayer.serverPos.clone().add(myPlayer.velocity.clone().multiply(1.1))) - object.scale <= weapon.stats.range + myPlayer.scale) {
-                    const gatherAngle = MathUtil.roundTo(MathUtil.getDirection(myPlayer.serverPos.clone().add(myPlayer.velocity.clone().multiply(1.1)), object.position), 1);
+                if (MathUtil.getDistance(object.position, PredictionUtil.futurePosition(myPlayer)) - object.scale <= weapon.stats.range + myPlayer.scale) {
+                    const gatherAngle = MathUtil.roundTo(MathUtil.getDirection(PredictionUtil.futurePosition(myPlayer), object.position), 1);
                     //const safeSpan = MathUtil.lineSpan(object.position.clone(), myPlayer.serverPos.clone(), myPlayer.serverPos.clone().add(myPlayer.velocity));
 
-                    if (MathUtil.getAngleDist(core.mouseAngle, gatherAngle) <= config.gatherAngle + Number.EPSILON) {
+                    if (MathUtil.getAngleDist(core.mouseAngle, gatherAngle) <= config.gatherAngle/* + Number.EPSILON*/) {
                         if (object instanceof PlayerBuilding) {
                             objectsHit++;
                         }
@@ -62,11 +74,11 @@ export default class AutoHat extends Module {
             const players = core.playerManager.getVisibleEnemies();
             for (let i = 0; i < players.length; i++) {
                 const player = players[i];
-                if (MathUtil.getDistance(player.serverPos.clone().add(player.velocity.clone().multiply(1.1)), myPlayer.serverPos.clone().add(myPlayer.velocity.clone().multiply(1.1))) - player.scale <= weapon.stats.range + myPlayer.scale) {
-                    const gatherAngle = MathUtil.roundTo(MathUtil.getDirection(myPlayer.serverPos, player.serverPos), 1);
+                if (PredictionUtil.futureDistance(myPlayer, player) - player.scale <= weapon.stats.range + myPlayer.scale) {
+                    const gatherAngle = MathUtil.roundTo(PredictionUtil.futureDirection(myPlayer, player), 1);
 
                     //console.log(MathUtil.getAngleDist(core.mouseAngle, gatherAngle), config.gatherAngle + Number.EPSILON);
-                    if (MathUtil.getAngleDist(core.mouseAngle, gatherAngle) <= config.gatherAngle + Number.EPSILON) {
+                    if (MathUtil.getAngleDist(core.mouseAngle, gatherAngle) <= config.gatherAngle/* + Number.EPSILON*/) {
                         playersHit++;
                     }
                 }
@@ -75,9 +87,11 @@ export default class AutoHat extends Module {
             if (weapon !== Weapons.GREAT_HAMMER && playersHit > 0) {
                 hat = 7;
                 tail = 0;
+                isDefault = false;
             } else if (antiTrap.isBreaking || objectsHit > 0) {
                 //console.log("autohat: TANK");
                 hat = 40;
+                isDefault = false;
             }
 
             //hat = 7;
@@ -116,31 +130,67 @@ export default class AutoHat extends Module {
             }
         }
 
-        return [hat, tail];
+        return [hat, tail, isDefault];
     }
 
-    onPreTick(tickIndex: number): void {
-        if (this.skipNextTick) {
+    onTick(tickIndex: number, schedulableTick: number): void {
+        /*if (this.skipNextTick) {
+            console.log(">> SKIPPED TICK ", tickIndex);
             this.skipNextTick = false;
             return;
-        }
+        }*/
 
         /*if (this.doAttackNextTick) {
             this.doAttackNextTick = false;
             this.doAttack();
         }*/
 
+        if (schedulableTick < this.skipTick) return;
+
         const myPlayer = core.playerManager.myPlayer;
+        const pingTicks = core.tickEngine.getPingTicks();
+        
+        const willAttack = !this.isPlacing && this.bundleAttackState && (myPlayer.isAutoAttacking || myPlayer.isAttacking) && myPlayer.inventory.heldItem instanceof MeleeWeapon;
+        let shouldAutobull = willAttack && myPlayer.nextAttack - 1 === schedulableTick;
+        if (shouldAutobull) this.scheduledAutobull = false;
+        //this.hasAutobulled = false;
 
-        const shouldAutobull = !this.isPlacing && this.bundleAttackState && (myPlayer.isAutoAttacking || myPlayer.isAttacking) && myPlayer.inventory.heldItem instanceof MeleeWeapon && myPlayer.nextAttack === tickIndex - 1;
+        let predictionFix = false;
 
-        const [hat, tail] = this.getHat(shouldAutobull);
+        // this should theoretically only apply to daggers because they attack so quickly the prediction is already ahead of them so it wont exec
+        if (
+            myPlayer.nextAttack !== 0
+            && myPlayer.nextAttack <= schedulableTick
+            && !this.scheduledAutobull
+            && willAttack
+            && !shouldAutobull
+        ) {
+            if (tickIndex + pingTicks === myPlayer.nextAttack - 1) {
+                predictionFix = true;
+            }
+        }
 
-        core.scheduleAction(ActionType.HAT, ActionPriority.BIOMEHAT, tickIndex, [hat]);
-        core.scheduleAction(ActionType.TAIL, ActionPriority.BIOMEHAT, tickIndex, [tail]);
+        if (shouldAutobull) this.scheduledAutobull = true;
+
+        const [hat, tail, isDefault] = this.getHat(shouldAutobull, true);
+        const priority = isDefault ? ActionPriority.BIOMEHAT : ActionPriority.AUTOHAT;
+
+        if (predictionFix && core.isHighestPriority(ActionPriority.AUTOHAT, myPlayer.nextAttack - 1)) {
+            const [hat, tail] = this.getHat(true, true);
+            console.log("fix", hat, tail);
+            core.cancelScheduledAction(ActionType.HAT, ActionPriority.BIOMEHAT, myPlayer.nextAttack - 1);
+            core.cancelScheduledAction(ActionType.TAIL, ActionPriority.BIOMEHAT, myPlayer.nextAttack - 1);
+            core.runImmediateAction(ActionType.HAT, priority, [hat]);
+            core.runImmediateAction(ActionType.TAIL, priority, [tail]);
+        }
+
+        core.scheduleAction(ActionType.HAT, priority, schedulableTick, [hat]);
+        core.scheduleAction(ActionType.TAIL, priority, schedulableTick, [tail]);
     }
 
     onPacketSend(event: EventPacket): void {
+        if (event.isCanceled()) return;
+
         const packet = event.getPacket();
         const myPlayer = core.playerManager.myPlayer;
 
@@ -148,24 +198,36 @@ export default class AutoHat extends Module {
             this.bundleAttackState = packet.data[0] === 1;
             if (!this.isPlacing && myPlayer.inventory.heldItem instanceof MeleeWeapon) {
                 if (packet.data[0] && myPlayer.justStartedAttacking) {
-                    const [hat, tail] = this.getHat(true);
-                    const attackArriveTick = core.tickEngine.tickIndex + 1;
-                    //console.log("first hit autohat activated");
-                    if (core.tickEngine.isTickPredictable(attackArriveTick)) {
-                        core.scheduleAction(ActionType.HAT, ActionPriority.BIOMEHAT, attackArriveTick, [hat]);
-                        core.scheduleAction(ActionType.TAIL, ActionPriority.BIOMEHAT, attackArriveTick, [tail]);
-                    } else if (core.isHighestPriority(ActionPriority.BIOMEHAT, attackArriveTick)/* && !antiTrap.isTrapped()*/) {
-                        connection.send(new Packet(PacketType.BUY_AND_EQUIP, [0, hat, 0]), true);
-                        connection.send(new Packet(PacketType.BUY_AND_EQUIP, [0, tail, 1]), true);
-                        core.lastActionState.hat = hat;
-                        core.lastActionState.tail = tail;
+                    const [hat, tail, isSwingBased] = this.getHat(true, false);
+                    const pingTicks = core.tickEngine.getPingTicks();
+                    const attackTick = core.tickEngine.getFirstSchedulableTick();
+                    
+                    //if (core.isHighestPriority(ActionPriority.AUTOHAT, core.tickEngine.tickIndex + core.tickEngine.getPingTicks())) {
+                        core.runImmediateAction(ActionType.HAT, ActionPriority.AUTOHAT, [hat]);
+                        core.runImmediateAction(ActionType.TAIL, ActionPriority.AUTOHAT, [tail]);
+                        //this.skipNextTick = true;
+                        core.cancelScheduledAction(ActionType.HAT, ActionPriority.BIOMEHAT, attackTick - 1, true);
+                        core.cancelScheduledAction(ActionType.TAIL, ActionPriority.BIOMEHAT, attackTick - 1, true);
+                        this.skipTick = attackTick;
+                    //}
+                    //if (core.tickEngine.isTickPredictable(attackArriveTick)) {
+                        
+                    /*} else if (core.isHighestPriority(ActionPriority.BIOMEHAT, attackArriveTick)) {
+                        if (core.lastActionState.hat !== hat) {
+                            connection.send(new Packet(PacketType.BUY_AND_EQUIP, [0, hat, 0]), true);
+                            core.lastActionState.hat = hat;
+                        }
+                        if (core.lastActionState.tail !== tail) {
+                            connection.send(new Packet(PacketType.BUY_AND_EQUIP, [0, tail, 1]), true);
+                            core.lastActionState.tail = tail;
+                        }
                         core.lastActionState.attack = 1;
                         core.lastActionState.aim = packet.data[1];
                         connection.send(new Packet(PacketType.ATTACK, [1, packet.data[1]]), true);
                         this.skipNextTick = true;
                         //console.log("REWRITING HIT SUYPER OMG SUCK MY DICK");
                         event.cancel();
-                    }
+                    }*/
                 }
             }
         }

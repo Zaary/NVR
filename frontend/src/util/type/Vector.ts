@@ -2,10 +2,12 @@ export default class Vector {
 
     public x: number;
     public y: number;
+    private frozen: boolean;
 
     constructor(x?: number, y?: number) {
         this.x = x ?? 0;
         this.y = y ?? 0;
+        this.frozen = false;
     }
 
     isNull() {
@@ -21,6 +23,8 @@ export default class Vector {
     add(amount: number): this;
 
     add(param1: Vector | number, param2?: number): this {
+        if (this.frozen) return this;
+        
         if (typeof param1 === "object") {
             this.x += param1.x;
             this.y += param1.y;
@@ -39,6 +43,8 @@ export default class Vector {
     subtract(amount: number): this;
 
     subtract(param1: Vector | number, param2?: number): this {
+        if (this.frozen) return this;
+        
         if (typeof param1 === "object") {
             this.x -= param1.x;
             this.y -= param1.y;
@@ -57,6 +63,8 @@ export default class Vector {
     multiply(amount: number): this;
 
     multiply(param1: Vector | number, param2?: number): this {
+        if (this.frozen) return this;
+        
         if (typeof param1 === "object") {
             this.x *= param1.x;
             this.y *= param1.y;
@@ -75,6 +83,8 @@ export default class Vector {
     divide(amount: number): this;
 
     divide(param1: Vector | number, param2?: number): this {
+        if (this.frozen) return this;
+        
         if (typeof param1 === "object") {
             this.x /= param1.x;
             this.y /= param1.y;
@@ -93,6 +103,8 @@ export default class Vector {
     set(amount: number): this;
 
     set(param1: Vector | number, param2?: number): this {
+        if (this.frozen) return this;
+        
         if (typeof param1 === "object") {
             this.x = param1.x;
             this.y = param1.y;
@@ -106,7 +118,16 @@ export default class Vector {
         return this;
     }
 
+    move(amount: number) {
+        if (this.frozen) return this;
+        
+        this.directionMove(this.direction(), amount);
+        return this;
+    }
+
     directionMove(direction: number, amount: number): this {
+        if (this.frozen) return this;
+        
         this.x += Math.cos(direction) * amount;
         this.y += Math.sin(direction) * amount;
         return this;
@@ -118,6 +139,15 @@ export default class Vector {
 
     length(): number {
         return Math.hypot(this.x, this.y);
+    }
+
+    direction(): number {
+        return Math.atan2(this.y, this.x);
+    }
+
+    freeze(): this {
+        this.frozen = true;
+        return this;
     }
 
     toString(round?: boolean): string {

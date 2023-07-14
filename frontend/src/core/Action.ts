@@ -6,10 +6,10 @@ class Action {
     public type: ActionType;
     public priority: ActionPriority;
     public executeTick: number;
-    public data: any[];
+    public data: any[] | undefined;
     public force: boolean;
 
-    constructor(id: number, type: ActionType, priority: ActionPriority, executeTick: number, data: any[], force: boolean) {
+    constructor(id: number, type: ActionType, priority: ActionPriority, executeTick: number, data: any[] | undefined, force: boolean) {
         this.id = id;
         this.type = type;
         this.priority = priority;

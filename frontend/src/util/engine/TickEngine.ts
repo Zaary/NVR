@@ -153,16 +153,23 @@ class TickEngine extends EventEmitter<{
             
             this.predictionTick += delta;
 
-            const offset = deltaStd + getStandardDeviation(this.pings);
-            const futureProgress = (this.predictionTick + delta + this.ping + offset) / TickEngine.TICK_DELTA;
+        if (false) { // >111 ping is unplayable anyways so why bother
+
+            const futureProgress = (this.predictionTick + this.ping + this.pingStd) / TickEngine.TICK_DELTA;
             this.futureProgress = futureProgress;
 
-            // emit 30% before the actual tick
-            if (futureProgress + 0.8 >= this.nextPreTick) {
-                if (futureProgress + 0.8 - this.nextPreTick >= 1) return this.nextPreTick = Math.ceil(futureProgress + 0.8);
+            if (futureProgress >= this.nextPreTick) {
+                if (futureProgress - this.nextPreTick >= 1) return this.nextPreTick = this.tickIndex + Math.ceil(futureProgress + 1);
 
                 if (this.nextPreTick > this.lastPredictedPre) {
                     const predictedTickIndex = this.nextPreTick;
+                    //console.log("prediction: " + predictedTickIndex, Date.now());
+                    if (window.hasOwnProperty("-" + predictedTickIndex)) {
+                        /*const delta = Date.now() - window.predictions["-" + this.tickIndex];
+                        console.log("late: " + delta);*/
+                    } else {
+                        //window.predictions["+" + predictedTickIndex] = Date.now();
+                    }
 
                     this.lastPredictedPre = predictedTickIndex;
 
@@ -191,6 +198,7 @@ class TickEngine extends EventEmitter<{
                     this.nextPostTick++;
                 }
             }
+        }
 
             // clean all predicted buildings if we didnt receive confirming placement packet
             // use a while loop since we are splicing inside of it
@@ -200,7 +208,7 @@ class TickEngine extends EventEmitter<{
                 if (now - predictedPlacements[i].placedTimestamp > this.ping * 2 + maxDelta + TickEngine.TICK_DELTA) {
                     const prediction = predictedPlacements[i];
                     // failed = possibility of a hidden trap therefore we add trap as a prediction for the next 0.6s
-                    core.objectManager.addPlacementAttempt([prediction.position, core.playerManager.myPlayer.scale, prediction.dir], items.list[15], Date.now() + 600);
+                    core.objectManager.addPlacementAttempt([prediction.position.clone(), core.playerManager.myPlayer.scale, prediction.dir], items.list[15], Date.now() + 600);
                     predictedPlacements.splice(i, 1);
                 }
             }
@@ -223,12 +231,44 @@ class TickEngine extends EventEmitter<{
         return this.tickIndex + Math.ceil((ms - this.lastTick) / TickEngine.TICK_DELTA);
     }
 
-    getNextPredictableTick() {
-        return Math.round(this.futureProgress) + 1;
+    getPingTicksRaw() {
+        return Math.ceil(this.ping / TickEngine.TICK_DELTA);
     }
 
-    isTickPredictable(tick: number) {
-        return tick - this.futureProgress > 1;
+    /**
+     * Returns delay in ticks to when packet sent at this moment will be processed on backend
+     */
+    getPingTicks() {
+        const timeSinceLastTick = Date.now() - this.lastTick;
+        return Math.floor((timeSinceLastTick + this.ping) / TickEngine.TICK_DELTA);
+    }
+
+    /**
+     * Returns the nearest future tick where we can schedule an action and ensure its execution
+     */
+    getFirstSchedulableTick() {
+        return this.tickIndex + this.getPingTicks() + 1;
+    }
+
+    /**
+     * Determines if an action can be scheduled on the current tick and executed in the future
+     */
+    isTickSchedulable(tickIndex: number) {
+        return tickIndex >= this.getFirstSchedulableTick();
+    }
+
+    /**
+     * Determines if a packet sent now would arrive before the next tick
+     */
+    wouldArriveThisTick() {
+        return this.timeToNextTick > this.ping + this.pingStd;
+    }
+
+    /**
+     * Determines if a packet sent now would arrive before the given tick
+     */
+    wouldArriveAtTick(tick: number) {
+        return (tick - this.tickIndex) * TickEngine.TICK_DELTA + this.timeToNextTick > this.ping + this.pingStd;
     }
 
     toTicks(ms: number) {
@@ -236,7 +276,7 @@ class TickEngine extends EventEmitter<{
     }
 
     get timeToNextTick() {
-        return TickEngine.TICK_DELTA - (Date.now() - this.lastTick) - this.ping;
+        return TickEngine.TICK_DELTA - (Date.now() - this.lastTick);
     }
 
     get serverLag(): number {

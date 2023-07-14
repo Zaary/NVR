@@ -5,9 +5,12 @@
 enum ActionPriority {
     COMPATIBILITY,
     BIOMEHAT,
+    AUTOHAT,
+    BULLTICK,
     ANTITRAP,
     AUTOBREAK,
     ANTIBULL,
+    ANTIREFLECT,
     SPIKESYNC,
     ANTIINSTA,
     

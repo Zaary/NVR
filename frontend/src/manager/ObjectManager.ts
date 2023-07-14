@@ -73,7 +73,8 @@ export default class ObjectManager {
         const [position, scale, angle] = source;
 
         const placeOffset = scale + item.scale + (item.placeOffset ?? 0);
-        const targetPosition = position.clone().directionMove(angle, placeOffset);
+        // since position is already being cloned when passing as argument, we dont need to clone again
+        const targetPosition = position.directionMove(angle, placeOffset);
         
         if (this.isPositionFree(targetPosition, item.scale)) {
             this.predictedPlacements.push(new PredictedPlacement(targetPosition, angle, item.scale, item.id, timestamp));
@@ -341,11 +342,13 @@ export default class ObjectManager {
 
     // REMOVE ALL FROM PLAYER:
     removeAllItems(sid: number) {
-        for (var i = 0; i < this.gameObjects.length; ++i) {
+        let i = this.gameObjects.length - 1;
+        while (i >= 0) {
             const object = this.gameObjects[i];
             if (object instanceof PlayerBuilding && object.owner.sid === sid) {
                 this.disableObj(object);
             }
+            i--;
         }
         /*if (server) {
             server.broadcast("13", sid);

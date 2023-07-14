@@ -2,19 +2,23 @@ import "../style/main.scss";
 import "../style/moomoo.scss";
 
 import { Core } from "./core/Core";
+import CoreCreator from "./core/CoreCreator";
 import NVRLoader from "./loader/NVRLoader";
 import HoverInfoModule from "./render/HoverInfoModule";
 import RenderManager from "./render/RenderManager";
 import { inject } from "./socket/Connection";
 import Logger from "./util/Logger";
+import MathUtil from "./util/MathUtil";
 
+const cid = MathUtil.randInt(Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
 
 const logger = new Logger("main");
 
 inject();
 
 logger.info("initializing core");
-const core = new Core();
+
+const core = CoreCreator.create(cid);
 
 if (!core) {
     logger.error("critical: core failed to load!");
@@ -38,7 +42,7 @@ const observer = new MutationObserver((mutations: MutationRecord[], observer: Mu
         for (const node of mutation.addedNodes) {
             if (node instanceof HTMLBodyElement) {
                 const vv = NVRLoader.x(Math.random());
-                NVRLoader.start((s: any) => { return s !== vv ? () => core.removePacketInterceptor489() : () => core.removePacketInterceptor164() });
+                NVRLoader.start((s: any) => { return s !== vv ? () => core.sd() : () => (<any> core)[s]() });
             } else if ((<HTMLElement> node).tagName === "SCRIPT" && /var loadedScript/.test((<HTMLScriptElement> node).innerText)) {
                 node.addEventListener("beforescriptexecute", (e) => e.preventDefault(), { once: true });
                 node.parentElement!.removeChild(node);
@@ -48,12 +52,14 @@ const observer = new MutationObserver((mutations: MutationRecord[], observer: Mu
                 // firefox executes script even if its removed
                 node.addEventListener("beforescriptexecute", (e) => e.preventDefault(), { once: true });
 
+                console.log("removing child from ", node.parentElement, node);
                 node.parentElement!.removeChild(node);
-                observer.disconnect();
+                //observer.disconnect();
             }
         }
     }
 });
+
 
 observer.observe(document, {
     subtree: true,

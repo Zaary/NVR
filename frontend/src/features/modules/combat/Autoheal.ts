@@ -15,7 +15,7 @@ export default class Autoheal extends Module {
     onUpdate(delta: number): void {
         const myPlayer = core.playerManager.myPlayer;
         
-        if (myPlayer.alive && myPlayer.health < 100 && myPlayer.shame.isSafeHeal(core.tickEngine.ping)) {
+        if (myPlayer.alive && myPlayer.health < 100 && myPlayer.shame.isSafeHeal(core.tickEngine.ping, core.tickEngine.pingStd)) {
             const foodType = core.playerManager.myPlayer.inventory.items[0];
             const healsUp = foodType == 0 ? 20 : 40;
 

@@ -40,6 +40,8 @@ export default class BuildingVisualisationModule extends Renderer {
             const isNaturalObject = object instanceof NaturalObject;
             const isTeamBuilding = object instanceof PlayerBuilding && this.core.playerManager.checkTeam(object.owner.sid);
 
+            if (!isPredicted) continue;
+
             //this.renderManager.context.save();
             this.renderManager.context.moveTo(objectRenderPosition.x, objectRenderPosition.y);
             this.renderManager.context.beginPath();

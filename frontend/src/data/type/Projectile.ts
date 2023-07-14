@@ -73,7 +73,7 @@ class ProjectileItem {
 
 const Projectiles = {
     BOW_ARROW: new ProjectileItem(0, { scale: 103, range: 1000, speed: 1.6, dmg: 25 }),
-    TURRET_BULLET: new ProjectileItem(1, { scale: 20, range: 700, speed: 2, dmg: 25 }),
+    TURRET_BULLET: new ProjectileItem(1, { scale: 20, range: 700, speed: 1.5, dmg: 25 }),
     CROSSBOW_ARROW: new ProjectileItem(2, { scale: 103, range: 1200, speed: 2.5, dmg: 35 }),
     REPEATER_CROSSBOW_ARROW: new ProjectileItem(3, {scale: 103, range: 1200, speed: 2, dmg: 30 }),
     UNKNOWN_PROJECTILE: new ProjectileItem(4, { scale: 20, range: 700, speed: 2, dmg: 16 }),
